@@ -2317,17 +2317,11 @@ void LongInteger::BurnikelZiegler(LongInteger& liValue, LongInteger& liDiv, Long
 	// The first part is DivTwoDigitsByOne
 	// It needs to split the numbers, so we shall test the split code
 
-	vector<LongIntegerSP> vList;
-	LongInteger frank(16909060); // 1.2.3.4
-	LongInteger bob(25610); // 100.10
+	// Very much in the testing phase, hence the chaotic layout (plus it is rather hard to understand the paper as I don't really
+	// know maths notation - so a lot of trial and error)
 
-	vList = LongInteger::split(std::make_shared<LongInteger>(frank), 2, frank.getSize() / 2);
+	
 
-	CString strResult;
-	strResult = vList[0]->toDecimal();
-	strResult = vList[1]->toDecimal();
-
-	// Put the code for these bits in here for now
 	// DivTwoDigitsByOne(AHigh, ALow, B), return quotient Q and remainder S
 	// 
 	// 1) Let [a1,a2] = AH, [a3,a4] = AL, and [b1,b2] = B
@@ -2352,75 +2346,55 @@ void LongInteger::BurnikelZiegler(LongInteger& liValue, LongInteger& liDiv, Long
 	//17) }
 	//18) Return quotient q and remainder R
 
+	// A whole load of tests of split, merge and Div3By2 have worked
+	// Now test DivTwoDigitsByOne
+
+	// Make a LongInteger that is 4 bytes long. So AHigh is 2, ALow is 2.
+	// B gets chopped into 2, so make it 2 bytes long to keep the initial tests simple
+
+	// A = 1.2.3.4 = 16909060
+
+	// Just rewrote 'merge', so need to test this thoroughly
+	// Think up some test conditions
+	// Merging 1,1 size 1 = 257 (Hex 1.1)
+	// Merging 1,2.3 size 1 = Hex 3.3
+	// Merging 1,2.3 size 2 = Hex 1.2.3
+	// Merging 1.2.3,3.4.5 size 2 = Hex 1.2.6.4.5
+	// Merging 1.2,3 size 3 = 1.2.0.0.3
 
 
+	CString strA = L"16909060";
+	LongInteger liA = strA;
+	LongInteger liB = 257;
 
+	// 65794 , 2 - in hex 1.1.2 , 2
 
+	CString test, testHex;
 
-	LongIntegerSP test1 = vList[0];
-	LongIntegerSP test2 = vList[1];
-	CString strTest = test1->toDecimal();
+	testHex = liA.toHexString();
+	test = liA.toDecimal();
 
-	// Test the merge function
-	LongInteger liTest1(CString(L"4328719365"));
-	test1 = std::make_shared<LongInteger>(liTest1);
-	UINT uSplitSize = test1->getSize() / 2;
-	vList = split(test1, 3, uSplitSize);
-	strTest = vList[0]->toHexString();
-	strTest = vList[1]->toHexString();
-	strTest = vList[2]->toHexString();
-	LongIntegerSP liMerge;
-	liMerge = merge(vList, 3, uSplitSize);
+	LongInteger liQuotient = liA / liB;
+	LongInteger liRemainder = liA % liB;
 
-	strTest = liMerge->toHexString(); // Should be 05.04.03.02.01
-	strTest = liMerge->toDecimal(); // Should be 4328719365
+	test = liQuotient.toDecimal();
+	testHex = liQuotient.toHexString();
+	test = liRemainder.toDecimal();
+	testHex = liRemainder.toHexString();
 
-	// Test DivThreeHalvesByTwo
-	LongIntegerSP A(nullptr), B(nullptr);
-	vector<LongIntegerSP> vDivResult;
-	A = std::make_shared<LongInteger>(66051); // Hex 01.02.03
-	B = std::make_shared<LongInteger>(258); // Hex 01.02
+	LongIntegerSP AHigh, ALow, B;
+	UINT uDigits = liA.size / 2;
+	vector<LongIntegerSP> vASplit(2);
+	vASplit = split(std::make_shared<LongInteger>(liA), 2, uDigits);
 
-	vector<LongIntegerSP> vA = split(A, 3, 1);
-	vector<LongIntegerSP> vB = split(B, 2, 1);
+	testHex = vASplit[0]->toHexString();
+	testHex = vASplit[1]->toHexString();
 
-	vDivResult = DivThreeHalvesByTwo(vA[2], vA[1], vA[0], vB[1], vB[0], 1);
+	vector<LongIntegerSP> vResult = DivTwoDigitsByOne(vASplit[1], vASplit[0], std::make_shared<LongInteger>(liB));
 
-	strTest = vDivResult[0]->toHexString();
-	strTest = vDivResult[0]->toDecimal();
-	strTest = vDivResult[1]->toHexString();
-	strTest = vDivResult[1]->toDecimal();
-
-	// A should be less than B^256(n), where n is the number of digits it is being broken up into
-	// It says n should be even, but it seems to work with n=1, which is odd
-	// Additionally,
-	// B >= (256^2n)/2. With n=1, 256^2 / 2 = 32768. This doesn't seem right
-	// Will test for a range of values
-	// So if A is 66051, B should be less than A/256=258.011. However it seems to work fine for much larger numbers
-/*	for (UINT j = 2; j < 256; j *= 2) {
-		*A = j;
-		for (UINT i = 1; i < j; i *=2 ) {
-			*B = i;
-			UINT uSizeParts = 1;
-			if (B->size > 2) uSizeParts++;
-			vB = split(B, 2, uSizeParts);
-			vA = split(A, 3, uSizeParts);
-
-			vDivResult = DivThreeHalvesByTwo(vA[2], vA[1], vA[0], vB[1], vB[0], uSizeParts);
-
-			LongInteger remainder = *A / *B;
-			LongInteger modulus = *A % *B;
-
-			bool divworked = remainder == *vDivResult[0];
-			bool modworked = modulus == *vDivResult[1];
-			if (!(divworked && modworked)) {
-				strTest = remainder.toDecimal();
-				strTest = vDivResult[0]->toDecimal();
-				strTest = modulus.toDecimal();
-				strTest = vDivResult[1]->toDecimal();
-			}
-		}
-	}*/
+	testHex = vResult[0]->toHexString();
+	testHex = vResult[1]->toHexString();
+	
 }
 
 vector<LongIntegerSP> LongInteger::DivTwoDigitsByOne(LongIntegerSP AHigh, LongIntegerSP ALow, LongIntegerSP B)
@@ -2450,8 +2424,6 @@ vector<LongIntegerSP> LongInteger::DivTwoDigitsByOne(LongIntegerSP AHigh, LongIn
 
 	*/
 	vector<LongIntegerSP> vReturn(2); // Return Q & S
-	vReturn[0] = std::make_shared<LongInteger>();
-	vReturn[1] = std::make_shared<LongInteger>();
 
 	// Decide how many digits we are chopping up the numbers by (it needs to be consistent)
 	UINT uDigits = AHigh->getSize();
@@ -2471,16 +2443,24 @@ vector<LongIntegerSP> LongInteger::DivTwoDigitsByOne(LongIntegerSP AHigh, LongIn
 	LongIntegerSP b1 = vWorking[0];
 	LongIntegerSP b2 = vWorking[1];
 
-	vector<LongIntegerSP> vResult;
+	vector<LongIntegerSP> vResult1, vResult2;
 	// 2) [q1,R] = DivThreeHalvesByTwo(a1,a2,a3,b1,b2)
-	vResult = DivThreeHalvesByTwo(a1, a2, a3, b1, b2, uDigits);
+	vResult1 = DivThreeHalvesByTwo(a1, a2, a3, b1, b2, uDigits);
 
-	vWorking = LongInteger::split(vResult[1], 2, uDigits);
+	// 3) Let [r1,r2]=R
+	vWorking = LongInteger::split(vResult1[1], 2, uDigits);
 	LongIntegerSP r1 = vWorking[0];
 	LongIntegerSP r2 = vWorking[1];
 
-//	liSplitResult = DivThreeHalvesByTwo
+	// 4) [q2,S] = DivThreeHalvesByTwo(r1,r2,a4,b1,b2)
+	vResult2 = DivThreeHalvesByTwo(r1, r2, a4, b1, b2, uDigits);
 
+	// 5) Return Q=[q1,q2] and S
+	vReturn[1] = vResult2[1];
+	vector<LongIntegerSP> Q(2);
+	Q[0] = vResult1[0];
+	Q[1] = vResult2[0];
+	vReturn[0] = merge(Q, 2, uDigits);
 
 	return vReturn;
 }
@@ -2578,9 +2558,23 @@ LongIntegerSP LongInteger::merge(vector<LongIntegerSP> vList, UINT uNumParts, UI
 {
 	// Merge the contents of liList into a single LongInteger
 
+	// Need to rework this as I've hit scenarios where the components can be bigger than uSizeParts
+	LongIntegerSP liReturn = std::make_shared<LongInteger>(0);
+
+	LongInteger liWorking;
+
+	for (UINT i = 0; i < uNumParts; i++)
+	{
+		liWorking += (*vList[i] << (i * uSizeParts * BASEVALBITS));
+	}
+
+	liReturn = std::make_shared<LongInteger>(liWorking);
+
+
+
 	// The size of each data element needs to be sent in as LongIntegers chop off leading zeroes and
 	// we want to include leading zeroes
-	UINT uNewSize = 0;
+/*	UINT uNewSize = 0;
 	uNewSize = uSizeParts * uNumParts;
 
 	LongIntegerSP liReturn = std::make_shared<LongInteger>(0);
@@ -2592,16 +2586,16 @@ LongIntegerSP LongInteger::merge(vector<LongIntegerSP> vList, UINT uNumParts, UI
 	// Merge the data into the new array.
 	for (UINT i = 0; i < uNumParts; i++)
 	{
-		UINT uEnd = (uStart + vList[i]->getSize()); // In case the individual member is less than the max size specified
+		UINT uEnd = (uStart + vList[i]->size); // In case the individual member is less than the max size specified
 		for (UINT j = uStart, k = 0; j < uEnd; j++, k++)
 		{
-			newArray[j] = vList[i]->getDigit(k);
+			newArray[j] = vList[i]->digits[k];
 		}
 		uStart += uSizeParts;
 	}
 
 	liReturn->assignByteArray(newArray, uNewSize);
 	delete newArray;
-
+*/
 	return liReturn;
 }

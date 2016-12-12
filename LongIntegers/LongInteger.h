@@ -16,7 +16,7 @@ using std::shared_ptr;
 // The karatsuba algorithm is only accessed via the multiplyNumber method
 
 class LongInteger;
-typedef shared_ptr<LongInteger> LongIntegerSP;
+typedef shared_ptr<LongInteger> LongIntegerSP; // Started using shared_ptr because the number of deletes was getting out of hand
 
 class LongInteger
 {
