@@ -353,42 +353,79 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// Tests for random stuff under the "Arrow" button, because why not
 
 	// Test the new division algorithms
-	LongInteger liNumber, liDivisor, *pliResult, *pliRemainder;
-	pliRemainder = new LongInteger;
-	pliResult = new LongInteger;
+	LongInteger liNumber, liDivisor, *pliQuotient, *pliModulus;
 
-	// Test Burnikel-Ziegler division
-	LongInteger::BurnikelZiegler(liNumber, liDivisor, pliResult, pliRemainder);
+	for (UINT i = 10; i < 100; i++)
+	{
 
-	delete pliRemainder;
-	delete pliResult;
-	
+
+		byte *array1 = new byte[i];
+		for (UINT digits = 0; digits < i; digits++)
+		{
+			array1[digits] = 10;
+		}
+		liNumber.assignByteArray(array1, i);
+		for (UINT j = 6; j < i; j++)
+		{
+			byte *array2 = new byte[j];
+			for (UINT digits = 0; digits < j; digits++)
+			{
+				array2[digits] = 5;
+			}
+
+			liDivisor.assignByteArray(array2, j);
+
+			// Test Burnikel-Ziegler division
+			pliModulus = new LongInteger; // Make these shared pointers later on to simplify the memory management headaches
+			pliQuotient = new LongInteger;
+			LongInteger::BurnikelZiegler(liNumber, liDivisor, pliQuotient, pliModulus);
+
+			LongInteger liRealQuotient = liNumber / liDivisor;
+			LongInteger liRealModulus = liNumber % liDivisor;
+
+			CString strTestRQ, strTestRM, strTestQ, strTestM;
+			strTestRQ = liRealQuotient.toArrayNumbers();
+			strTestRM = liRealModulus.toArrayNumbers();
+			strTestQ = pliQuotient->toArrayNumbers();
+			strTestM = pliModulus->toArrayNumbers();
+
+			bool bWorked1 = *pliQuotient == liRealQuotient;
+			bool bWorked2 = *pliModulus == liRealModulus;
+			if (!(bWorked1 && bWorked2))
+				int iBreakPointInt = 0;
+
+			delete pliModulus;
+			delete pliQuotient;
+			delete array2;
+		}
+		delete array1;
+	}
 	return;
 
 	// Test restoring division
 	liNumber = 25;
 	liDivisor = 10;
 
-	LongInteger::RestoringDivision(liNumber, liDivisor, pliResult, pliRemainder);
+	LongInteger::RestoringDivision(liNumber, liDivisor, pliQuotient, pliModulus);
 	CString divResult;
-	divResult.Format(L"%s divided by %s = %s, remainder = %s", liNumber.toDecimal(), liDivisor.toDecimal(), pliResult->toDecimal(), pliRemainder->toDecimal());
+	divResult.Format(L"%s divided by %s = %s, remainder = %s", liNumber.toDecimal(), liDivisor.toDecimal(), pliQuotient->toDecimal(), pliModulus->toDecimal());
 
 
 	liNumber = 10000;
 	liDivisor = 111;
-	LongInteger::RestoringDivision(liNumber, liDivisor, pliResult, pliRemainder);
+	LongInteger::RestoringDivision(liNumber, liDivisor, pliQuotient, pliModulus);
 	// Result = 90, remainder 10
-	divResult.Format(L"%s divided by %s = %s, remainder = %s", liNumber.toDecimal(), liDivisor.toDecimal(), pliResult->toDecimal(), pliRemainder->toDecimal());
+	divResult.Format(L"%s divided by %s = %s, remainder = %s", liNumber.toDecimal(), liDivisor.toDecimal(), pliQuotient->toDecimal(), pliModulus->toDecimal());
 
 	liNumber = CString(L"1000000000000000");
 	liDivisor = 111111;
-	LongInteger::RestoringDivision(liNumber, liDivisor, pliResult, pliRemainder);
+	LongInteger::RestoringDivision(liNumber, liDivisor, pliQuotient, pliModulus);
 	// Result = 900090009000, remainder 1000
-	divResult.Format(L"%s divided by %s = %s, remainder = %s", liNumber.toDecimal(), liDivisor.toDecimal(), pliResult->toDecimal(), pliRemainder->toDecimal());
+	divResult.Format(L"%s divided by %s = %s, remainder = %s", liNumber.toDecimal(), liDivisor.toDecimal(), pliQuotient->toDecimal(), pliModulus->toDecimal());
 
 
-	delete pliResult;
-	delete pliRemainder;
+	delete pliQuotient;
+	delete pliModulus;
 
 
 
