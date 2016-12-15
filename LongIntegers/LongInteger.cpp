@@ -1343,9 +1343,8 @@ bool LongInteger::modulus(const LongInteger& liDivide)
 
 
 	// Compare sizes
-	// If the divisor is bigger than the number being divided then result is zero (we don't have decimals or fractions)
+	// If the divisor is bigger than the number being divided then the modulus is the original number
 	if (liDivide.size > size) {
-		assignNumber(0);
 		return !bOverflow;
 	}
 
@@ -2208,6 +2207,21 @@ CString LongInteger::toHexString() const
 }
 
 
+CString LongInteger::toArrayNumbers()
+{
+	// Output the number represented as each decimal number in the array (helps in testing really big numbers)
+	CString result = L"";
+	CString index;
+	for (UINT i = 0; i < size; i++)
+	{
+		if (i != 0) result.Append(L".");
+		index.Format(L"[%d]%d", i, digits[i]);
+		result.Append(index);
+	}
+	return result;
+}
+
+
 void LongInteger::RestoringDivision(LongInteger& liValue, LongInteger& liDiv, LongInteger* liResult, LongInteger* liModulus)
 {
 	// Slow division - restoring division
@@ -2320,7 +2334,7 @@ void LongInteger::BurnikelZiegler(LongInteger& liValue, LongInteger& liDiv, Long
 	// Very much in the testing phase, hence the chaotic layout (plus it is rather hard to understand the paper as I don't really
 	// know maths notation - so a lot of trial and error)
 
-	
+
 
 	// DivTwoDigitsByOne(AHigh, ALow, B), return quotient Q and remainder S
 	// 
@@ -2346,58 +2360,19 @@ void LongInteger::BurnikelZiegler(LongInteger& liValue, LongInteger& liDiv, Long
 	//17) }
 	//18) Return quotient q and remainder R
 
-	// A whole load of tests of split, merge and Div3By2 have worked
-	// Now test DivTwoDigitsByOne
-
-	// Make a LongInteger that is 4 bytes long. So AHigh is 2, ALow is 2.
-	// B gets chopped into 2, so make it 2 bytes long to keep the initial tests simple
-
-	// A = 1.2.3.4 = 16909060
-
-	// Just rewrote 'merge', so need to test this thoroughly
-	// Think up some test conditions
-	// Merging 1,1 size 1 = 257 (Hex 1.1)
-	// Merging 1,2.3 size 1 = Hex 3.3
-	// Merging 1,2.3 size 2 = Hex 1.2.3
-	// Merging 1.2.3,3.4.5 size 2 = Hex 1.2.6.4.5
-	// Merging 1.2,3 size 3 = 1.2.0.0.3
-
-
-	CString strA = L"16909060";
-	LongInteger liA = strA;
-	LongInteger liB = 257;
-
-	// 65794 , 2 - in hex 1.1.2 , 2
-
-	CString test, testHex;
-
-	testHex = liA.toHexString();
-	test = liA.toDecimal();
-
-	LongInteger liQuotient = liA / liB;
-	LongInteger liRemainder = liA % liB;
-
-	test = liQuotient.toDecimal();
-	testHex = liQuotient.toHexString();
-	test = liRemainder.toDecimal();
-	testHex = liRemainder.toHexString();
-
-	LongIntegerSP AHigh, ALow, B;
-	UINT uDigits = liA.size / 2;
+	
+	UINT uDigits = (liValue.size + 3) / 4;
 	vector<LongIntegerSP> vASplit(2);
-	vASplit = split(std::make_shared<LongInteger>(liA), 2, uDigits);
+	vASplit = split(std::make_shared<LongInteger>(liValue), 2, uDigits * 2);
 
-	testHex = vASplit[0]->toHexString();
-	testHex = vASplit[1]->toHexString();
+	vector<LongIntegerSP> vResult = DivTwoDigitsByOne(vASplit[1], vASplit[0], std::make_shared<LongInteger>(liDiv), uDigits);
 
-	vector<LongIntegerSP> vResult = DivTwoDigitsByOne(vASplit[1], vASplit[0], std::make_shared<LongInteger>(liB));
-
-	testHex = vResult[0]->toHexString();
-	testHex = vResult[1]->toHexString();
+	*liResult = *(vResult[0].get());
+	*liModulus = *(vResult[1].get());
 	
 }
 
-vector<LongIntegerSP> LongInteger::DivTwoDigitsByOne(LongIntegerSP AHigh, LongIntegerSP ALow, LongIntegerSP B)
+vector<LongIntegerSP> LongInteger::DivTwoDigitsByOne(LongIntegerSP AHigh, LongIntegerSP ALow, LongIntegerSP B, UINT uNumDigits)
 {
 	// DivTwoDigitsByOne(AHigh, ALow, B), return quotient Q and remainder S
 	// 
@@ -2426,41 +2401,99 @@ vector<LongIntegerSP> LongInteger::DivTwoDigitsByOne(LongIntegerSP AHigh, LongIn
 	vector<LongIntegerSP> vReturn(2); // Return Q & S
 
 	// Decide how many digits we are chopping up the numbers by (it needs to be consistent)
-	UINT uDigits = AHigh->getSize();
-	if (ALow->getSize() > uDigits) uDigits = ALow->getSize();
-	if (uDigits < 2) return vReturn;
-	uDigits /= 2;
-	if (uDigits % 2 == 1) uDigits++;
+	if (uNumDigits == 0) uNumDigits = 1;
 
 	vector<LongIntegerSP> vWorking;
-	vWorking = LongInteger::split(AHigh, 2, uDigits);
-	LongIntegerSP a1 = vWorking[0];
-	LongIntegerSP a2 = vWorking[1];
-	vWorking = LongInteger::split(ALow, 2, uDigits);
-	LongIntegerSP a3 = vWorking[0];
-	LongIntegerSP a4 = vWorking[1];
-	vWorking = LongInteger::split(B, 2, uDigits);
-	LongIntegerSP b1 = vWorking[0];
-	LongIntegerSP b2 = vWorking[1];
+	vWorking = LongInteger::split(AHigh, 2, uNumDigits);
+	LongIntegerSP a1 = vWorking[1];
+	LongIntegerSP a2 = vWorking[0];
+	vWorking = LongInteger::split(ALow, 2, uNumDigits);
+	LongIntegerSP a3 = vWorking[1];
+	LongIntegerSP a4 = vWorking[0];
+	vWorking = LongInteger::split(B, 2, uNumDigits);
+	LongIntegerSP b1 = vWorking[1];
+	LongIntegerSP b2 = vWorking[0];
+
+	CString strTesta1, strTesta2, strTesta3, strTesta4, strTestb1, strTestb2, strTestAH, strTestAL, strTestB;
+	strTestAH = AHigh->toArrayNumbers();
+	strTestAL = ALow->toArrayNumbers();
+	strTestB = B->toArrayNumbers();
+	strTesta1 = a1->toArrayNumbers();
+	strTesta1 = a2->toArrayNumbers();
+	strTesta1 = a3->toArrayNumbers();
+	strTesta1 = a4->toArrayNumbers();
+	strTesta1 = b1->toArrayNumbers();
+	strTesta1 = b2->toArrayNumbers();
+
+
 
 	vector<LongIntegerSP> vResult1, vResult2;
 	// 2) [q1,R] = DivThreeHalvesByTwo(a1,a2,a3,b1,b2)
-	vResult1 = DivThreeHalvesByTwo(a1, a2, a3, b1, b2, uDigits);
+	LongInteger a1a2a3 = (*a1 << (uNumDigits * BASEVALBITS * 2)) + (*a2 << (uNumDigits * BASEVALBITS)) + *a3;
+	if (a1a2a3 < *B) {
+		vResult1.push_back(std::make_shared<LongInteger>(LongInteger()));
+		vResult1.push_back(std::make_shared<LongInteger>(a1a2a3));
+	} else
+		vResult1 = DivThreeHalvesByTwo(a1, a2, a3, b1, b2, uNumDigits);
+
+	LongInteger liabit = (*a1 << (uNumDigits * 16)) + (*a2 << (uNumDigits * 8)) + *a3;
+	LongInteger libbit = (*b1 << (uNumDigits * 8)) + *b2;
+	CString testa, testb;
+	testa = liabit.toArrayNumbers();
+	testb = libbit.toArrayNumbers();
+	bool bTest = libbit == *B;
+	LongInteger liRealQ = liabit / libbit;
+	LongInteger liRealM = liabit % libbit;
+
+	CString strRQ, strRM, strQ, strM;
+	strRQ = liRealQ.toArrayNumbers();
+	strRM = liRealM.toArrayNumbers();
+	strQ = vResult1[0]->toArrayNumbers();
+	strM = vResult1[1]->toArrayNumbers();
+
+	bool bWorkedQ = liRealQ == *vResult1[0];
+	bool bWorkedM = liRealM == *vResult1[1];
+
 
 	// 3) Let [r1,r2]=R
-	vWorking = LongInteger::split(vResult1[1], 2, uDigits);
-	LongIntegerSP r1 = vWorking[0];
-	LongIntegerSP r2 = vWorking[1];
+	vWorking = LongInteger::split(vResult1[1], 2, uNumDigits);
+	LongIntegerSP r1 = vWorking[1];
+	LongIntegerSP r2 = vWorking[0];
 
 	// 4) [q2,S] = DivThreeHalvesByTwo(r1,r2,a4,b1,b2)
-	vResult2 = DivThreeHalvesByTwo(r1, r2, a4, b1, b2, uDigits);
+	a1a2a3 = (*vResult1[1] << (uNumDigits * BASEVALBITS)) + *a3;
+	if (a1a2a3 < *B) {
+		vResult2.push_back(std::make_shared<LongInteger>(LongInteger()));
+		vResult2.push_back(std::make_shared<LongInteger>(a1a2a3));
+	}
+	else
+		vResult2 = DivThreeHalvesByTwo(r1, r2, a4, b1, b2, uNumDigits);
+
+	liabit = (*r1 << (uNumDigits * 16)) + (*r2 << (uNumDigits * 8)) + *a4;
+	libbit = (*b1 << (uNumDigits * 8)) + *b2;
+	testa = liabit.toArrayNumbers();
+	testb = libbit.toArrayNumbers();
+
+	liRealQ = liabit / libbit;
+	liRealM = liabit % libbit;
+	strRQ = liRealQ.toArrayNumbers();
+	strRM = liRealM.toArrayNumbers();
+	strQ = vResult2[0]->toArrayNumbers();
+	strM = vResult2[1]->toArrayNumbers();
+
+	bWorkedQ = liRealQ == *vResult2[0];
+	bWorkedM = liRealM == *vResult2[1];
 
 	// 5) Return Q=[q1,q2] and S
+	CString testv1 = vResult2[1]->toArrayNumbers();
 	vReturn[1] = vResult2[1];
 	vector<LongIntegerSP> Q(2);
-	Q[0] = vResult1[0];
-	Q[1] = vResult2[0];
-	vReturn[0] = merge(Q, 2, uDigits);
+	Q[1] = vResult1[0];
+	Q[0] = vResult2[0];
+	CString testq0 = vResult1[0]->toArrayNumbers();
+	CString testq1 = vResult2[0]->toArrayNumbers();
+	vReturn[0] = merge(Q, 2, uNumDigits);
+	CString testv0 = vReturn[0]->toArrayNumbers();
 
 	return vReturn;
 }
@@ -2532,6 +2565,10 @@ vector<LongIntegerSP> LongInteger::DivThreeHalvesByTwo(LongIntegerSP a2, LongInt
 	vMerge[0] = b0;
 	vMerge[1] = b1;
 	B = merge(vMerge, 2, uNumDigits);
+	CString strTestb0, strTestb1, strTestB;
+	strTestb0 = b0->toArrayNumbers();
+	strTestb1 = b1->toArrayNumbers();
+	strTestB = B->toArrayNumbers();
 
 	while (*R < 0) {
 		*R += *B;
@@ -2539,9 +2576,28 @@ vector<LongIntegerSP> LongInteger::DivThreeHalvesByTwo(LongIntegerSP a2, LongInt
 	}
 
 	// Added to handle a scenario not mentioned in the algorithm
+	// Need to speed this up a bit as it can loop for up to 256^uNumDigits-1 times - which can be a lot!
 	while (*R >= *B) {
-		*R -= *B;
-		(*Q)++;
+		UINT uDiff = 0;
+//		UINT uDiff = R->size - B->size;
+//		if (uDiff != 0)
+//			uDiff--; // To avoid multiplying B until it is larger than R
+//		uDiff *= BASEVALBITS;
+		// Try to get the exact number of bits different
+//		int uDiffBits = R->digits[(R->size - 1)] - B->digits[(B->size - 1)];
+//		while (uDiffBits > 1)
+//		{	
+//			uDiffBits /= 2;
+//			uDiff++;
+//		}
+//		while (uDiffBits < -1 && uDiffBits != 0)
+//		{
+//			uDiffBits /= 2;
+//			uDiff--;
+//		}
+
+		*R -= (*B << uDiff);
+		*Q += (1 << uDiff);
 	}
 
 	vResult[0] = std::make_shared<LongInteger>(*Q);
@@ -2559,6 +2615,7 @@ LongIntegerSP LongInteger::merge(vector<LongIntegerSP> vList, UINT uNumParts, UI
 	// Merge the contents of liList into a single LongInteger
 
 	// Need to rework this as I've hit scenarios where the components can be bigger than uSizeParts
+	// It originally used memcpy for speed, but with potentially overlapping values that can't be used
 	LongIntegerSP liReturn = std::make_shared<LongInteger>(0);
 
 	LongInteger liWorking;
@@ -2570,32 +2627,5 @@ LongIntegerSP LongInteger::merge(vector<LongIntegerSP> vList, UINT uNumParts, UI
 
 	liReturn = std::make_shared<LongInteger>(liWorking);
 
-
-
-	// The size of each data element needs to be sent in as LongIntegers chop off leading zeroes and
-	// we want to include leading zeroes
-/*	UINT uNewSize = 0;
-	uNewSize = uSizeParts * uNumParts;
-
-	LongIntegerSP liReturn = std::make_shared<LongInteger>(0);
-	byte* newArray = new byte[uNewSize];
-	// Clear out the new array
-	memset(newArray, 0, uNewSize);
-
-	UINT uStart = 0;
-	// Merge the data into the new array.
-	for (UINT i = 0; i < uNumParts; i++)
-	{
-		UINT uEnd = (uStart + vList[i]->size); // In case the individual member is less than the max size specified
-		for (UINT j = uStart, k = 0; j < uEnd; j++, k++)
-		{
-			newArray[j] = vList[i]->digits[k];
-		}
-		uStart += uSizeParts;
-	}
-
-	liReturn->assignByteArray(newArray, uNewSize);
-	delete newArray;
-*/
 	return liReturn;
 }
