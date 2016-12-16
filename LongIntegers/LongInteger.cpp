@@ -1092,6 +1092,10 @@ bool LongInteger::divideNumber(const LongInteger& liDivide)
 	// the number being divided and then subtracted. This will reduce the number of subtractions
 	// How to do this?
 
+	// Dividing zero doesn't get you anywhere
+	if (size == 0)
+		return !bOverflow;
+
 	// Compare sizes
 	// If the divisor is bigger than the number being divided then result is zero (we don't have decimals or fractions)
 	if (liDivide.size > size) {
@@ -1341,6 +1345,16 @@ bool LongInteger::modulus(const LongInteger& liDivide)
 	// Simplest - though least efficient method - is to subtract liDivide
 	// until liDivide is greater than the number held and that is the remainder
 
+	// Some sanity checks
+	// 0 mod n = 0
+	if (size == 0)
+		return !bOverflow;
+
+	// n mod 0 = undefined. For practicality, set this to zero
+	if (liDivide.size == 0) {
+		assignNumber(0);
+		return !bOverflow;
+	}
 
 	// Compare sizes
 	// If the divisor is bigger than the number being divided then the modulus is the original number
@@ -2106,7 +2120,7 @@ vector<LongIntegerSP> LongInteger::split(LongIntegerSP liToSplit, UINT uNumParts
 	
 	vector<LongIntegerSP> vList(uNumParts);
 	for (UINT i = 0; i < uNumParts; i++) {
-		vList[i] = std::make_shared<LongInteger>(0);
+		vList[i] = make_shared<LongInteger>(0);
 	}
 
 	UINT uNumSplits = uNumParts;
@@ -2360,12 +2374,11 @@ void LongInteger::BurnikelZiegler(LongInteger& liValue, LongInteger& liDiv, Long
 	//17) }
 	//18) Return quotient q and remainder R
 
-	
 	UINT uDigits = (liValue.size + 3) / 4;
 	vector<LongIntegerSP> vASplit(2);
-	vASplit = split(std::make_shared<LongInteger>(liValue), 2, uDigits * 2);
+	vASplit = split(make_shared<LongInteger>(liValue), 2, uDigits * 2);
 
-	vector<LongIntegerSP> vResult = DivTwoDigitsByOne(vASplit[1], vASplit[0], std::make_shared<LongInteger>(liDiv), uDigits);
+	vector<LongIntegerSP> vResult = DivTwoDigitsByOne(vASplit[1], vASplit[0], make_shared<LongInteger>(liDiv), uDigits);
 
 	*liResult = *(vResult[0].get());
 	*liModulus = *(vResult[1].get());
@@ -2419,29 +2432,33 @@ vector<LongIntegerSP> LongInteger::DivTwoDigitsByOne(LongIntegerSP AHigh, LongIn
 	strTestAL = ALow->toArrayNumbers();
 	strTestB = B->toArrayNumbers();
 	strTesta1 = a1->toArrayNumbers();
-	strTesta1 = a2->toArrayNumbers();
-	strTesta1 = a3->toArrayNumbers();
-	strTesta1 = a4->toArrayNumbers();
-	strTesta1 = b1->toArrayNumbers();
-	strTesta1 = b2->toArrayNumbers();
+	strTesta2 = a2->toArrayNumbers();
+	strTesta3 = a3->toArrayNumbers();
+	strTesta4 = a4->toArrayNumbers();
+	strTestb1 = b1->toArrayNumbers();
+	strTestb2 = b2->toArrayNumbers();
 
 
 
 	vector<LongIntegerSP> vResult1, vResult2;
 	// 2) [q1,R] = DivThreeHalvesByTwo(a1,a2,a3,b1,b2)
 	LongInteger a1a2a3 = (*a1 << (uNumDigits * BASEVALBITS * 2)) + (*a2 << (uNumDigits * BASEVALBITS)) + *a3;
-	if (a1a2a3 < *B) {
-		vResult1.push_back(std::make_shared<LongInteger>(LongInteger()));
-		vResult1.push_back(std::make_shared<LongInteger>(a1a2a3));
-	} else
-		vResult1 = DivThreeHalvesByTwo(a1, a2, a3, b1, b2, uNumDigits);
 
-	LongInteger liabit = (*a1 << (uNumDigits * 16)) + (*a2 << (uNumDigits * 8)) + *a3;
+	LongInteger liabit = a1a2a3;
 	LongInteger libbit = (*b1 << (uNumDigits * 8)) + *b2;
 	CString testa, testb;
 	testa = liabit.toArrayNumbers();
 	testb = libbit.toArrayNumbers();
 	bool bTest = libbit == *B;
+
+	if (a1a2a3 < *B) {
+		vResult1.push_back(make_shared<LongInteger>(LongInteger()));
+		vResult1.push_back(make_shared<LongInteger>(a1a2a3));
+	} else
+		vResult1 = DivThreeHalvesByTwo(a1, a2, a3, b1, b2, uNumDigits);
+
+
+
 	LongInteger liRealQ = liabit / libbit;
 	LongInteger liRealM = liabit % libbit;
 
@@ -2461,10 +2478,10 @@ vector<LongIntegerSP> LongInteger::DivTwoDigitsByOne(LongIntegerSP AHigh, LongIn
 	LongIntegerSP r2 = vWorking[0];
 
 	// 4) [q2,S] = DivThreeHalvesByTwo(r1,r2,a4,b1,b2)
-	a1a2a3 = (*vResult1[1] << (uNumDigits * BASEVALBITS)) + *a3;
+	a1a2a3 = (*vResult1[1] << (uNumDigits * BASEVALBITS)) + *a4;
 	if (a1a2a3 < *B) {
-		vResult2.push_back(std::make_shared<LongInteger>(LongInteger()));
-		vResult2.push_back(std::make_shared<LongInteger>(a1a2a3));
+		vResult2.push_back(make_shared<LongInteger>(LongInteger()));
+		vResult2.push_back(make_shared<LongInteger>(a1a2a3));
 	}
 	else
 		vResult2 = DivThreeHalvesByTwo(r1, r2, a4, b1, b2, uNumDigits);
@@ -2548,7 +2565,9 @@ vector<LongIntegerSP> LongInteger::DivThreeHalvesByTwo(LongIntegerSP a2, LongInt
 	Q = new LongInteger;
 	R = new LongInteger;
 
-	if (*a2 < *b1) {
+//	if (*a2 < *b1) 
+//	{
+	if (*b1 != 0) {
 		*Q = ((*a2) << (uNumDigits * LongInteger::BASEVALBITS)) + (*a1);
 		// The next 2 lines can be done recursively as they are division and modulus
 		// Leave as non-recursive until we are sure this works
@@ -2556,52 +2575,95 @@ vector<LongIntegerSP> LongInteger::DivThreeHalvesByTwo(LongIntegerSP a2, LongInt
 		*Q /= *b1;
 	}
 	else {
-		*Q = (LongInteger::BASEVAL * uNumDigits) - 1;
+		//*Q = ((*a2) << (uNumDigits * LongInteger::BASEVALBITS)) + (*a1);
+		//*R = 0;
+
+
+		*Q = (1 << (uNumDigits * BASEVALBITS)) - 1;
 		*R = ((*a2 - *b1) << (uNumDigits * LongInteger::BASEVALBITS)) + *a1 + *b1;
 	}
+//	}
+//	else {
+		// In most cases these lines worked, but in a few they didn't. Unexpectedly,
+		// the part of the 'if' case works, except that R ends up hugely negative
+		//*Q = (1 << (uNumDigits * BASEVALBITS)) - 1;
+		//*R = ((*a2 - *b1) << (uNumDigits * LongInteger::BASEVALBITS)) + *a1 + *b1;
+//	}
 
 	*R = (*R << (uNumDigits * LongInteger::BASEVALBITS)) + *a0 - (*Q * *b0);
 
 	vMerge[0] = b0;
 	vMerge[1] = b1;
 	B = merge(vMerge, 2, uNumDigits);
-	CString strTestb0, strTestb1, strTestB;
-	strTestb0 = b0->toArrayNumbers();
-	strTestb1 = b1->toArrayNumbers();
-	strTestB = B->toArrayNumbers();
 
 	while (*R < 0) {
-		*R += *B;
-		(*Q)--;
+		// In some scenarios R can end up massively negative, so make B a lot bigger
+		UINT uDiff = R->size - B->size;
+
+		uDiff *= BASEVALBITS;
+		// Try to get the exact number of bits different
+		int uDiffBits = R->digits[(R->size - 1)] / B->digits[(B->size - 1)];
+		while (uDiffBits > 2)
+		{	
+			uDiffBits /= 2;
+			uDiff++;
+		}
+
+		*R += (*B << uDiff);
+		*Q -= (LongInteger(1) << uDiff);
 	}
 
 	// Added to handle a scenario not mentioned in the algorithm
 	// Need to speed this up a bit as it can loop for up to 256^uNumDigits-1 times - which can be a lot!
 	while (*R >= *B) {
-		UINT uDiff = 0;
-//		UINT uDiff = R->size - B->size;
+//		UINT uDiff = 0;
+		CString testR, testB, testRsub, testQadd;
+		testR = R->toArrayNumbers();
+		testB = B->toArrayNumbers();
+		UINT uDiff = R->size - B->size;
 //		if (uDiff != 0)
 //			uDiff--; // To avoid multiplying B until it is larger than R
-//		uDiff *= BASEVALBITS;
+		uDiff *= BASEVALBITS;
 		// Try to get the exact number of bits different
-//		int uDiffBits = R->digits[(R->size - 1)] - B->digits[(B->size - 1)];
-//		while (uDiffBits > 1)
-//		{	
-//			uDiffBits /= 2;
-//			uDiff++;
-//		}
-//		while (uDiffBits < -1 && uDiffBits != 0)
-//		{
-//			uDiffBits /= 2;
-//			uDiff--;
-//		}
+		if (R->digits[(R->size - 1)] > B->digits[(B->size - 1)]) {
+			int uDiffBits = R->digits[(R->size - 1)] / B->digits[(B->size - 1)];
+			while (uDiffBits > 1)
+			{
+				uDiffBits /= 2;
+				uDiff++;
+			}
+		}
+		else {
+			int uDiffBits = B->digits[(B->size - 1)] / R->digits[(R->size - 1)];
+			while (uDiffBits > 1)
+			{
+				uDiffBits /= 2;
+				uDiff--;
+			}
+		}
+		// *temp created to check we aren't deleting too large a number
+		// It is very hard to get the balance between too large and too small
+		// This is an overhead, but it should reduce the number of loops and so 
+		// save more than it costs
+		LongInteger* temp = new LongInteger((*B << uDiff));
+		while (*temp > *R) {
+			*temp /= 2;
+			uDiff--;
+		}
 
-		*R -= (*B << uDiff);
-		*Q += (1 << uDiff);
+		*R -= *temp;
+		delete temp;
+		if (R->bPositive == false)
+			int breakpointint = 0;
+		*Q += (LongInteger(1) << uDiff);
+		testRsub = (*B << uDiff).toArrayNumbers();
+		testQadd = (LongInteger(1) << uDiff).toArrayNumbers();
+		testR = R->toArrayNumbers();
+		testB = B->toArrayNumbers();
 	}
 
-	vResult[0] = std::make_shared<LongInteger>(*Q);
-	vResult[1] = std::make_shared<LongInteger>(*R);
+	vResult[0] = make_shared<LongInteger>(*Q);
+	vResult[1] = make_shared<LongInteger>(*R);
 
 	delete Q;
 	delete R;
@@ -2616,7 +2678,7 @@ LongIntegerSP LongInteger::merge(vector<LongIntegerSP> vList, UINT uNumParts, UI
 
 	// Need to rework this as I've hit scenarios where the components can be bigger than uSizeParts
 	// It originally used memcpy for speed, but with potentially overlapping values that can't be used
-	LongIntegerSP liReturn = std::make_shared<LongInteger>(0);
+	LongIntegerSP liReturn = make_shared<LongInteger>(0);
 
 	LongInteger liWorking;
 
@@ -2625,7 +2687,7 @@ LongIntegerSP LongInteger::merge(vector<LongIntegerSP> vList, UINT uNumParts, UI
 		liWorking += (*vList[i] << (i * uSizeParts * BASEVALBITS));
 	}
 
-	liReturn = std::make_shared<LongInteger>(liWorking);
+	liReturn = make_shared<LongInteger>(liWorking);
 
 	return liReturn;
 }

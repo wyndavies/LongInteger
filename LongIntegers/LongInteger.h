@@ -3,6 +3,7 @@
 #include <memory>
 using std::vector;
 using std::shared_ptr;
+using std::make_shared;
 
 // Header for LongInteger file. Can handle positive integers up to 4 billion digits in length.
 // It holds the number as a byte array and indexes it using an uint (hence the size limit)
@@ -22,14 +23,20 @@ class LongInteger
 {
 public:
 	// Have these listed here whilst still working on them
-	static LongInteger* ToomCook3(const LongInteger&, const LongInteger&); // Still in testing. 3rd parameter is cutoff value as part of tests
 
+	// Still in testing. Performance is weird (improves dramatically at multiples of 350 and then drops rapidly until the next multiple is hit)
+	static LongInteger* ToomCook3(const LongInteger&, const LongInteger&);
+
+	// Restoring division seems to work fine. Some more testing needed to see what the performance is
 	static void RestoringDivision(LongInteger&, LongInteger&, LongInteger*, LongInteger*);
+
+	// This is under development. The code is rather messy as I'm struggling to follow the paper due to the heavy usage of maths
+	// terminology I'm unfamiliar with.
 	static void BurnikelZiegler(LongInteger&, LongInteger&, LongInteger*, LongInteger*);
 
 	static shared_ptr<LongInteger> merge(vector<LongIntegerSP> vList, UINT uNumParts, UINT uSizeParts);
 	static vector<LongIntegerSP> DivThreeHalvesByTwo(LongIntegerSP a1, LongIntegerSP a2, LongIntegerSP a3, LongIntegerSP b1, LongIntegerSP b2, UINT uNumDigits);
-	static vector<LongIntegerSP> DivTwoDigitsByOne(LongIntegerSP AHigh, LongIntegerSP ALow, LongIntegerSP B);
+	static vector<LongIntegerSP> DivTwoDigitsByOne(LongIntegerSP AHigh, LongIntegerSP ALow, LongIntegerSP B, UINT uNumDigits);
 	// A generic splitting function. Split the input LongInteger into UINT parts of UINT length and return as an array of LongIntegers
 	static vector<shared_ptr<LongInteger>> split(LongIntegerSP, UINT, UINT);
 
@@ -39,13 +46,13 @@ private:
 
 	// Constants
 public:
-	static const int BASEVAL = 256; // The effect base of the digits
+	static const int BASEVAL = 256; // The effective base of the numbers (each digit is 1 byte)
 	static const int BASEVALBITS = 8; // Size of each digit in bits
 	static const byte BASEMAX = 255; // Highest value that can be stored in each digit
 	static const UINT ABSMAXSIZE = 4294967295; // Largest number of values that can be stored (index is by uint, so 2^32-1)
 	static const UINT SIZESTEP = 10000; // Internal byte array is increased or decreased in block of this size
 	static const UINT KARATSBUACUTOFF = 50; // Karatsuba cutoff size. Numbers below this size will use long multiplication
-	static const UINT TOOMCOOK3CUTOFF = 150; // Testing shows this is the optimal value
+	static const UINT TOOMCOOK3CUTOFF = 150; // Testing shows this is the optimal value. Update - 150 is the best in debug builds. In release builds it is not. In release it is all over the place.
 
 public:
 	// For testing only
@@ -76,7 +83,8 @@ public:
 
 	// Conversion methods
 	CString toDecimal();
-	CString toHexString() const;
+	CString toHexString() const; // Useful for testing
+	CString toArrayNumbers();    // Also useful for testing
 	explicit operator int(); // Convert to int. Make it explicit to avoid confusion in other methods
 	explicit operator UINT();
 	

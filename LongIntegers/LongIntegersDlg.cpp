@@ -355,7 +355,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// Test the new division algorithms
 	LongInteger liNumber, liDivisor, *pliQuotient, *pliModulus;
 
-	for (UINT i = 10; i < 100; i++)
+	for (UINT i = 1; i < 100; i++)
 	{
 
 
@@ -365,7 +365,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 			array1[digits] = 10;
 		}
 		liNumber.assignByteArray(array1, i);
-		for (UINT j = 6; j < i; j++)
+		for (UINT j = 1; j < 100; j++)
 		{
 			byte *array2 = new byte[j];
 			for (UINT digits = 0; digits < j; digits++)
