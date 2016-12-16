@@ -2427,50 +2427,15 @@ vector<LongIntegerSP> LongInteger::DivTwoDigitsByOne(LongIntegerSP AHigh, LongIn
 	LongIntegerSP b1 = vWorking[1];
 	LongIntegerSP b2 = vWorking[0];
 
-	CString strTesta1, strTesta2, strTesta3, strTesta4, strTestb1, strTestb2, strTestAH, strTestAL, strTestB;
-	strTestAH = AHigh->toArrayNumbers();
-	strTestAL = ALow->toArrayNumbers();
-	strTestB = B->toArrayNumbers();
-	strTesta1 = a1->toArrayNumbers();
-	strTesta2 = a2->toArrayNumbers();
-	strTesta3 = a3->toArrayNumbers();
-	strTesta4 = a4->toArrayNumbers();
-	strTestb1 = b1->toArrayNumbers();
-	strTestb2 = b2->toArrayNumbers();
-
-
-
 	vector<LongIntegerSP> vResult1, vResult2;
 	// 2) [q1,R] = DivThreeHalvesByTwo(a1,a2,a3,b1,b2)
 	LongInteger a1a2a3 = (*a1 << (uNumDigits * BASEVALBITS * 2)) + (*a2 << (uNumDigits * BASEVALBITS)) + *a3;
-
-	LongInteger liabit = a1a2a3;
-	LongInteger libbit = (*b1 << (uNumDigits * 8)) + *b2;
-	CString testa, testb;
-	testa = liabit.toArrayNumbers();
-	testb = libbit.toArrayNumbers();
-	bool bTest = libbit == *B;
 
 	if (a1a2a3 < *B) {
 		vResult1.push_back(make_shared<LongInteger>(LongInteger()));
 		vResult1.push_back(make_shared<LongInteger>(a1a2a3));
 	} else
 		vResult1 = DivThreeHalvesByTwo(a1, a2, a3, b1, b2, uNumDigits);
-
-
-
-	LongInteger liRealQ = liabit / libbit;
-	LongInteger liRealM = liabit % libbit;
-
-	CString strRQ, strRM, strQ, strM;
-	strRQ = liRealQ.toArrayNumbers();
-	strRM = liRealM.toArrayNumbers();
-	strQ = vResult1[0]->toArrayNumbers();
-	strM = vResult1[1]->toArrayNumbers();
-
-	bool bWorkedQ = liRealQ == *vResult1[0];
-	bool bWorkedM = liRealM == *vResult1[1];
-
 
 	// 3) Let [r1,r2]=R
 	vWorking = LongInteger::split(vResult1[1], 2, uNumDigits);
@@ -2486,31 +2451,12 @@ vector<LongIntegerSP> LongInteger::DivTwoDigitsByOne(LongIntegerSP AHigh, LongIn
 	else
 		vResult2 = DivThreeHalvesByTwo(r1, r2, a4, b1, b2, uNumDigits);
 
-	liabit = (*r1 << (uNumDigits * 16)) + (*r2 << (uNumDigits * 8)) + *a4;
-	libbit = (*b1 << (uNumDigits * 8)) + *b2;
-	testa = liabit.toArrayNumbers();
-	testb = libbit.toArrayNumbers();
-
-	liRealQ = liabit / libbit;
-	liRealM = liabit % libbit;
-	strRQ = liRealQ.toArrayNumbers();
-	strRM = liRealM.toArrayNumbers();
-	strQ = vResult2[0]->toArrayNumbers();
-	strM = vResult2[1]->toArrayNumbers();
-
-	bWorkedQ = liRealQ == *vResult2[0];
-	bWorkedM = liRealM == *vResult2[1];
-
 	// 5) Return Q=[q1,q2] and S
-	CString testv1 = vResult2[1]->toArrayNumbers();
 	vReturn[1] = vResult2[1];
 	vector<LongIntegerSP> Q(2);
 	Q[1] = vResult1[0];
 	Q[0] = vResult2[0];
-	CString testq0 = vResult1[0]->toArrayNumbers();
-	CString testq1 = vResult2[0]->toArrayNumbers();
 	vReturn[0] = merge(Q, 2, uNumDigits);
-	CString testv0 = vReturn[0]->toArrayNumbers();
 
 	return vReturn;
 }
@@ -2556,6 +2502,12 @@ vector<LongIntegerSP> LongInteger::DivThreeHalvesByTwo(LongIntegerSP a2, LongInt
 	Checking for this is best done in the calling program
 	*/
 
+	/*
+	This has ended up diverging from the algorithm described and from an example implementation I found, which
+	worries me somewhat. Part of it is because I'm working in base 256 and the descriptions
+	are for binary, but even so there shouldn't have been major changes.
+	*/
+
 	vector<LongIntegerSP> vResult(2); // To hold q & R
 	vector<LongIntegerSP> vMerge(2);
 
@@ -2565,8 +2517,6 @@ vector<LongIntegerSP> LongInteger::DivThreeHalvesByTwo(LongIntegerSP a2, LongInt
 	Q = new LongInteger;
 	R = new LongInteger;
 
-//	if (*a2 < *b1) 
-//	{
 	if (*b1 != 0) {
 		*Q = ((*a2) << (uNumDigits * LongInteger::BASEVALBITS)) + (*a1);
 		// The next 2 lines can be done recursively as they are division and modulus
@@ -2575,20 +2525,9 @@ vector<LongIntegerSP> LongInteger::DivThreeHalvesByTwo(LongIntegerSP a2, LongInt
 		*Q /= *b1;
 	}
 	else {
-		//*Q = ((*a2) << (uNumDigits * LongInteger::BASEVALBITS)) + (*a1);
-		//*R = 0;
-
-
 		*Q = (1 << (uNumDigits * BASEVALBITS)) - 1;
-		*R = ((*a2 - *b1) << (uNumDigits * LongInteger::BASEVALBITS)) + *a1 + *b1;
+		*R = ((*a2) << (uNumDigits * LongInteger::BASEVALBITS)) + *a1;
 	}
-//	}
-//	else {
-		// In most cases these lines worked, but in a few they didn't. Unexpectedly,
-		// the part of the 'if' case works, except that R ends up hugely negative
-		//*Q = (1 << (uNumDigits * BASEVALBITS)) - 1;
-		//*R = ((*a2 - *b1) << (uNumDigits * LongInteger::BASEVALBITS)) + *a1 + *b1;
-//	}
 
 	*R = (*R << (uNumDigits * LongInteger::BASEVALBITS)) + *a0 - (*Q * *b0);
 
@@ -2615,14 +2554,11 @@ vector<LongIntegerSP> LongInteger::DivThreeHalvesByTwo(LongIntegerSP a2, LongInt
 
 	// Added to handle a scenario not mentioned in the algorithm
 	// Need to speed this up a bit as it can loop for up to 256^uNumDigits-1 times - which can be a lot!
+	// Speed up code added by adding left-shifts. uDiff is the number of bits to left-shift
+	// There are still awkward scenarios. The worst case is that this loop runs for log2(B) times, which isn't great
+	// but a lot less than before
 	while (*R >= *B) {
-//		UINT uDiff = 0;
-		CString testR, testB, testRsub, testQadd;
-		testR = R->toArrayNumbers();
-		testB = B->toArrayNumbers();
 		UINT uDiff = R->size - B->size;
-//		if (uDiff != 0)
-//			uDiff--; // To avoid multiplying B until it is larger than R
 		uDiff *= BASEVALBITS;
 		// Try to get the exact number of bits different
 		if (R->digits[(R->size - 1)] > B->digits[(B->size - 1)]) {
@@ -2645,21 +2581,14 @@ vector<LongIntegerSP> LongInteger::DivThreeHalvesByTwo(LongIntegerSP a2, LongInt
 		// It is very hard to get the balance between too large and too small
 		// This is an overhead, but it should reduce the number of loops and so 
 		// save more than it costs
-		LongInteger* temp = new LongInteger((*B << uDiff));
+		LongInteger* temp = new LongInteger(*B << uDiff);
 		while (*temp > *R) {
-			*temp /= 2;
+			*temp >>= 1;
 			uDiff--;
 		}
-
 		*R -= *temp;
 		delete temp;
-		if (R->bPositive == false)
-			int breakpointint = 0;
 		*Q += (LongInteger(1) << uDiff);
-		testRsub = (*B << uDiff).toArrayNumbers();
-		testQadd = (LongInteger(1) << uDiff).toArrayNumbers();
-		testR = R->toArrayNumbers();
-		testB = B->toArrayNumbers();
 	}
 
 	vResult[0] = make_shared<LongInteger>(*Q);
