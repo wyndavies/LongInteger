@@ -353,24 +353,36 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// Tests for random stuff under the "Arrow" button, because why not
 
 	// Test the new division algorithms
+
+
+
+	CStdioFile writeHex;
+	writeHex.Open(L"D:\\hextex.txt", CFile::modeCreate | CFile::modeReadWrite);
+	CString newline = L"\n";
+	CString writing;
+	auto startTimetbz = std::chrono::high_resolution_clock::now();
+	auto endTimetbz = std::chrono::high_resolution_clock::now();
+	auto startTimeld = std::chrono::high_resolution_clock::now();
+	auto endTimeld = std::chrono::high_resolution_clock::now();
+
 	LongInteger liNumber, liDivisor, *pliQuotient, *pliModulus;
 
-	for (UINT i = 1; i < 100; i++)
+
+	for (UINT i = 10; i < 1010; i+=10)
 	{
-
-
 		byte *array1 = new byte[i];
 		for (UINT digits = 0; digits < i; digits++)
 		{
-			array1[digits] = 10;
+			array1[digits] = (std::rand() % 256);
 		}
 		liNumber.assignByteArray(array1, i);
-		for (UINT j = 1; j < 100; j++)
 		{
+			UINT j = std::sqrt(i);
+			if (j < 0) j = 1;
 			byte *array2 = new byte[j];
 			for (UINT digits = 0; digits < j; digits++)
 			{
-				array2[digits] = 5;
+				array2[digits] = (std::rand() % 256);
 			}
 
 			liDivisor.assignByteArray(array2, j);
@@ -378,9 +390,16 @@ void CLongIntegersDlg::OnClickedIdarrow()
 			// Test Burnikel-Ziegler division
 			pliModulus = new LongInteger; // Make these shared pointers later on to simplify the memory management headaches
 			pliQuotient = new LongInteger;
-			LongInteger::BurnikelZiegler(liNumber, liDivisor, pliQuotient, pliModulus);
 
+
+			startTimetbz = std::chrono::high_resolution_clock::now();
+			LongInteger::BurnikelZiegler(liNumber, liDivisor, pliQuotient, pliModulus);
+			endTimetbz = std::chrono::high_resolution_clock::now();
+
+			startTimeld = std::chrono::high_resolution_clock::now();
 			LongInteger liRealQuotient = liNumber / liDivisor;
+			endTimeld = std::chrono::high_resolution_clock::now();
+
 			LongInteger liRealModulus = liNumber % liDivisor;
 
 			CString strTestRQ, strTestRM, strTestQ, strTestM;
@@ -394,12 +413,26 @@ void CLongIntegersDlg::OnClickedIdarrow()
 			if (!(bWorked1 && bWorked2))
 				int iBreakPointInt = 0;
 
+
+			auto diff1 = std::chrono::duration_cast<std::chrono::microseconds>(endTimetbz - startTimetbz).count();
+			auto diff2 = std::chrono::duration_cast<std::chrono::microseconds>(endTimeld - startTimeld).count();
+			writing.Format(L"ValueSize,%d,DivSize,%d,BZ,%d,LD,%d,", i,j, diff1, diff2);
+			if (diff1 < diff2) writing.Append(L"BZ");
+			if (diff2 < diff1) writing.Append(L"LD");
+			if (diff1 == diff2) writing.Append(L"BZ & LD");
+
+			writeHex.WriteString(writing);
+			writeHex.WriteString(newline);
+
+
+
 			delete pliModulus;
 			delete pliQuotient;
 			delete array2;
 		}
 		delete array1;
 	}
+	writeHex.Close();
 	return;
 
 	// Test restoring division
@@ -448,7 +481,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	strNum1 = L"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
 	strNum2 = L"9876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210";
 
-	CStdioFile writeHex;
+	/*CStdioFile writeHex;
 	writeHex.Open(L"D:\\hextex.txt", CFile::modeCreate | CFile::modeReadWrite);
 	CString newline = L"\n";
 	CString writing;
@@ -458,7 +491,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	auto endTimek = std::chrono::high_resolution_clock::now();
 	auto startTimem = std::chrono::high_resolution_clock::now();
 	auto endTimem = std::chrono::high_resolution_clock::now();
-
+	*/
 
 	// Create a byte array for testing big numbers
 	/*for (UINT arraysize = 1000; arraysize < 10000; arraysize+=1000) {
@@ -534,17 +567,17 @@ void CLongIntegersDlg::OnClickedIdarrow()
 			memset(newArray2, 200, bytearraysize);
 			num1.assignByteArray(newArray1, bytearraysize);
 			num2.assignByteArray(newArray2, bytearraysize);
-			startTimetc3 = std::chrono::high_resolution_clock::now();
+//			startTimetc3 = std::chrono::high_resolution_clock::now();
 			bill = LongInteger::ToomCook3(num1, num2);
-			endTimetc3 = std::chrono::high_resolution_clock::now();
-			startTimek = std::chrono::high_resolution_clock::now();
+//			endTimetc3 = std::chrono::high_resolution_clock::now();
+//			startTimek = std::chrono::high_resolution_clock::now();
 			bob = (num1 * num2);
-			endTimek = std::chrono::high_resolution_clock::now();
+//			endTimek = std::chrono::high_resolution_clock::now();
 
 			frank = num1;
-			startTimem = std::chrono::high_resolution_clock::now();
+//			startTimem = std::chrono::high_resolution_clock::now();
 			frank.multiplyInternal(num2);
-			endTimem = std::chrono::high_resolution_clock::now();
+//			endTimem = std::chrono::high_resolution_clock::now();
 
 			bResult = *bill == bob;
 			bResult2 = *bill == frank;
@@ -552,7 +585,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 			if (!(bResult & bResult2))
 				int breakpointint = 0;
 
-			auto diff1 = std::chrono::duration_cast<std::chrono::microseconds>(endTimetc3 - startTimetc3).count();
+			/*auto diff1 = std::chrono::duration_cast<std::chrono::microseconds>(endTimetc3 - startTimetc3).count();
 			auto diff2 = std::chrono::duration_cast<std::chrono::microseconds>(endTimek - startTimek).count();
 			auto diff3 = std::chrono::duration_cast<std::chrono::microseconds>(endTimem - startTimem).count();
 			writing.Format(L"Size,%d,TC3,%d,Karatsuba,%d,Multiplication,%d,", i, diff1, diff2, diff3);
@@ -563,7 +596,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 			if (diff1 == diff3 && diff1 < diff2) writing.Append(L"TC3 & M");
 			if (diff2 == diff3 && diff2 < diff1) writing.Append(L"K & M");
 			if (diff1 == diff2 && diff1 == diff3) writing.Append(L"TC3 & K & M");
-
+			*/
 			writeHex.WriteString(writing);
 			writeHex.WriteString(newline);
 			delete bill;

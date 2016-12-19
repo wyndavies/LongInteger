@@ -2490,7 +2490,7 @@ vector<LongIntegerSP> LongInteger::DivThreeHalvesByTwo(LongIntegerSP a2, LongInt
 	3. R ← R1βn + A4 − QB 0
 	4. If R < 0, R ← R + B and Q ← Q − 1.
 	5. If R < 0, R ← R + B and Q ← Q − 1.
-	6. Return Q = Q and R = R.	
+	6. Return Q = Q and R = R.
 	*/
 
 	/*
@@ -2506,6 +2506,9 @@ vector<LongIntegerSP> LongInteger::DivThreeHalvesByTwo(LongIntegerSP a2, LongInt
 	This has ended up diverging from the algorithm described and from an example implementation I found, which
 	worries me somewhat. Part of it is because I'm working in base 256 and the descriptions
 	are for binary, but even so there shouldn't have been major changes.
+	There is even a completely new logic block to handle scenarios not mentioned in the original algorithm,
+	and an optimisation attempt that is getting so complex I'm losing track of what it does.
+	This is all going horribly wrong.
 	*/
 
 	vector<LongIntegerSP> vResult(2); // To hold q & R
@@ -2525,6 +2528,9 @@ vector<LongIntegerSP> LongInteger::DivThreeHalvesByTwo(LongIntegerSP a2, LongInt
 		*Q /= *b1;
 	}
 	else {
+		// I am baffled. The line below doesn't work as expected and instead gives the result 255
+		// no matter what value uNumDigits is. However, the calculation works.
+		// I cannot explain this.
 		*Q = (1 << (uNumDigits * BASEVALBITS)) - 1;
 		*R = ((*a2) << (uNumDigits * LongInteger::BASEVALBITS)) + *a1;
 	}
@@ -2535,29 +2541,18 @@ vector<LongIntegerSP> LongInteger::DivThreeHalvesByTwo(LongIntegerSP a2, LongInt
 	vMerge[1] = b1;
 	B = merge(vMerge, 2, uNumDigits);
 
-	while (*R < 0) {
-		// In some scenarios R can end up massively negative, so make B a lot bigger
-		UINT uDiff = R->size - B->size;
-
-		uDiff *= BASEVALBITS;
-		// Try to get the exact number of bits different
-		int uDiffBits = R->digits[(R->size - 1)] / B->digits[(B->size - 1)];
-		while (uDiffBits > 2)
-		{	
-			uDiffBits /= 2;
-			uDiff++;
-		}
-
-		*R += (*B << uDiff);
-		*Q -= (LongInteger(1) << uDiff);
-	}
 
 	// Added to handle a scenario not mentioned in the algorithm
 	// Need to speed this up a bit as it can loop for up to 256^uNumDigits-1 times - which can be a lot!
 	// Speed up code added by adding left-shifts. uDiff is the number of bits to left-shift
 	// There are still awkward scenarios. The worst case is that this loop runs for log2(B) times, which isn't great
 	// but a lot less than before
-	while (*R >= *B) {
+
+	// 19/12/2016 - Trying something. Going to make temp slightly bigger, so R goes negative
+	// See if this results in a lower number of loops in total (including the negative loop below)
+
+	// 19/12/2016 - Trying another alternative as that didn't work as expected
+/*	while (*R >= *B) {
 		UINT uDiff = R->size - B->size;
 		uDiff *= BASEVALBITS;
 		// Try to get the exact number of bits different
@@ -2579,17 +2574,99 @@ vector<LongIntegerSP> LongInteger::DivThreeHalvesByTwo(LongIntegerSP a2, LongInt
 		}
 		// *temp created to check we aren't deleting too large a number
 		// It is very hard to get the balance between too large and too small
-		// This is an overhead, but it should reduce the number of loops and so 
+		// This is an overhead, but it should reduce the number of loops and so
 		// save more than it costs
+		uDiff++; // Increment it by 1 to make it slightly too large as part of the 19/12/2016 test
 		LongInteger* temp = new LongInteger(*B << uDiff);
 		while (*temp > *R) {
 			*temp >>= 1;
 			uDiff--;
 		}
+
 		*R -= *temp;
 		delete temp;
 		*Q += (LongInteger(1) << uDiff);
 	}
+
+
+	while (*R < 0) {
+		// In some scenarios R can end up massively negative, so make B a lot bigger
+		UINT uDiff = R->size - B->size;
+
+		uDiff *= BASEVALBITS;
+		// Try to get the exact number of bits different
+		int uDiffBits = R->digits[(R->size - 1)] / B->digits[(B->size - 1)];
+		while (uDiffBits > 2)
+		{
+			uDiffBits /= 2;
+			uDiff++;
+		}
+
+		*R += (*B << uDiff);
+		*Q -= (LongInteger(1) << uDiff);
+	}
+*/
+
+	while (*R >= *B || *R < 0) {
+		if (*R >= *B) {
+			UINT uDiff = R->size - B->size;
+			uDiff *= BASEVALBITS;
+			// Try to get the exact number of bits different
+			if (R->digits[(R->size - 1)] > B->digits[(B->size - 1)]) {
+				int uDiffBits = R->digits[(R->size - 1)] / B->digits[(B->size - 1)];
+				while (uDiffBits > 1)
+				{
+					uDiffBits /= 2;
+					uDiff++;
+				}
+			}
+			else {
+				int uDiffBits = B->digits[(B->size - 1)] / R->digits[(R->size - 1)];
+				while (uDiffBits > 1)
+				{
+					uDiffBits /= 2;
+					uDiff--;
+				}
+			}
+			// *temp created to check we aren't deleting too large a number
+			// It is very hard to get the balance between too large and too small
+			// This is an overhead, but it should reduce the number of loops and so
+			// save more than it costs
+			// Changed the test as I encountered a scenario where the overall while loop went into an infinite cycle
+			LongInteger* temp = new LongInteger(*B << uDiff);
+			while (temp->size == R->size && temp->digits[temp->size - 1] > R->digits[R->size - 1]) {
+				*temp >>= 1;
+				uDiff--;
+			}
+			if (temp->size > 1 && temp->size == R->size && temp->digits[temp->size - 1] == R->digits[R->size - 1] &&
+				temp->digits[temp->size - 2] > R->digits[R->size - 2]) {
+				*temp >>= 1;
+				uDiff--;
+			}
+
+			*R -= *temp;
+			delete temp;
+			*Q += (LongInteger(1) << uDiff);
+		}
+		else {
+			// In some scenarios R can end up massively negative, so make B a lot bigger
+			UINT uDiff = R->size - B->size;
+
+			uDiff *= BASEVALBITS;
+			// Try to get the exact number of bits different
+			int uDiffBits = R->digits[(R->size - 1)] / B->digits[(B->size - 1)];
+			while (uDiffBits > 1)
+			{
+				uDiffBits /= 2;
+				uDiff++;
+			}
+			uDiff--;
+
+			*R += (*B << uDiff);
+			*Q -= (LongInteger(1) << uDiff);
+		}
+	}
+	
 
 	vResult[0] = make_shared<LongInteger>(*Q);
 	vResult[1] = make_shared<LongInteger>(*R);
