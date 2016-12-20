@@ -2,8 +2,9 @@
 #include <vector>
 #include <memory>
 using std::vector;
-using std::shared_ptr;
-using std::make_shared;
+using std::unique_ptr;
+using std::make_unique;
+using std::move;
 
 // Header for LongInteger file. Can handle positive integers up to 4 billion digits in length.
 // It holds the number as a byte array and indexes it using an uint (hence the size limit)
@@ -17,7 +18,7 @@ using std::make_shared;
 // The karatsuba algorithm is only accessed via the multiplyNumber method
 
 class LongInteger;
-typedef shared_ptr<LongInteger> LongIntegerSP; // Started using shared_ptr because the number of deletes was getting out of hand
+typedef unique_ptr<LongInteger> LongIntegerUP;
 
 class LongInteger
 {
@@ -32,13 +33,13 @@ public:
 
 	// This is under development. The code is rather messy as I'm struggling to follow the paper due to the heavy usage of maths
 	// terminology I'm unfamiliar with.
-	static void BurnikelZiegler(LongInteger&, LongInteger&, LongInteger*, LongInteger*);
+	static void BurnikelZiegler(LongInteger&, LongInteger&, LongIntegerUP&, LongIntegerUP&);
 
-	static shared_ptr<LongInteger> merge(vector<LongIntegerSP> vList, UINT uNumParts, UINT uSizeParts);
-	static vector<LongIntegerSP> DivThreeHalvesByTwo(LongIntegerSP a1, LongIntegerSP a2, LongIntegerSP a3, LongIntegerSP b1, LongIntegerSP b2, UINT uNumDigits);
-	static vector<LongIntegerSP> DivTwoDigitsByOne(LongIntegerSP AHigh, LongIntegerSP ALow, LongIntegerSP B, UINT uNumDigits);
+	static LongIntegerUP merge(vector<LongIntegerUP>& vList, UINT uNumParts, UINT uSizeParts);
+	static vector<LongIntegerUP> DivThreeHalvesByTwo(LongIntegerUP& a1, LongIntegerUP& a2, LongIntegerUP& a3, LongIntegerUP& b1, LongIntegerUP& b2, UINT uNumDigits);
+	static vector<LongIntegerUP> DivTwoDigitsByOne(LongIntegerUP& AHigh, LongIntegerUP& ALow, LongIntegerUP& B, UINT uNumDigits);
 	// A generic splitting function. Split the input LongInteger into UINT parts of UINT length and return as an array of LongIntegers
-	static vector<shared_ptr<LongInteger>> split(LongIntegerSP, UINT, UINT);
+	static vector<LongIntegerUP> split(LongIntegerUP&, UINT, UINT);
 
 private:
 	static LongInteger karatsuba(const LongInteger&, const LongInteger&); // This is the front end which also tidies up any memory allocated

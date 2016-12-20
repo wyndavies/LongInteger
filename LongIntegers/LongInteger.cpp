@@ -2112,15 +2112,15 @@ UINT LongInteger::toomsplit(LongInteger** liList, UINT uDigits) const
 	return uStep; // Return the number of digits each has been divided into
 }
 
-vector<LongIntegerSP> LongInteger::split(LongIntegerSP liToSplit, UINT uNumParts, UINT uDigits)
+vector<LongIntegerUP> LongInteger::split(LongIntegerUP& liToSplit, UINT uNumParts, UINT uDigits)
 {
 	// We will split up the input LongInteger into uNumParts and return as 
 	// an array of LongIntegers
 	// We will create the LongIntegers in this method
 	
-	vector<LongIntegerSP> vList(uNumParts);
+	vector<LongIntegerUP> vList(uNumParts);
 	for (UINT i = 0; i < uNumParts; i++) {
-		vList[i] = make_shared<LongInteger>(0);
+		vList[i] = make_unique<LongInteger>(0);
 	}
 
 	UINT uNumSplits = uNumParts;
@@ -2149,7 +2149,7 @@ vector<LongIntegerSP> LongInteger::split(LongIntegerSP liToSplit, UINT uNumParts
 		uNumSplits++;
 	}
 
-	return vList;
+	return move(vList);
 }
 
 LongInteger LongInteger::operator-() const
@@ -2337,7 +2337,7 @@ void LongInteger::RestoringDivision(LongInteger& liValue, LongInteger& liDiv, Lo
 }
 
 
-void LongInteger::BurnikelZiegler(LongInteger& liValue, LongInteger& liDiv, LongInteger* liResult, LongInteger* liModulus)
+void LongInteger::BurnikelZiegler(LongInteger& liValue, LongInteger& liDiv, LongIntegerUP& liResult, LongIntegerUP& liModulus)
 {
 	// Looked at other algorithm (e.g. Newton-Raphson division) and many of them use floating point numbers
 	// So we shall move on to Burnikel-Ziegler division
@@ -2375,17 +2375,17 @@ void LongInteger::BurnikelZiegler(LongInteger& liValue, LongInteger& liDiv, Long
 	//18) Return quotient q and remainder R
 
 	UINT uDigits = (liValue.size + 3) / 4;
-	vector<LongIntegerSP> vASplit(2);
-	vASplit = split(make_shared<LongInteger>(liValue), 2, uDigits * 2);
+	vector<LongIntegerUP> vASplit(2);
+	vASplit = move(split(make_unique<LongInteger>(liValue), 2, uDigits * 2));
 
-	vector<LongIntegerSP> vResult = DivTwoDigitsByOne(vASplit[1], vASplit[0], make_shared<LongInteger>(liDiv), uDigits);
+	vector<LongIntegerUP> vResult = DivTwoDigitsByOne(vASplit[1], vASplit[0], make_unique<LongInteger>(liDiv), uDigits);
 
-	*liResult = *(vResult[0].get());
-	*liModulus = *(vResult[1].get());
+	liResult = move(vResult[0]);
+	liModulus = move(vResult[1]);
 	
 }
 
-vector<LongIntegerSP> LongInteger::DivTwoDigitsByOne(LongIntegerSP AHigh, LongIntegerSP ALow, LongIntegerSP B, UINT uNumDigits)
+vector<LongIntegerUP> LongInteger::DivTwoDigitsByOne(LongIntegerUP& AHigh, LongIntegerUP& ALow, LongIntegerUP& B, UINT uNumDigits)
 {
 	// DivTwoDigitsByOne(AHigh, ALow, B), return quotient Q and remainder S
 	// 
@@ -2411,57 +2411,57 @@ vector<LongIntegerSP> LongInteger::DivTwoDigitsByOne(LongIntegerSP AHigh, LongIn
 	4. Return the quotient Q = Q1βn/2 + Q0 and the remainder R = R0.
 
 	*/
-	vector<LongIntegerSP> vReturn(2); // Return Q & S
+	vector<LongIntegerUP> vReturn(2); // Return Q & S
 
 	// Decide how many digits we are chopping up the numbers by (it needs to be consistent)
 	if (uNumDigits == 0) uNumDigits = 1;
 
-	vector<LongIntegerSP> vWorking;
-	vWorking = LongInteger::split(AHigh, 2, uNumDigits);
-	LongIntegerSP a1 = vWorking[1];
-	LongIntegerSP a2 = vWorking[0];
-	vWorking = LongInteger::split(ALow, 2, uNumDigits);
-	LongIntegerSP a3 = vWorking[1];
-	LongIntegerSP a4 = vWorking[0];
-	vWorking = LongInteger::split(B, 2, uNumDigits);
-	LongIntegerSP b1 = vWorking[1];
-	LongIntegerSP b2 = vWorking[0];
+	vector<LongIntegerUP> vWorking;
+	vWorking = move(LongInteger::split(AHigh, 2, uNumDigits));
+	LongIntegerUP a1 = move(vWorking[1]);
+	LongIntegerUP a2 = move(vWorking[0]);
+	vWorking = move(LongInteger::split(ALow, 2, uNumDigits));
+	LongIntegerUP a3 = move(vWorking[1]);
+	LongIntegerUP a4 = move(vWorking[0]);
+	vWorking = move(LongInteger::split(B, 2, uNumDigits));
+	LongIntegerUP b1 = move(vWorking[1]);
+	LongIntegerUP b2 = move(vWorking[0]);
 
-	vector<LongIntegerSP> vResult1, vResult2;
+	vector<LongIntegerUP> vResult1, vResult2;
 	// 2) [q1,R] = DivThreeHalvesByTwo(a1,a2,a3,b1,b2)
 	LongInteger a1a2a3 = (*a1 << (uNumDigits * BASEVALBITS * 2)) + (*a2 << (uNumDigits * BASEVALBITS)) + *a3;
 
 	if (a1a2a3 < *B) {
-		vResult1.push_back(make_shared<LongInteger>(LongInteger()));
-		vResult1.push_back(make_shared<LongInteger>(a1a2a3));
+		vResult1.push_back(make_unique<LongInteger>(LongInteger()));
+		vResult1.push_back(make_unique<LongInteger>(a1a2a3));
 	} else
 		vResult1 = DivThreeHalvesByTwo(a1, a2, a3, b1, b2, uNumDigits);
 
 	// 3) Let [r1,r2]=R
-	vWorking = LongInteger::split(vResult1[1], 2, uNumDigits);
-	LongIntegerSP r1 = vWorking[1];
-	LongIntegerSP r2 = vWorking[0];
+	vWorking = move(LongInteger::split(vResult1[1], 2, uNumDigits));
+	LongIntegerUP r1 = move(vWorking[1]);
+	LongIntegerUP r2 = move(vWorking[0]);
 
 	// 4) [q2,S] = DivThreeHalvesByTwo(r1,r2,a4,b1,b2)
 	a1a2a3 = (*vResult1[1] << (uNumDigits * BASEVALBITS)) + *a4;
 	if (a1a2a3 < *B) {
-		vResult2.push_back(make_shared<LongInteger>(LongInteger()));
-		vResult2.push_back(make_shared<LongInteger>(a1a2a3));
+		vResult2.push_back(make_unique<LongInteger>(LongInteger()));
+		vResult2.push_back(make_unique<LongInteger>(a1a2a3));
 	}
-	else
+	else {
 		vResult2 = DivThreeHalvesByTwo(r1, r2, a4, b1, b2, uNumDigits);
-
+	}
 	// 5) Return Q=[q1,q2] and S
-	vReturn[1] = vResult2[1];
-	vector<LongIntegerSP> Q(2);
-	Q[1] = vResult1[0];
-	Q[0] = vResult2[0];
-	vReturn[0] = merge(Q, 2, uNumDigits);
+	vReturn[1] = move(vResult2[1]);
+	vector<LongIntegerUP> Q(2);
+	Q[1] = move(vResult1[0]);
+	Q[0] = move(vResult2[0]);
+	vReturn[0] = move(merge(Q, 2, uNumDigits));
 
-	return vReturn;
+	return move(vReturn);
 }
 
-vector<LongIntegerSP> LongInteger::DivThreeHalvesByTwo(LongIntegerSP a2, LongIntegerSP a1, LongIntegerSP a0, LongIntegerSP b1, LongIntegerSP b0, UINT uNumDigits)
+vector<LongIntegerUP> LongInteger::DivThreeHalvesByTwo(LongIntegerUP& a2, LongIntegerUP& a1, LongIntegerUP& a0, LongIntegerUP& b1, LongIntegerUP& b0, UINT uNumDigits)
 {
 	// DivThreeHalvesByTwo(a1,a2,a3,b1,b2)
 	//
@@ -2511,21 +2511,28 @@ vector<LongIntegerSP> LongInteger::DivThreeHalvesByTwo(LongIntegerSP a2, LongInt
 	This is all going horribly wrong.
 	*/
 
-	vector<LongIntegerSP> vResult(2); // To hold q & R
-	vector<LongIntegerSP> vMerge(2);
+	vector<LongIntegerUP> vResult(2); // To hold q & R
+	vector<LongIntegerUP> vMerge(2);
 
-	LongIntegerSP B(nullptr);
-	LongInteger *Q, *R;
+	LongIntegerUP B(nullptr);
+	LongIntegerUP Q, R;
 
-	Q = new LongInteger;
-	R = new LongInteger;
+	Q = make_unique<LongInteger>(0);
+	R = make_unique<LongInteger>(0);
 
 	if (*b1 != 0) {
 		*Q = ((*a2) << (uNumDigits * LongInteger::BASEVALBITS)) + (*a1);
 		// The next 2 lines can be done recursively as they are division and modulus
-		// Leave as non-recursive until we are sure this works
-		*R = *Q % *b1;
-		*Q /= *b1;
+
+		if (Q->size > 50) {
+			LongIntegerUP temp;
+			BurnikelZiegler(*Q, *b1, temp, R);
+			Q = move(temp);
+		}
+		else {
+			*R = *Q % *b1;
+			*Q /= *b1;
+		}
 	}
 	else {
 		// I am baffled. The line below doesn't work as expected and instead gives the result 255
@@ -2537,9 +2544,9 @@ vector<LongIntegerSP> LongInteger::DivThreeHalvesByTwo(LongIntegerSP a2, LongInt
 
 	*R = (*R << (uNumDigits * LongInteger::BASEVALBITS)) + *a0 - (*Q * *b0);
 
-	vMerge[0] = b0;
-	vMerge[1] = b1;
-	B = merge(vMerge, 2, uNumDigits);
+	vMerge[0] = make_unique<LongInteger>(*b0);
+	vMerge[1] = make_unique<LongInteger>(*b1);
+	B = move(merge(vMerge, 2, uNumDigits));
 
 
 	// Added to handle a scenario not mentioned in the algorithm
@@ -2609,82 +2616,94 @@ vector<LongIntegerSP> LongInteger::DivThreeHalvesByTwo(LongIntegerSP a2, LongInt
 
 	while (*R >= *B || *R < 0) {
 		if (*R >= *B) {
-			UINT uDiff = R->size - B->size;
-			uDiff *= BASEVALBITS;
-			// Try to get the exact number of bits different
-			if (R->digits[(R->size - 1)] > B->digits[(B->size - 1)]) {
+			if (R->size < B->size)
+			{
+				*R -= *B;
+				(*Q)++;
+			}
+			else {
+				UINT uDiff = R->size - B->size;
+				uDiff *= BASEVALBITS;
+				// Try to get the exact number of bits different
+				if (R->digits[(R->size - 1)] > B->digits[(B->size - 1)]) {
+					int uDiffBits = R->digits[(R->size - 1)] / B->digits[(B->size - 1)];
+					while (uDiffBits > 1)
+					{
+						uDiffBits /= 2;
+						uDiff++;
+					}
+				}
+				else {
+					int uDiffBits = B->digits[(B->size - 1)] / R->digits[(R->size - 1)];
+					while (uDiffBits > 1)
+					{
+						uDiffBits /= 2;
+						uDiff--;
+					}
+				}
+				// *temp created to check we aren't deleting too large a number
+				// It is very hard to get the balance between too large and too small
+				// This is an overhead, but it should reduce the number of loops and so
+				// save more than it costs
+				// Changed the test as I encountered a scenario where the overall while loop went into an infinite cycle
+				LongInteger* temp = new LongInteger(*B << uDiff);
+				while (temp->size == R->size && temp->digits[temp->size - 1] > R->digits[R->size - 1] && uDiff > 0) {
+					*temp >>= 1;
+					uDiff--;
+				}
+				if (temp->size > 1 && temp->size == R->size && temp->digits[temp->size - 1] == R->digits[R->size - 1] &&
+					temp->digits[temp->size - 2] > R->digits[R->size - 2] && uDiff > 0) {
+					*temp >>= 1;
+					uDiff--;
+				}
+
+				*R -= *temp;
+				delete temp;
+				*Q += (LongInteger(1) << uDiff);
+			}
+		}
+		else {
+			// In some scenarios R can end up massively negative, so make B a lot bigger
+			if (R->size < B->size)
+			{
+				// This can happen in rare cases
+				*R += *B;
+				(*Q)--;
+			}
+			else {
+				UINT uDiff = uDiff = R->size - B->size;
+				uDiff *= BASEVALBITS;
+				// Try to get the exact number of bits different
 				int uDiffBits = R->digits[(R->size - 1)] / B->digits[(B->size - 1)];
 				while (uDiffBits > 1)
 				{
 					uDiffBits /= 2;
 					uDiff++;
 				}
-			}
-			else {
-				int uDiffBits = B->digits[(B->size - 1)] / R->digits[(R->size - 1)];
-				while (uDiffBits > 1)
-				{
-					uDiffBits /= 2;
+				if (uDiff > 0)
 					uDiff--;
-				}
-			}
-			// *temp created to check we aren't deleting too large a number
-			// It is very hard to get the balance between too large and too small
-			// This is an overhead, but it should reduce the number of loops and so
-			// save more than it costs
-			// Changed the test as I encountered a scenario where the overall while loop went into an infinite cycle
-			LongInteger* temp = new LongInteger(*B << uDiff);
-			while (temp->size == R->size && temp->digits[temp->size - 1] > R->digits[R->size - 1]) {
-				*temp >>= 1;
-				uDiff--;
-			}
-			if (temp->size > 1 && temp->size == R->size && temp->digits[temp->size - 1] == R->digits[R->size - 1] &&
-				temp->digits[temp->size - 2] > R->digits[R->size - 2]) {
-				*temp >>= 1;
-				uDiff--;
-			}
 
-			*R -= *temp;
-			delete temp;
-			*Q += (LongInteger(1) << uDiff);
-		}
-		else {
-			// In some scenarios R can end up massively negative, so make B a lot bigger
-			UINT uDiff = R->size - B->size;
-
-			uDiff *= BASEVALBITS;
-			// Try to get the exact number of bits different
-			int uDiffBits = R->digits[(R->size - 1)] / B->digits[(B->size - 1)];
-			while (uDiffBits > 1)
-			{
-				uDiffBits /= 2;
-				uDiff++;
+				*R += (*B << uDiff);
+				*Q -= (LongInteger(1) << uDiff);
 			}
-			uDiff--;
-
-			*R += (*B << uDiff);
-			*Q -= (LongInteger(1) << uDiff);
 		}
 	}
 	
 
-	vResult[0] = make_shared<LongInteger>(*Q);
-	vResult[1] = make_shared<LongInteger>(*R);
-
-	delete Q;
-	delete R;
+	vResult[0] = move(Q);
+	vResult[1] = move(R);
 
 	return vResult;
 
 }
 
-LongIntegerSP LongInteger::merge(vector<LongIntegerSP> vList, UINT uNumParts, UINT uSizeParts)
+LongIntegerUP LongInteger::merge(vector<LongIntegerUP>& vList, UINT uNumParts, UINT uSizeParts)
 {
 	// Merge the contents of liList into a single LongInteger
 
 	// Need to rework this as I've hit scenarios where the components can be bigger than uSizeParts
 	// It originally used memcpy for speed, but with potentially overlapping values that can't be used
-	LongIntegerSP liReturn = make_shared<LongInteger>(0);
+	LongIntegerUP liReturn;
 
 	LongInteger liWorking;
 
@@ -2693,7 +2712,7 @@ LongIntegerSP LongInteger::merge(vector<LongIntegerSP> vList, UINT uNumParts, UI
 		liWorking += (*vList[i] << (i * uSizeParts * BASEVALBITS));
 	}
 
-	liReturn = make_shared<LongInteger>(liWorking);
+	liReturn = make_unique<LongInteger>(liWorking);
 
 	return liReturn;
 }

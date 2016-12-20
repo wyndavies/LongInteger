@@ -365,72 +365,72 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	auto startTimeld = std::chrono::high_resolution_clock::now();
 	auto endTimeld = std::chrono::high_resolution_clock::now();
 
-	LongInteger liNumber, liDivisor, *pliQuotient, *pliModulus;
+	LongInteger liNumber, liDivisor;
+	LongIntegerUP upliQuotient, upliModulus;
+	upliQuotient = make_unique<LongInteger>(0);
+	upliModulus = make_unique<LongInteger>(0);
 
 
-	for (UINT i = 10; i < 1010; i+=10)
+	for (UINT i = 1000; i <= 10000; i+=1000)
 	{
-		byte *array1 = new byte[i];
-		for (UINT digits = 0; digits < i; digits++)
+		
+
+		for(UINT j = 1000; j <= i; j+=1000)
 		{
-			array1[digits] = (std::rand() % 256);
-		}
-		liNumber.assignByteArray(array1, i);
-		{
-			UINT j = std::sqrt(i);
-			if (j < 0) j = 1;
-			byte *array2 = new byte[j];
-			for (UINT digits = 0; digits < j; digits++)
-			{
-				array2[digits] = (std::rand() % 256);
+			for (UINT k = 0; k < 10; k++) {
+				byte *array1 = new byte[i];
+				for (UINT digits = 0; digits < i; digits++)
+				{
+					array1[digits] = (std::rand() % 256);
+				}
+				liNumber.assignByteArray(array1, i);
+				byte *array2 = new byte[j];
+				for (UINT digits = 0; digits < j; digits++)
+				{
+					array2[digits] = (std::rand() % 256);
+				}
+
+				liDivisor.assignByteArray(array2, j);
+
+				// Test Burnikel-Ziegler division
+
+				startTimetbz = std::chrono::high_resolution_clock::now();
+				LongInteger::BurnikelZiegler(liNumber, liDivisor, upliQuotient, upliModulus);
+				endTimetbz = std::chrono::high_resolution_clock::now();
+
+				startTimeld = std::chrono::high_resolution_clock::now();
+				LongInteger liRealQuotient = liNumber / liDivisor;
+				endTimeld = std::chrono::high_resolution_clock::now();
+
+				LongInteger liRealModulus = liNumber % liDivisor;
+
+				CString strTestRQ, strTestRM, strTestQ, strTestM;
+				strTestRQ = liRealQuotient.toArrayNumbers();
+				strTestRM = liRealModulus.toArrayNumbers();
+				strTestQ = upliQuotient->toArrayNumbers();
+				strTestM = upliModulus->toArrayNumbers();
+
+				bool bWorked1 = *upliQuotient == liRealQuotient;
+				bool bWorked2 = *upliModulus == liRealModulus;
+				if (!(bWorked1 && bWorked2))
+					int iBreakPointInt = 0;
+
+
+				auto diff1 = std::chrono::duration_cast<std::chrono::microseconds>(endTimetbz - startTimetbz).count();
+				auto diff2 = std::chrono::duration_cast<std::chrono::microseconds>(endTimeld - startTimeld).count();
+				writing.Format(L"ValueSize,%d,DivSize,%d,BZ,%d,LD,%d,", i, j, diff1, diff2);
+				if (diff1 < diff2) writing.Append(L"BZ");
+				if (diff2 < diff1) writing.Append(L"LD");
+				if (diff1 == diff2) writing.Append(L"BZ & LD");
+
+				writeHex.WriteString(writing);
+				writeHex.WriteString(newline);
+
+				delete array2;
+				delete array1;
 			}
-
-			liDivisor.assignByteArray(array2, j);
-
-			// Test Burnikel-Ziegler division
-			pliModulus = new LongInteger; // Make these shared pointers later on to simplify the memory management headaches
-			pliQuotient = new LongInteger;
-
-
-			startTimetbz = std::chrono::high_resolution_clock::now();
-			LongInteger::BurnikelZiegler(liNumber, liDivisor, pliQuotient, pliModulus);
-			endTimetbz = std::chrono::high_resolution_clock::now();
-
-			startTimeld = std::chrono::high_resolution_clock::now();
-			LongInteger liRealQuotient = liNumber / liDivisor;
-			endTimeld = std::chrono::high_resolution_clock::now();
-
-			LongInteger liRealModulus = liNumber % liDivisor;
-
-			CString strTestRQ, strTestRM, strTestQ, strTestM;
-			strTestRQ = liRealQuotient.toArrayNumbers();
-			strTestRM = liRealModulus.toArrayNumbers();
-			strTestQ = pliQuotient->toArrayNumbers();
-			strTestM = pliModulus->toArrayNumbers();
-
-			bool bWorked1 = *pliQuotient == liRealQuotient;
-			bool bWorked2 = *pliModulus == liRealModulus;
-			if (!(bWorked1 && bWorked2))
-				int iBreakPointInt = 0;
-
-
-			auto diff1 = std::chrono::duration_cast<std::chrono::microseconds>(endTimetbz - startTimetbz).count();
-			auto diff2 = std::chrono::duration_cast<std::chrono::microseconds>(endTimeld - startTimeld).count();
-			writing.Format(L"ValueSize,%d,DivSize,%d,BZ,%d,LD,%d,", i,j, diff1, diff2);
-			if (diff1 < diff2) writing.Append(L"BZ");
-			if (diff2 < diff1) writing.Append(L"LD");
-			if (diff1 == diff2) writing.Append(L"BZ & LD");
-
-			writeHex.WriteString(writing);
-			writeHex.WriteString(newline);
-
-
-
-			delete pliModulus;
-			delete pliQuotient;
-			delete array2;
 		}
-		delete array1;
+
 	}
 	writeHex.Close();
 	return;
@@ -438,6 +438,8 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// Test restoring division
 	liNumber = 25;
 	liDivisor = 10;
+
+	LongInteger *pliQuotient, *pliModulus;
 
 	LongInteger::RestoringDivision(liNumber, liDivisor, pliQuotient, pliModulus);
 	CString divResult;
