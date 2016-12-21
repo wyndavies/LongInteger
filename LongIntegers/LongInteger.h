@@ -54,6 +54,8 @@ public:
 	static const UINT SIZESTEP = 10000; // Internal byte array is increased or decreased in block of this size
 	static const UINT KARATSBUACUTOFF = 50; // Karatsuba cutoff size. Numbers below this size will use long multiplication
 	static const UINT TOOMCOOK3CUTOFF = 150; // Testing shows this is the optimal value. Update - 150 is the best in debug builds. In release builds it is not. In release it is all over the place.
+//	static const UINT BURKINELZIEGLERCUTOFF = 10; // Still testing for the optimal value
+	static UINT BURKINELZIEGLERCUTOFF;
 
 public:
 	// For testing only

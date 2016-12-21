@@ -373,24 +373,28 @@ void CLongIntegersDlg::OnClickedIdarrow()
 
 	for (UINT i = 1000; i <= 10000; i+=1000)
 	{
-		
-
 		for(UINT j = 1000; j <= i; j+=1000)
 		{
-			for (UINT k = 0; k < 10; k++) {
-				byte *array1 = new byte[i];
-				for (UINT digits = 0; digits < i; digits++)
-				{
-					array1[digits] = (std::rand() % 256);
-				}
-				liNumber.assignByteArray(array1, i);
-				byte *array2 = new byte[j];
-				for (UINT digits = 0; digits < j; digits++)
-				{
-					array2[digits] = (std::rand() % 256);
-				}
+			byte *array1 = new byte[i];
+			for (UINT digits = 0; digits < i; digits++)
+			{
+				array1[digits] = (std::rand() % 256);
+			}
+			liNumber.assignByteArray(array1, i);
+			byte *array2 = new byte[j];
+			for (UINT digits = 0; digits < j; digits++)
+			{
+				array2[digits] = (std::rand() % 256);
+			}
 
-				liDivisor.assignByteArray(array2, j);
+			liDivisor.assignByteArray(array2, j);
+
+			delete array2;
+			delete array1;
+
+			for (UINT k = 10; k <= 200; k+=10) {
+				LongInteger::BURKINELZIEGLERCUTOFF = k;
+				
 
 				// Test Burnikel-Ziegler division
 
@@ -425,10 +429,9 @@ void CLongIntegersDlg::OnClickedIdarrow()
 
 				writeHex.WriteString(writing);
 				writeHex.WriteString(newline);
-
-				delete array2;
-				delete array1;
 			}
+
+			writeHex.Flush();
 		}
 
 	}

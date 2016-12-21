@@ -13,6 +13,7 @@
 #endif
 
 bool LongInteger::bShuttingDown = false;
+UINT LongInteger::BURKINELZIEGLERCUTOFF = 100;
 
 void LongInteger::init()
 {
@@ -2524,7 +2525,7 @@ vector<LongIntegerUP> LongInteger::DivThreeHalvesByTwo(LongIntegerUP& a2, LongIn
 		*Q = ((*a2) << (uNumDigits * LongInteger::BASEVALBITS)) + (*a1);
 		// The next 2 lines can be done recursively as they are division and modulus
 
-		if (Q->size > 50) {
+		if (Q->size > BURKINELZIEGLERCUTOFF) {
 			LongIntegerUP temp;
 			BurnikelZiegler(*Q, *b1, temp, R);
 			Q = move(temp);
