@@ -16,6 +16,14 @@ using std::move;
 // The karatsuba algorithm is used to multiply large numbers. It is more complex than long multiplication,
 // but the number of steps needed doesn't increase as rapidly as the number length increases.
 // The karatsuba algorithm is only accessed via the multiplyNumber method
+//
+// ToomCook3 algorithm has been added for multiplying even larger numbers. The implementation looks rather complex, so
+// there may well be inefficiencies. Performance is odd, which convinces me all is not correct
+//
+// Burnikel-Ziegler algorithm for division has been implemented. It ended up with much more code than expected
+// and also handles scenarios that aren't mentioned at all in Burnikel and Ziegler's paper, so that isn't a good sign.
+// It works and divides numbers faster than the division algorithm I implemented for large numbers, where the divisor
+// is at least half the size of the value being divided.
 
 class LongInteger;
 typedef unique_ptr<LongInteger> LongIntegerUP;
@@ -159,13 +167,13 @@ public:
 	bool bitshiftright(UINT);
 	bool bitshiftleft(UINT);
 	LongInteger operator>>(const LongInteger&);
-	LongInteger operator>>(int);
+	LongInteger operator>>(UINT);
 	LongInteger& operator>>=(const LongInteger&);
-	LongInteger& operator>>=(int);
+	LongInteger& operator>>=(UINT);
 	LongInteger operator<<(const LongInteger&);
-	LongInteger operator<<(int);
+	LongInteger operator<<(UINT);
 	LongInteger& operator<<=(const LongInteger&);
-	LongInteger& operator<<=(int);
+	LongInteger& operator<<=(UINT);
 
 	LongInteger abs(const LongInteger&);
 
