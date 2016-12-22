@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "LongInteger.h"
 #include <stdexcept>
 #undef min
@@ -2719,7 +2719,9 @@ vector<LongIntegerUP> LongInteger::DivThreeHalvesByTwo(LongIntegerUP& a2, LongIn
 	else {
 		// I am baffled. The line below doesn't work as expected and instead gives the result 255
 		// no matter what value uNumDigits is. However, the calculation works.
-		// I cannot explain this.
+		// I've worked out why the number goes wrong - it is calculating 1 rightshifted as a UINT,
+		// which can't be shifted more than 3 bytes left.
+		// However, I cannot explain why the calculation still works.
 		*Q = (1 << (uNumDigits * BASEVALBITS)) - 1;
 		*R = ((*a2) << (uNumDigits * LongInteger::BASEVALBITS)) + *a1;
 	}
@@ -2730,71 +2732,11 @@ vector<LongIntegerUP> LongInteger::DivThreeHalvesByTwo(LongIntegerUP& a2, LongIn
 	vMerge[1] = make_unique<LongInteger>(*b1);
 	B = move(merge(vMerge, 2, uNumDigits));
 
-
 	// Added to handle a scenario not mentioned in the algorithm
 	// Need to speed this up a bit as it can loop for up to 256^uNumDigits-1 times - which can be a lot!
 	// Speed up code added by adding left-shifts. uDiff is the number of bits to left-shift
 	// There are still awkward scenarios. The worst case is that this loop runs for log2(B) times, which isn't great
 	// but a lot less than before
-
-	// 19/12/2016 - Trying something. Going to make temp slightly bigger, so R goes negative
-	// See if this results in a lower number of loops in total (including the negative loop below)
-
-	// 19/12/2016 - Trying another alternative as that didn't work as expected
-/*	while (*R >= *B) {
-		UINT uDiff = R->size - B->size;
-		uDiff *= BASEVALBITS;
-		// Try to get the exact number of bits different
-		if (R->digits[(R->size - 1)] > B->digits[(B->size - 1)]) {
-			int uDiffBits = R->digits[(R->size - 1)] / B->digits[(B->size - 1)];
-			while (uDiffBits > 1)
-			{
-				uDiffBits /= 2;
-				uDiff++;
-			}
-		}
-		else {
-			int uDiffBits = B->digits[(B->size - 1)] / R->digits[(R->size - 1)];
-			while (uDiffBits > 1)
-			{
-				uDiffBits /= 2;
-				uDiff--;
-			}
-		}
-		// *temp created to check we aren't deleting too large a number
-		// It is very hard to get the balance between too large and too small
-		// This is an overhead, but it should reduce the number of loops and so
-		// save more than it costs
-		uDiff++; // Increment it by 1 to make it slightly too large as part of the 19/12/2016 test
-		LongInteger* temp = new LongInteger(*B << uDiff);
-		while (*temp > *R) {
-			*temp >>= 1;
-			uDiff--;
-		}
-
-		*R -= *temp;
-		delete temp;
-		*Q += (LongInteger(1) << uDiff);
-	}
-
-
-	while (*R < 0) {
-		// In some scenarios R can end up massively negative, so make B a lot bigger
-		UINT uDiff = R->size - B->size;
-
-		uDiff *= BASEVALBITS;
-		// Try to get the exact number of bits different
-		int uDiffBits = R->digits[(R->size - 1)] / B->digits[(B->size - 1)];
-		while (uDiffBits > 2)
-		{
-			uDiffBits /= 2;
-			uDiff++;
-		}
-
-		*R += (*B << uDiff);
-		*Q -= (LongInteger(1) << uDiff);
-	}
-*/
 
 	while (*R >= *B || *R < 0) {
 		if (*R >= *B) {
