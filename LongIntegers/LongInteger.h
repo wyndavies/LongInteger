@@ -156,6 +156,8 @@ public:
 
 	bool bitshiftright(const LongInteger&);
 	bool bitshiftleft(const LongInteger&);
+	bool bitshiftright(UINT);
+	bool bitshiftleft(UINT);
 	LongInteger operator>>(const LongInteger&);
 	LongInteger operator>>(int);
 	LongInteger& operator>>=(const LongInteger&);
@@ -212,7 +214,6 @@ private:
 	static vector<LongIntegerUP> DivTwoDigitsByOne(LongIntegerUP& AHigh, LongIntegerUP& ALow, LongIntegerUP& B, UINT uNumDigits);
 	// A generic splitting function. Split the input LongInteger into UINT parts of UINT length and return as an array of LongIntegers
 	static vector<LongIntegerUP> split(LongIntegerUP&, UINT, UINT);
-
 
 public:
 	bool multiplyInternal(const LongInteger&);

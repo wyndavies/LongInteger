@@ -350,6 +350,145 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// 2||||2 -> 2|(2|||2) -> 2|(2|(2||2)) -> 2|(2|(2|(2|2)))
 
 
+	// Test a different approach to division and see if it is faster
+	LongInteger liVal, liDiv;
+	LongInteger liQ, liM, liQ2;
+	LongInteger liNQ, liNM;
+
+
+	liVal = CString(L"12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
+	liDiv = CString(L"888");
+
+	liNQ = liVal / liDiv;
+	liNM = liVal % liDiv;
+
+
+	// We will run a test. If the divisor is more than 1 digit in size less than the value, multiply the 
+	// divisor by 256 until it is (keeping a count of how many times
+	// Then loop that many times:
+	//	shift the quotient left 1
+	//  shift the (inflated) divisor right 1
+	//  divide the modulus by the divisor
+	//  add the quotient of this to the original quotient
+
+	UINT count = 0;
+	while (liDiv.getSize() < (liVal.getSize() - 1)) {
+		liDiv.bitshiftleft(8);
+		count++;
+	}
+	liQ = liVal / liDiv;
+	liM = liVal % liDiv;
+	while (count > 0) {
+		liQ.bitshiftleft(8);
+		liDiv.bitshiftright(8);
+		liQ2 = liM / liDiv;
+		liM = liM % liDiv;
+		liQ += liQ2;
+		count--;
+	}
+
+	CString strQ = liQ.toDecimal();
+	CString strM = liM.toDecimal();
+	CString strNQ = liNQ.toDecimal();
+	CString strNM = liNM.toDecimal();
+	bool workedQ = liQ == liNQ;
+	bool workedM = liM == liNM;
+
+
+	// Now try some random values to see how it works.
+	UINT base = 1000;
+	UINT increment = 500;
+	for (UINT i = 6000; i <= 10000; i += base) {
+		byte* array1 = new byte[i];
+		memset(array1, 111, i);
+		liVal.assignByteArray(array1, i);
+		delete array1;
+		for (UINT j = 10; j <= 100; j += base) {
+			byte* array2 = new byte[j];
+			memset(array2, 55, j);
+			liDiv.assignByteArray(array2, j);
+			delete array2;
+			liDiv = 10;
+
+//			liNQ = liVal / liDiv;
+//			liNM = liVal % liDiv;
+
+			for (UINT k = 100; k < 1000; k++) {
+				increment = k;
+
+				UINT shift = 0;
+				if (liVal.getSize() > (liDiv.getSize() * 2) && liDiv.getSize() > 0) {
+					shift = liVal.getSize() - liDiv.getSize() - 2;
+					liDiv.bitshiftleft(8 * shift);
+				}
+				liQ = liVal / liDiv;
+				liM = liVal % liDiv;
+				/*
+				while (shift > 0 && shift > j) {
+					UINT subshift = shift;
+					// If the shifted liDiv is going to be less than half the size of liM, change the shift amount
+					// to make it slightly more than half the size of liDiv
+					// So liDiv/2 = liM - shift => =shift = lim - (liDiv/2)
+					if ((liM.getSize() - 10) > ((liDiv.getSize() - subshift) / 2))
+						subshift = (liM.getSize() - (liDiv.getSize() / 2)) + 10;
+					liQ.bitshiftleft(8 * subshift);
+					liDiv.bitshiftright(8 * subshift);
+					liQ2 = liM / liDiv;
+					liM = liM % liDiv;
+					liQ += liQ2;
+					shift -= subshift;
+				}
+				if (shift > 0)
+				{
+					liQ.bitshiftleft(8 * shift);
+					liDiv.bitshiftright(8 * shift);
+					liQ2 = liM / liDiv;
+					liM = liM % liDiv;
+					liQ += liQ2;
+				}*/
+				while (shift > j && shift > increment) {
+					UINT subshift = increment;
+					liQ.bitshiftleft(8 * subshift);
+					liDiv.bitshiftright(8 * subshift);
+					liQ2 = liM / liDiv;
+					liM = liM % liDiv;
+					liQ += liQ2;
+					shift -= subshift;
+				}
+				if (shift > 0)
+				{
+					liQ.bitshiftleft(8 * shift);
+					liDiv.bitshiftright(8 * shift);
+					if (liDiv.getSize() > 0) {
+						liQ2 = liM / liDiv;
+						liM = liM % liDiv;
+						liQ += liQ2;
+					}
+				}
+
+
+
+
+				strQ = liQ.toDecimal();
+				strM = liM.toDecimal();
+				strNQ = liNQ.toDecimal();
+				strNM = liNM.toDecimal();
+				workedQ = liQ == liNQ;
+				workedM = liM == liNM;
+			}
+
+		}
+	}
+
+
+
+
+
+
+
+
+	return;
+
 
 	CString strFactor;
 	CString strArrowLevel;

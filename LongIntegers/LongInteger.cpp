@@ -1776,6 +1776,71 @@ bool LongInteger::bitshiftright(const LongInteger& liShift)
 }
 
 
+bool LongInteger::bitshiftright(UINT uShift)
+{
+	// Rightshift all the bits by uShift amount
+	// Every multiple of 8 in uShift is a full byte to the right
+	// So start by getting uShift div 8 and moving all bytes by that amount
+
+	// First a sanity check. A little like a sanity clause, but without the reindeer.
+	UINT uMoveBytes = uShift / 8;
+	UINT iMoveBits = uShift - (uMoveBytes * 8);
+	if (uMoveBytes > size)
+	{
+		init();
+		checkSize();
+		return bOverflow;
+	}
+
+	// And another check
+	// Shifting zero or shifting by zero achieves nothing - so just return
+	if (size == 0 || uShift == 0)
+	{
+		return bOverflow;
+	}
+
+	// The digits need to be shifted down by uMoveBytes, starting from zero
+	for (UINT i = 0, j = uMoveBytes; j < size; ++i, ++j)
+	{
+		digits[i] = digits[j];
+	}
+	// Blank out the other digits
+	for (UINT uLoop = (size - uMoveBytes); uLoop < size; ++uLoop)
+	{
+		digits[uLoop] = 0;
+	}
+	checkSize();
+
+	// Create a bitmask
+	byte bBitMask = 0;
+	for (UINT i = 0; i < iMoveBits; i++)
+	{
+		bBitMask <<= 1;
+		bBitMask += 1;
+	}
+
+	if (bBitMask == 0) return bOverflow;
+
+	// Now move each digit by any bits left over
+	UINT iUnderflow = 0;
+	UINT iTemp;
+	UINT index;
+	for (UINT uLoop = size; uLoop > 0; --uLoop)
+	{
+		index = uLoop; // Index of digit to adjust converted to a UINT
+		index--; // A workaround to deal with LongIntegers (and UINT) not being negative and the end test for the loop
+		iTemp = digits[index] >> iMoveBits;
+		iTemp += iUnderflow;
+		iUnderflow = digits[index] & bBitMask;
+		iUnderflow <<= (BASEVALBITS - iMoveBits);
+		digits[index] = (byte)iTemp;
+	}
+
+	checkSize();
+	return bOverflow;
+}
+
+
 bool LongInteger::bitshiftleft(const LongInteger& liShift)
 {
 	// Leftshift all the bits by liShift amount
@@ -1823,6 +1888,96 @@ bool LongInteger::bitshiftleft(const LongInteger& liShift)
 	while (uMoveFrom > 0)
 	{
 		digits[uMoveTo] = digits[(uMoveFrom-1)];
+		--uMoveFrom;
+		--uMoveTo;
+	}
+	// Blank out the other digits
+	for (UINT uLoop = 0; uLoop < (size - oldSize); ++uLoop)
+	{
+		digits[uLoop] = 0;
+	}
+	checkSize();
+
+	// Create a bitmask
+	byte bBitMask = 0;
+	for (UINT i = 0; i < iMoveBits; i++)
+	{
+		bBitMask <<= 1;
+		bBitMask += 1;
+	}
+
+	if (bBitMask == 0) return bOverflow;
+
+	// Now move each digit by any bits left over
+	UINT iMoveUp = 0;
+	UINT iTemp;
+	UINT index;
+	for (UINT uLoop = 0; uLoop < size; ++uLoop)
+	{
+		index = uLoop;
+		iTemp = digits[index] << iMoveBits;
+		iTemp += iMoveUp;
+		iMoveUp = iTemp / 256;
+		digits[uLoop] = (byte)iTemp;
+	}
+	if (iMoveUp != 0)
+	{
+		size++;
+		if (size > maxSize)
+		{
+			recalcMaxSize();
+		}
+		digits[size - 1] = (byte)iMoveUp;
+	}
+	checkSize();
+
+	return bOverflow;
+}
+
+bool LongInteger::bitshiftleft(UINT uShift)
+{
+	// Leftshift all the bits by liShift amount
+	// Every multiple of 8 in liShift is a full byte to the left
+	// So start by getting liShift div 8 and moving all bytes by that amount
+
+	// First some sanity checks. A little like a sanity clause, but without the reindeer.
+	// Left shifting zero doens't do anything (except cause issues with the loops)
+	if (size == 0 || (size == 1 && digits[0] == 0))
+		return bOverflow;
+	// Check we aren't going to increase the number beyond max size
+	UINT uMoveBytes = uShift / 8;
+	UINT iMoveBits = uShift % 8;
+	if (uMoveBytes > (LongInteger::ABSMAXSIZE - size))
+	{
+		bOverflow = true;
+		return bOverflow;
+	}
+
+	// And another check
+	// Shifting zero or shifting by zero achieves nothing - so just return
+	if (size == 0 || uShift == 0)
+	{
+		return bOverflow;
+	}
+
+	// Work out the new size needed
+	UINT newSize = size + uMoveBytes;
+	UINT oldSize = size;
+	size = newSize;
+	recalcMaxSize();
+
+	// The bits below are all wrong
+	// Got to here
+
+	// The digits need to be shifted up by uMoveBytes
+	// Some artificial manipulation of uMoveTo as we can't check for it being less than zero
+	// as UINTs can't be negative (i.e stick in -1 and +1 where needed)
+	UINT uMoveTo = (size - 1);
+	UINT uMoveFrom = (uMoveTo - (size - oldSize)) + 1;
+
+	while (uMoveFrom > 0)
+	{
+		digits[uMoveTo] = digits[(uMoveFrom - 1)];
 		--uMoveFrom;
 		--uMoveTo;
 	}
