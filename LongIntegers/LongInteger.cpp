@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include "LongInteger.h"
 #include <stdexcept>
 #undef min
