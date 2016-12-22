@@ -2032,7 +2032,7 @@ LongInteger LongInteger::operator >> (const LongInteger& rhs)
 	return value;
 }
 
-LongInteger LongInteger::operator >> (int rhs)
+LongInteger LongInteger::operator >> (UINT rhs)
 {
 	LongInteger value = *this;
 	value >>= rhs;
@@ -2045,7 +2045,7 @@ LongInteger& LongInteger::operator>>=(const LongInteger& rhs)
 	return *this;
 }
 
-LongInteger& LongInteger::operator>>=(int rhs)
+LongInteger& LongInteger::operator>>=(UINT rhs)
 {
 	bitshiftright(rhs);
 	return *this;
@@ -2058,7 +2058,7 @@ LongInteger LongInteger::operator<<(const LongInteger& rhs)
 	return value;
 }
 
-LongInteger LongInteger::operator<<(int rhs)
+LongInteger LongInteger::operator<<(UINT rhs)
 {
 	LongInteger value = *this;
 	value <<= rhs;
@@ -2071,7 +2071,7 @@ LongInteger& LongInteger::operator<<=(const LongInteger& rhs)
 	return *this;
 }
 
-LongInteger& LongInteger::operator<<=(int rhs)
+LongInteger& LongInteger::operator<<=(UINT rhs)
 {
 	bitshiftleft(rhs);
 	return *this;
