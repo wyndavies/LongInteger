@@ -33,13 +33,9 @@ public:
 
 	// This is under development. The code is rather messy as I'm struggling to follow the paper due to the heavy usage of maths
 	// terminology I'm unfamiliar with.
-	static void BurnikelZiegler(LongInteger&, LongInteger&, LongIntegerUP&, LongIntegerUP&);
-
-	static LongIntegerUP merge(vector<LongIntegerUP>& vList, UINT uNumParts, UINT uSizeParts);
-	static vector<LongIntegerUP> DivThreeHalvesByTwo(LongIntegerUP& a1, LongIntegerUP& a2, LongIntegerUP& a3, LongIntegerUP& b1, LongIntegerUP& b2, UINT uNumDigits);
-	static vector<LongIntegerUP> DivTwoDigitsByOne(LongIntegerUP& AHigh, LongIntegerUP& ALow, LongIntegerUP& B, UINT uNumDigits);
-	// A generic splitting function. Split the input LongInteger into UINT parts of UINT length and return as an array of LongIntegers
-	static vector<LongIntegerUP> split(LongIntegerUP&, UINT, UINT);
+	// So far it shows that it is a lot quicker than long division if the divisor is at least half the size (number of digits)
+	// of the value. Otherwise it is a lot slower
+	static void BurnikelZiegler(const LongInteger&, const LongInteger&, LongIntegerUP&, LongIntegerUP&);
 
 private:
 	static LongInteger karatsuba(const LongInteger&, const LongInteger&); // This is the front end which also tidies up any memory allocated
@@ -54,8 +50,7 @@ public:
 	static const UINT SIZESTEP = 10000; // Internal byte array is increased or decreased in block of this size
 	static const UINT KARATSBUACUTOFF = 50; // Karatsuba cutoff size. Numbers below this size will use long multiplication
 	static const UINT TOOMCOOK3CUTOFF = 150; // Testing shows this is the optimal value. Update - 150 is the best in debug builds. In release builds it is not. In release it is all over the place.
-//	static const UINT BURKINELZIEGLERCUTOFF = 10; // Still testing for the optimal value
-	static UINT BURKINELZIEGLERCUTOFF;
+	static const UINT BURKINELZIEGLERCUTOFF = 50; // 50 seems to work well for the recursion point
 
 public:
 	// For testing only
@@ -108,9 +103,9 @@ public:
 
 	// Arithmetic operators
 	LongInteger operator+(const LongInteger&) const; // Addition
-    //	LongInteger operator+() const; // Unary plus
+    LongInteger operator+() const; // Unary plus
 	LongInteger operator-(const LongInteger&) const;
-	//	LongInteger operator-() const; // Unary negate
+	LongInteger operator-() const; // Unary negate
 	LongInteger operator*(const LongInteger&) const;
 	LongInteger operator/(const LongInteger&) const;
 	LongInteger operator%(const LongInteger&) const;
@@ -170,10 +165,6 @@ public:
 	LongInteger& operator<<=(const LongInteger&);
 	LongInteger& operator<<=(int);
 
-	// Unary operators
-	LongInteger operator-() const;
-	LongInteger operator+() const;
-
 	LongInteger abs(const LongInteger&);
 
 	bool equalsZero() const;
@@ -214,6 +205,15 @@ private:
 	bool multHelper(int);
 	bool multHelper2(UINT);
 	UINT UINTpower(UINT, UINT);
+
+	// Helper methods for Burnikel-Ziegler division
+	static LongIntegerUP merge(vector<LongIntegerUP>& vList, UINT uNumParts, UINT uSizeParts);
+	static vector<LongIntegerUP> DivThreeHalvesByTwo(LongIntegerUP& a1, LongIntegerUP& a2, LongIntegerUP& a3, LongIntegerUP& b1, LongIntegerUP& b2, UINT uNumDigits);
+	static vector<LongIntegerUP> DivTwoDigitsByOne(LongIntegerUP& AHigh, LongIntegerUP& ALow, LongIntegerUP& B, UINT uNumDigits);
+	// A generic splitting function. Split the input LongInteger into UINT parts of UINT length and return as an array of LongIntegers
+	static vector<LongIntegerUP> split(LongIntegerUP&, UINT, UINT);
+
+
 public:
 	bool multiplyInternal(const LongInteger&);
 

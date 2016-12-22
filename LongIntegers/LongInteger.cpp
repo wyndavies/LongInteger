@@ -13,7 +13,6 @@
 #endif
 
 bool LongInteger::bShuttingDown = false;
-UINT LongInteger::BURKINELZIEGLERCUTOFF = 100;
 
 void LongInteger::init()
 {
@@ -1109,6 +1108,20 @@ bool LongInteger::divideNumber(const LongInteger& liDivide)
 		return !bOverflow;
 	}
 
+	// If the value is large and the divisor is at least half the size of the value, then Burnikel-Zeigler division is quicker
+	if (size > BURKINELZIEGLERCUTOFF && liDivide.size > (size / 2))
+	{
+		LongIntegerUP upliQuotient, upliModulus;
+		upliQuotient = make_unique<LongInteger>(0);
+		upliModulus = make_unique<LongInteger>(0);
+
+		BurnikelZiegler(*this, liDivide, upliQuotient, upliModulus);
+		*this = *upliQuotient;
+		return !bOverflow;
+	}
+
+
+
 	LongInteger liResult = 0;
 	// Use a LongInteger for the subtractor as the number could potentially end up being very large
 	LongInteger liNumOfSubtractions = 1;
@@ -1360,6 +1373,18 @@ bool LongInteger::modulus(const LongInteger& liDivide)
 	// Compare sizes
 	// If the divisor is bigger than the number being divided then the modulus is the original number
 	if (liDivide.size > size) {
+		return !bOverflow;
+	}
+
+	// If the value is large and the divisor is at least half the size of the value, then Burnikel-Zeigler division is quicker
+	if (size > BURKINELZIEGLERCUTOFF && liDivide.size > (size / 2))
+	{
+		LongIntegerUP upliQuotient, upliModulus;
+		upliQuotient = make_unique<LongInteger>(0);
+		upliModulus = make_unique<LongInteger>(0);
+
+		BurnikelZiegler(*this, liDivide, upliQuotient, upliModulus);
+		*this = *upliModulus;
 		return !bOverflow;
 	}
 
@@ -2335,10 +2360,11 @@ void LongInteger::RestoringDivision(LongInteger& liValue, LongInteger& liDiv, Lo
 
 	liResult->assignByteArray(Q, liValue.size);
 	*liModulus = P;
+	delete Q;
 }
 
 
-void LongInteger::BurnikelZiegler(LongInteger& liValue, LongInteger& liDiv, LongIntegerUP& liResult, LongIntegerUP& liModulus)
+void LongInteger::BurnikelZiegler(const LongInteger& liValue, const LongInteger& liDiv, LongIntegerUP& liResult, LongIntegerUP& liModulus)
 {
 	// Looked at other algorithm (e.g. Newton-Raphson division) and many of them use floating point numbers
 	// So we shall move on to Burnikel-Ziegler division
