@@ -292,7 +292,7 @@ public:
 		// so we have to do this in 2 bits
 		if (size > 0) {
 			UINT iLoop = size - 1;
-			while (iLoop >= 0 && bEqual) {
+			while (iLoop > 0 && bEqual) {
 				if (digits[iLoop] != rhs.digits[iLoop])
 					bEqual = false;
 				--iLoop;
