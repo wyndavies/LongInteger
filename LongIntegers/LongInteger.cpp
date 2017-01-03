@@ -260,10 +260,10 @@ bool LongInteger::assignNumber(CString& in_number)
 	while (!finished && !bOverflow) {
 		remainder = 0;
 		// Loop through and divide each digit by BASEVAL, putting the remainder in the next digit down
-		for (int i = listLength-1; i >= 0; i--) {
-			value = tempList[i] + (remainder * 10);
+		for (UINT i = listLength; i > 0; i--) {
+			value = tempList[i-1] + (remainder * 10);
 //			tempList[i] = value / BASEVAL;
-			tempList[i] = value >> BASEVALBITS;
+			tempList[i-1] = value >> BASEVALBITS;
 //			remainder = value % BASEVAL;
 			remainder = (byte)value; // Only works when using base 256
 		}
@@ -399,17 +399,23 @@ CString LongInteger::toDecimal()
 
 LongInteger::operator int()
 {
-	int uResult = (UINT)(*this);
-	// An unsigned int can be larger than the max value for int
-	if (uResult > (std::numeric_limits<int>::max()))
+	// Check the number held can be stored in an int
+	if (size > sizeof(int))
+		return 0;
+	if (abs(*this) > (std::numeric_limits<int>::max()))
 		return 0;
 
-	return (int)uResult;
+	int iResult = (UINT)(*this); // Call the UINT conversion so we don't have to write the conversion code twice
+	if (!bPositive)
+		iResult *= -1;
+
+	return iResult;
 }
 
 LongInteger::operator UINT()
 {
 	// Convert the LongInteger into an unsigned int. If it is too big, return 0
+	// Assume the user wants the absolute value, so we won't worry about pesky negative signs
 	if (size > sizeof(UINT))
 		return 0;
 	// Use an unsigned int to hold the converted LongInteger
@@ -1205,6 +1211,7 @@ bool LongInteger::divHelper(int iDivide)
 	}
 
 	// This division is by the unit storage amount - i.e. move each digit down one
+	// Slightly quicker version of shifting right by 8 bits
 	if (size == 1) {
 		digits[0] = 0;
 	} else {

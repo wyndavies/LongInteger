@@ -398,23 +398,37 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// Now try some random values to see how it works.
 	UINT base = 1000;
 	UINT increment = 500;
+	CStdioFile myFile;
+	bool bSuccess = myFile.Open(L"D:\\result.txt", CFile::modeCreate | CFile::modeWrite);
+
 	for (UINT i = 6000; i <= 10000; i += base) {
 		byte* array1 = new byte[i];
 		memset(array1, 111, i);
 		liVal.assignByteArray(array1, i);
 		delete array1;
-		for (UINT j = 10; j <= 100; j += base) {
+		for (UINT j = 1000; j <= i; j += base) {
 			byte* array2 = new byte[j];
 			memset(array2, 55, j);
 			liDiv.assignByteArray(array2, j);
 			delete array2;
 			liDiv = 10;
 
-//			liNQ = liVal / liDiv;
-//			liNM = liVal % liDiv;
+			
 
-			for (UINT k = 100; k < 1000; k++) {
+			
+			auto divStart = std::chrono::high_resolution_clock::now();
+			liNQ = liVal / liDiv;
+			liNM = liVal % liDiv;
+			auto divEnd = std::chrono::high_resolution_clock::now();
+			auto rawduration = divEnd - divStart;
+			std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
+			CString writeString;
+			writeString.Format(L"%d,%d,NA,%d,", i, j, duration);
+
+			for (UINT k = 100; k < 1000; k+=100) {
 				increment = k;
+
+				divStart = std::chrono::high_resolution_clock::now();
 
 				UINT shift = 0;
 				if (liVal.getSize() > (liDiv.getSize() * 2) && liDiv.getSize() > 0) {
@@ -423,29 +437,6 @@ void CLongIntegersDlg::OnClickedIdarrow()
 				}
 				liQ = liVal / liDiv;
 				liM = liVal % liDiv;
-				/*
-				while (shift > 0 && shift > j) {
-					UINT subshift = shift;
-					// If the shifted liDiv is going to be less than half the size of liM, change the shift amount
-					// to make it slightly more than half the size of liDiv
-					// So liDiv/2 = liM - shift => =shift = lim - (liDiv/2)
-					if ((liM.getSize() - 10) > ((liDiv.getSize() - subshift) / 2))
-						subshift = (liM.getSize() - (liDiv.getSize() / 2)) + 10;
-					liQ.bitshiftleft(8 * subshift);
-					liDiv.bitshiftright(8 * subshift);
-					liQ2 = liM / liDiv;
-					liM = liM % liDiv;
-					liQ += liQ2;
-					shift -= subshift;
-				}
-				if (shift > 0)
-				{
-					liQ.bitshiftleft(8 * shift);
-					liDiv.bitshiftright(8 * shift);
-					liQ2 = liM / liDiv;
-					liM = liM % liDiv;
-					liQ += liQ2;
-				}*/
 				while (shift > j && shift > increment) {
 					UINT subshift = increment;
 					liQ.bitshiftleft(8 * subshift);
@@ -466,8 +457,12 @@ void CLongIntegersDlg::OnClickedIdarrow()
 					}
 				}
 
-
-
+				divEnd = std::chrono::high_resolution_clock::now();
+				rawduration = divEnd - divStart;
+				duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
+				CString tempString;
+				tempString.Format(L",%d,%d", k, duration);
+				writeString.Append(tempString);
 
 				strQ = liQ.toDecimal();
 				strM = liM.toDecimal();
@@ -477,13 +472,12 @@ void CLongIntegersDlg::OnClickedIdarrow()
 				workedM = liM == liNM;
 			}
 
+			myFile.WriteString(writeString);
+			myFile.WriteString(L"/n");
+
 		}
 	}
-
-
-
-
-
+	myFile.Close();
 
 
 

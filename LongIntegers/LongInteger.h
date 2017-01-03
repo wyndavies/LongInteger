@@ -249,17 +249,27 @@ public:
 
 		bool bLessThan = false;
 		bool bLoop = true;
-		int index = size - 1;
-		while (index >= 0 && bLoop) {
-			if (digits[index] < rhs.digits[index]) {
-				bLessThan = true;
-				bLoop = false;
+		// Some amendments as the index is now a UINT and thus we can't go negative
+		if (size > 0) {
+			UINT index = size - 1;
+			while (index > 0 && bLoop) {
+				if (digits[index] < rhs.digits[index]) {
+					bLessThan = true;
+					bLoop = false;
+				}
+				else if (digits[index] > rhs.digits[index]) {
+					bLoop = false;
+				}
+				--index;
 			}
-			else if (digits[index] > rhs.digits[index]) {
-				bLoop = false;
-			}
-			--index;
 		}
+		// Scenario for index = 0 and we haven't finished checking
+		if (bLoop) {
+			if (digits[0] < rhs.digits[0]) {
+				bLessThan = true;
+			}
+		}		
+
 		return (bLessThan ^ !bPositive); // Return the opposite result if the numbers are negative
 	}
 
@@ -278,11 +288,20 @@ public:
 			return false;
 		}
 		bool bEqual = true;
-		int iLoop = size - 1;
-		while (iLoop >= 0 && bEqual) {
-			if (digits[iLoop] != rhs.digits[iLoop])
+		// Amendments for using UINT as index instead of int. Can no longer check for less than zero
+		// so we have to do this in 2 bits
+		if (size > 0) {
+			UINT iLoop = size - 1;
+			while (iLoop >= 0 && bEqual) {
+				if (digits[iLoop] != rhs.digits[iLoop])
+					bEqual = false;
+				--iLoop;
+			}
+		}
+		// Extra bit for the zeroth digit
+		if (bEqual) {
+			if (digits[0] != rhs.digits[0])
 				bEqual = false;
-			--iLoop;
 		}
 		return bEqual;
 	}
