@@ -401,7 +401,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	CStdioFile myFile;
 	bool bSuccess = myFile.Open(L"D:\\result.txt", CFile::modeCreate | CFile::modeWrite);
 
-	for (UINT i = 6000; i <= 10000; i += base) {
+	for (UINT i = 1000; i <= 10000; i += base) {
 		byte* array1 = new byte[i];
 		memset(array1, 111, i);
 		liVal.assignByteArray(array1, i);
@@ -411,52 +411,30 @@ void CLongIntegersDlg::OnClickedIdarrow()
 			memset(array2, 55, j);
 			liDiv.assignByteArray(array2, j);
 			delete array2;
-			liDiv = 10;
-
 			
 
 			
 			auto divStart = std::chrono::high_resolution_clock::now();
-			liNQ = liVal / liDiv;
-			liNM = liVal % liDiv;
+			LongIntegerUP upliNQ = make_unique<LongInteger>(0);
+			LongIntegerUP upliNM = make_unique<LongInteger>(0);
+			LongInteger::DivAndMod(liVal, liDiv, upliNQ, upliNM);
+			liNQ = *upliNQ;
+			liNM = *upliNM;
 			auto divEnd = std::chrono::high_resolution_clock::now();
 			auto rawduration = divEnd - divStart;
 			std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
 			CString writeString;
 			writeString.Format(L"%d,%d,NA,%d,", i, j, duration);
 
-			for (UINT k = 100; k < 1000; k+=100) {
-				increment = k;
+			for (UINT k = 25; k < 250; k+=25) {
+				LongInteger::BURKINELZIEGLERCUTOFF = k;
 
 				divStart = std::chrono::high_resolution_clock::now();
 
-				UINT shift = 0;
-				if (liVal.getSize() > (liDiv.getSize() * 2) && liDiv.getSize() > 0) {
-					shift = liVal.getSize() - liDiv.getSize() - 2;
-					liDiv.bitshiftleft(8 * shift);
-				}
-				liQ = liVal / liDiv;
-				liM = liVal % liDiv;
-				while (shift > j && shift > increment) {
-					UINT subshift = increment;
-					liQ.bitshiftleft(8 * subshift);
-					liDiv.bitshiftright(8 * subshift);
-					liQ2 = liM / liDiv;
-					liM = liM % liDiv;
-					liQ += liQ2;
-					shift -= subshift;
-				}
-				if (shift > 0)
-				{
-					liQ.bitshiftleft(8 * shift);
-					liDiv.bitshiftright(8 * shift);
-					if (liDiv.getSize() > 0) {
-						liQ2 = liM / liDiv;
-						liM = liM % liDiv;
-						liQ += liQ2;
-					}
-				}
-
+				LongInteger::DivAndMod(liVal, liDiv, upliNQ, upliNM);
+				liQ = *upliNQ;
+				liM = *upliNM;
+				
 				divEnd = std::chrono::high_resolution_clock::now();
 				rawduration = divEnd - divStart;
 				duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
@@ -464,16 +442,22 @@ void CLongIntegersDlg::OnClickedIdarrow()
 				tempString.Format(L",%d,%d", k, duration);
 				writeString.Append(tempString);
 
-				strQ = liQ.toDecimal();
-				strM = liM.toDecimal();
-				strNQ = liNQ.toDecimal();
-				strNM = liNM.toDecimal();
+				//strQ = liQ.toDecimal();
+				//strM = liM.toDecimal();
+				//strNQ = liNQ.toDecimal();
+				//strNM = liNM.toDecimal();
 				workedQ = liQ == liNQ;
 				workedM = liM == liNM;
+				if (!(workedQ && workedM)) {
+					int debugpointint = 0;
+					debugpointint += 10;
+					CString hellothere = L"";
+					hellothere.Format(L"%d", debugpointint);
+				}
 			}
 
 			myFile.WriteString(writeString);
-			myFile.WriteString(L"/n");
+			myFile.WriteString(L"\\n");
 
 		}
 	}

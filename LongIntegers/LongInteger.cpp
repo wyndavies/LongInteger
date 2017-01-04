@@ -13,6 +13,7 @@
 #endif
 
 bool LongInteger::bShuttingDown = false;
+UINT LongInteger::BURKINELZIEGLERCUTOFF = 1000000;
 
 void LongInteger::init()
 {
@@ -557,7 +558,31 @@ bool LongInteger::subtractNumber(const LongInteger& liMinus)
 	// If liMinus is greater than *this, we will go negative
 	// So set the flag for negative and subtract *this from liMinus
 	LongInteger liWorking;
-	if (abs(liMinus) > abs(*this))
+	// Some manipulations to avoid making a copy. Looks might complicated, but it is checking for
+	// abs(liMinus) > abs(*this). The abs operator makes a copy with bPositive set to positive, so
+	// it is a bit of an overhead. Hence the flag manipulation below
+	bool bGreater = true;
+	bool bTemp = bPositive;
+	bPositive = liMinus.bPositive;
+	if (bPositive == true) {
+		if (liMinus > *this) {
+			bGreater = true;
+		}
+		else {
+			bGreater = false;
+		}
+	}
+	else {
+		if (liMinus < *this) {
+			bGreater = true;
+		}
+		else {
+			bGreater = false;
+		}
+	}
+	bPositive = bTemp; // Put the flag back
+
+	if (bGreater)
 	{
 		LongInteger liTemp = (*this);
 		*this = liMinus;
@@ -1091,59 +1116,113 @@ bool LongInteger::powerCalc(int powerIn)
 
 bool LongInteger::divideNumber(const LongInteger& liDivide)
 {
+	LongIntegerUP upliQuotient = make_unique<LongInteger>(0);
+	LongIntegerUP upliModulus = make_unique<LongInteger>(0);
+
+	bool bSuccess = DivAndMod(*this, liDivide, upliQuotient, upliModulus);
+
+	if (!bSuccess) {
+		*this = 0;
+		bOverflow = true;
+	}
+	else {
+		*this = *upliQuotient;
+	}
+
+	return bOverflow;
+}
+
+bool LongInteger::DivAndMod(const LongInteger& liValue, const LongInteger& liDivide, LongIntegerUP& upliQuotient, LongIntegerUP& upliModulus)
+{
+	// The divide and modulus functions were created separately, but it will save a lot of hassle by combining them - especially as
+	// it is the same code in the 2 functions
+
+
 	// How to divide? Can you divide 1 digit at a time?
 	// Division is big subtraction, but if the divisor is small that will be a lot of
 	// subtractions.
 	// However... the divisor can be multiplied until it is just a bit smaller than
 	// the number being divided and then subtracted. This will reduce the number of subtractions
-	// How to do this?
 
+	bool bSuccess = true;
 	// Dividing zero doesn't get you anywhere
-	if (size == 0)
-		return !bOverflow;
+	if (liValue.size == 0)
+		return !bSuccess;
 
 	// Compare sizes
 	// If the divisor is bigger than the number being divided then result is zero (we don't have decimals or fractions)
-	if (liDivide.size > size) {
-		assignNumber(0);
-		return !bOverflow;
+	if (liDivide.size > liValue.size) {
+		return !bSuccess;
 	}
 	// Don't divide by zero
-	if (liDivide.size == 0) {
-		bOverflow = true;
-		return !bOverflow;
+	if (liDivide.equalsZero()) {
+		return !bSuccess;
 	}
 
 	// If the value is large and the divisor is at least half the size of the value, then Burnikel-Zeigler division is quicker
-	if (size > BURKINELZIEGLERCUTOFF && liDivide.size > (size / 2))
+	if (liValue.size > BURKINELZIEGLERCUTOFF)
 	{
-		LongIntegerUP upliQuotient, upliModulus;
-		upliQuotient = make_unique<LongInteger>(0);
-		upliModulus = make_unique<LongInteger>(0);
+		if (liDivide.size > (liValue.size / 2))
+		{
+			BurnikelZiegler(liValue, liDivide, upliQuotient, upliModulus);
+			return bSuccess;
+		}
+		else
+		{
+			// Increase the size of the divisor until it is at least half the size of the value
+			// Then do the division
+			// Then divide the modulus by the amount we had "buffed" the divisor, noting the quotient
+			// Then multiply the original quotient by the "buffed" amount and add the new quotient
+			// This seems like a lot of work, but it is quicker
+			
+			UINT uIncrement = liValue.size - liDivide.size;
+			if (uIncrement > 1000) {
+				uIncrement = 1000;
+			}
+			else {
+				uIncrement /= 2;
+			}
 
-		BurnikelZiegler(*this, liDivide, upliQuotient, upliModulus);
-		*this = *upliQuotient;
-		return !bOverflow;
+			LongInteger liNewDivide = liDivide;
+			LongInteger liOffset = uIncrement;
+			liOffset *= LongInteger::BASEVALBITS;
+			liNewDivide <<= liOffset;
+
+			DivAndMod(liValue, liNewDivide, upliQuotient, upliModulus);
+//			BurnikelZiegler(liValue, liNewDivide, upliQuotient, upliModulus);
+
+
+
+			liNewDivide.bitshiftright(liOffset);
+			LongIntegerUP upliNewQuotient = make_unique<LongInteger>(0);
+			LongIntegerUP upliNewModulus = make_unique<LongInteger>(0);
+			DivAndMod(*upliModulus, liNewDivide, upliNewQuotient, upliNewModulus);
+
+			upliQuotient->bitshiftleft(liOffset);
+			*upliQuotient += *upliNewQuotient;
+			upliModulus = move(upliNewModulus);
+
+			return bSuccess;
+		}
 	}
 
-
-
-	LongInteger liResult = 0;
 	// Use a LongInteger for the subtractor as the number could potentially end up being very large
 	LongInteger liNumOfSubtractions = 1;
 	LongInteger liSubtractor = liDivide;
+	LongInteger liWorkingMod = liValue;
+	LongInteger liWorkingQuot = 0;
 
 	// Turn the calculation into a +ve dividing a +ve and also work out what the final sign will be
-	bool bFinal = !(bPositive ^ liDivide.bPositive);
+	bool bFinal = !(liWorkingMod.bPositive ^ liDivide.bPositive);
 	liSubtractor.bPositive = true;
-	bPositive = true;
+	liWorkingMod.bPositive = true;
 
 	// multiply the divisor by 256 until the size is the same as the target.
 	// Subtract until the divider is greater than the target.
 	// Then divide by 256 and repeat until the divisor is back down to it's original size
 	// We don't have fractions or decimals so that will be the end
 	UINT iLevel = 0;
-	while (liSubtractor.size < size) {
+	while (liSubtractor.size < liWorkingMod.size) {
 		liNumOfSubtractions *= BASEVAL;
 		liSubtractor *= BASEVAL;
 		++iLevel;
@@ -1151,12 +1230,12 @@ bool LongInteger::divideNumber(const LongInteger& liDivide)
 
 	bool doLoop = true;
 	while (doLoop) {
-		while (*this >= liSubtractor) {
+		while (liWorkingMod >= liSubtractor) {
 			if (bShuttingDown) {
 				return false;
 			}
-			*this -= liSubtractor;
-			liResult += liNumOfSubtractions;
+			liWorkingMod -= liSubtractor;
+			liWorkingQuot += liNumOfSubtractions;
 		}
 		if (iLevel > 0) {
 			liNumOfSubtractions /= BASEVAL;
@@ -1170,10 +1249,11 @@ bool LongInteger::divideNumber(const LongInteger& liDivide)
 		}
 	}
 
-	*this = liResult;
-	bPositive = bFinal;
+	upliQuotient = make_unique<LongInteger>(liWorkingQuot);
+	upliQuotient->bPositive = bFinal;
+	upliModulus = make_unique<LongInteger>(liWorkingMod);
 
-	return !bOverflow;
+	return bSuccess;
 }
 
 
@@ -1361,75 +1441,19 @@ void LongInteger::setShuttingDown(bool bValue)
 
 bool LongInteger::modulus(const LongInteger& liDivide)
 {
-	// Divide the current number by liDivide and get the remainder
+	LongIntegerUP upliQuotient = make_unique<LongInteger>(0);
+	LongIntegerUP upliModulus = make_unique<LongInteger>(0);
 
-	// Simplest - though least efficient method - is to subtract liDivide
-	// until liDivide is greater than the number held and that is the remainder
+	bool bSuccess = DivAndMod(*this, liDivide, upliQuotient, upliModulus);
 
-	// Some sanity checks
-	// 0 mod n = 0
-	if (size == 0)
-		return !bOverflow;
-
-	// n mod 0 = undefined. For practicality, set this to zero
-	if (liDivide.size == 0) {
-		assignNumber(0);
-		return !bOverflow;
+	if (!bSuccess) {
+		*this = 0;
 	}
-
-	// Compare sizes
-	// If the divisor is bigger than the number being divided then the modulus is the original number
-	if (liDivide.size > size) {
-		return !bOverflow;
-	}
-
-	// If the value is large and the divisor is at least half the size of the value, then Burnikel-Zeigler division is quicker
-	if (size > BURKINELZIEGLERCUTOFF && liDivide.size > (size / 2))
-	{
-		LongIntegerUP upliQuotient, upliModulus;
-		upliQuotient = make_unique<LongInteger>(0);
-		upliModulus = make_unique<LongInteger>(0);
-
-		BurnikelZiegler(*this, liDivide, upliQuotient, upliModulus);
+	else {
 		*this = *upliModulus;
-		return !bOverflow;
 	}
 
-	// Use a LongInteger for the subtractor as the number could potentially end up being very large
-	LongInteger liNumOfSubtractions = 1;
-	LongInteger liSubtractor = liDivide;
-
-	// multiply the divisor by 256 until the size is the same as the target.
-	// Subtract until the divider is greater than the target.
-	// Then divide by 256 and repeat until the divisor is back down to it's original size
-	UINT iLevel = 0;
-	while (liSubtractor.size < size) {
-		liNumOfSubtractions *= BASEVAL;
-		liSubtractor *= BASEVAL;
-		++iLevel;
-	}
-
-	bool doLoop = true;
-	while (doLoop) {
-		while (*this >= liSubtractor) {
-			if (bShuttingDown) {
-				return false;
-			}
-			*this -= liSubtractor;
-		}
-		if (iLevel > 0) {
-			liNumOfSubtractions /= BASEVAL;
-			liSubtractor /= BASEVAL;
-		}
-		if (iLevel == 0) {
-			doLoop = false;
-		}
-		else {
-			--iLevel;
-		}
-	}
-
-	return !bOverflow;
+	return bOverflow;
 }
 
 LongInteger& LongInteger::operator%=(const LongInteger& liMod)
@@ -1725,19 +1749,21 @@ bool LongInteger::bitshiftright(const LongInteger& liShift)
 	// uses UINT as an index
 
 	// First a sanity check. A little like a sanity clause, but without the reindeer.
-	LongInteger liMoveBytes = liShift / 8;
-	UINT iMoveBits = (UINT)(liShift - (liMoveBytes * 8));
+	// Shifting zero or shifting by zero achieves nothing - so just return
+	if (size == 0 || liShift.size == 0)
+	{
+		return bOverflow;
+	}
+	
+	LongInteger liMoveBytes = liShift;
+	liMoveBytes.bitshiftright(BASEVALBITSSHIFT); // This should call the UNIT version
+	UINT iMoveBits = liShift.digits[0] % BASEVALBITS;
+
+	// And another check
 	if (liMoveBytes > size)
 	{
 		init();
 		checkSize();
-		return bOverflow;
-	}
-
-	// And another check
-	// Shifting zero or shifting by zero achieves nothing - so just return
-	if (size == 0 || liShift.size == 0)
-	{
 		return bOverflow;
 	}
 
@@ -1791,7 +1817,7 @@ bool LongInteger::bitshiftright(UINT uShift)
 
 	// First a sanity check. A little like a sanity clause, but without the reindeer.
 	UINT uMoveBytes = uShift / 8;
-	UINT iMoveBits = uShift - (uMoveBytes * 8);
+	UINT iMoveBits = uShift % 8;
 	if (uMoveBytes > size)
 	{
 		init();
@@ -1862,8 +1888,9 @@ bool LongInteger::bitshiftleft(const LongInteger& liShift)
 	if (size == 0 || (size == 1 && digits[0] == 0))
 		return bOverflow;
 	// Check we aren't going to increase the number beyond max size
-	LongInteger liMoveBytes = liShift / 8;
-	UINT iMoveBits = (UINT)(liShift % 8);
+	LongInteger liMoveBytes = liShift;
+	liMoveBytes.bitshiftright(BASEVALBITSSHIFT);
+	UINT iMoveBits = liShift.digits[0] % BASEVALBITS;
 	if (liMoveBytes > LongInteger::ABSMAXSIZE)
 	{
 		bOverflow = true;
@@ -2719,8 +2746,9 @@ vector<LongIntegerUP> LongInteger::DivThreeHalvesByTwo(LongIntegerUP& a2, LongIn
 			Q = move(temp);
 		}
 		else {
-			*R = *Q % *b1;
-			*Q /= *b1;
+			LongIntegerUP Q2 = make_unique<LongInteger>(0);
+			DivAndMod(*Q, *b1, Q2, R);;
+			Q = move(Q2);
 		}
 	}
 	else {

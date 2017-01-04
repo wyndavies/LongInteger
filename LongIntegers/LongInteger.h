@@ -45,20 +45,25 @@ public:
 	// of the value. Otherwise it is a lot slower
 	static void BurnikelZiegler(const LongInteger&, const LongInteger&, LongIntegerUP&, LongIntegerUP&);
 
+	static bool DivAndMod(const LongInteger&, const LongInteger&, LongIntegerUP&, LongIntegerUP&);
+
 private:
 	static LongInteger karatsuba(const LongInteger&, const LongInteger&); // This is the front end which also tidies up any memory allocated
 	static LongInteger* karatsubaMain(const LongInteger&, const LongInteger&); // This is the recursive part of the karatsuba algorithm
 
 	// Constants
 public:
-	static const int BASEVAL = 256; // The effective base of the numbers (each digit is 1 byte)
-	static const int BASEVALBITS = 8; // Size of each digit in bits
+	static const UINT BASEVAL = 256; // The effective base of the numbers (each digit is 1 byte)
+	static const UINT BASEVALBITS = 8; // Size of each digit in bits
+	static const UINT BASEVALBITSSHIFT = 3; // If dividing/multiplying by basevalbits, using shifts
 	static const byte BASEMAX = 255; // Highest value that can be stored in each digit
 	static const UINT ABSMAXSIZE = 4294967295; // Largest number of values that can be stored (index is by uint, so 2^32-1)
 	static const UINT SIZESTEP = 10000; // Internal byte array is increased or decreased in block of this size
 	static const UINT KARATSBUACUTOFF = 50; // Karatsuba cutoff size. Numbers below this size will use long multiplication
 	static const UINT TOOMCOOK3CUTOFF = 150; // Testing shows this is the optimal value. Update - 150 is the best in debug builds. In release builds it is not. In release it is all over the place.
-	static const UINT BURKINELZIEGLERCUTOFF = 50; // 50 seems to work well for the recursion point
+//	static const UINT BURKINELZIEGLERCUTOFF = 50; // 50 seems to work well for the recursion point
+
+	static UINT BURKINELZIEGLERCUTOFF; // Making it non-const so I can test different values
 
 public:
 	// For testing only
