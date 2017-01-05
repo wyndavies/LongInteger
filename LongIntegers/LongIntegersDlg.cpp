@@ -417,6 +417,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 			auto divStart = std::chrono::high_resolution_clock::now();
 			LongIntegerUP upliNQ = make_unique<LongInteger>(0);
 			LongIntegerUP upliNM = make_unique<LongInteger>(0);
+			LongInteger::BURKINELZIEGLERCUTOFF = 1000000; // Effectively disable BZ division
 			LongInteger::DivAndMod(liVal, liDiv, upliNQ, upliNM);
 			liNQ = *upliNQ;
 			liNM = *upliNM;
@@ -426,7 +427,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 			CString writeString;
 			writeString.Format(L"%d,%d,NA,%d,", i, j, duration);
 
-			for (UINT k = 25; k < 250; k+=25) {
+			for (UINT k = 4; k < 20; k+=1) {
 				LongInteger::BURKINELZIEGLERCUTOFF = k;
 
 				divStart = std::chrono::high_resolution_clock::now();
@@ -457,7 +458,8 @@ void CLongIntegersDlg::OnClickedIdarrow()
 			}
 
 			myFile.WriteString(writeString);
-			myFile.WriteString(L"\\n");
+			writeString = L"\n";
+			myFile.WriteString(writeString);
 
 		}
 	}
