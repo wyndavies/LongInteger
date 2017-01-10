@@ -401,7 +401,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	CStdioFile myFile;
 	bool bSuccess = myFile.Open(L"D:\\result.txt", CFile::modeCreate | CFile::modeWrite);
 
-	for (UINT i = 1000; i <= 10000; i += base) {
+	for (UINT i = 4000; i <= 10000; i += base) {
 		byte* array1 = new byte[i];
 		memset(array1, 111, i);
 		liVal.assignByteArray(array1, i);
@@ -427,7 +427,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 			CString writeString;
 			writeString.Format(L"%d,%d,NA,%d,", i, j, duration);
 
-			for (UINT k = 4; k < 20; k+=1) {
+			for (UINT k = 10; k < 100; k+=10) {
 				LongInteger::BURKINELZIEGLERCUTOFF = k;
 
 				divStart = std::chrono::high_resolution_clock::now();

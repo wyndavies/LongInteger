@@ -545,9 +545,11 @@ bool LongInteger::subtractNumber(const LongInteger& liMinus)
 	// We just subtract each digit in the ranges and then balance the numbers
 
 	// Some sanity checks.
-	if (liMinus.size > maxSize) {
+	if (liMinus.size == 0)
+	{
 		return false;
 	}
+
 	// Subtracting a negative is the same as adding a positive
 	if ((bPositive && !liMinus.bPositive) || (!bPositive && liMinus.bPositive))
 	{
@@ -561,26 +563,18 @@ bool LongInteger::subtractNumber(const LongInteger& liMinus)
 	// Some manipulations to avoid making a copy. Looks might complicated, but it is checking for
 	// abs(liMinus) > abs(*this). The abs operator makes a copy with bPositive set to positive, so
 	// it is a bit of an overhead. Hence the flag manipulation below
-	bool bGreater = true;
-	bool bTemp = bPositive;
-	bPositive = liMinus.bPositive;
-	if (bPositive == true) {
-		if (liMinus > *this) {
-			bGreater = true;
-		}
-		else {
-			bGreater = false;
-		}
+	bool bGreater = false;
+	// Test manually as the non-abs function depends on the signs and we want a sign-independant test that doesn't do copying
+	if (liMinus.size > size)
+	{
+		bGreater = true;
 	}
 	else {
-		if (liMinus < *this) {
+		if (liMinus.size == size && liMinus.digits[liMinus.size - 1] > digits[size - 1])
+		{
 			bGreater = true;
 		}
-		else {
-			bGreater = false;
-		}
 	}
-	bPositive = bTemp; // Put the flag back
 
 	if (bGreater)
 	{
