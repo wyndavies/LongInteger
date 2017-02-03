@@ -2348,7 +2348,7 @@ vector<LongIntegerUP> LongInteger::split(LongIntegerUP& liToSplit, UINT uNumPart
 
 		// Put the current chunk into the LongInteger
 		vList[i]->size = (uEnd - uStart);
-		vList[i]->maxSize = (uDigits - (uDigits % SIZESTEP)) + SIZESTEP;
+		vList[i]->maxSize = (vList[i]->size - (vList[i]->size % SIZESTEP)) + SIZESTEP;
 		vList[i]->reset();
 		memcpy(vList[i]->digits, liToSplit->digits + uStart, uEnd - uStart);
 	}

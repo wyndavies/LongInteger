@@ -395,6 +395,22 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	bool workedM = liM == liNM;
 
 
+	// Some tests of dividing by 10
+	int bigintsize = 100000;
+	LongInteger::BURKINELZIEGLERCUTOFF = 1000;
+	LongInteger liBigNumber;
+	byte* bigArray = new byte[bigintsize];
+	memset(bigArray, 111, bigintsize);
+	liBigNumber.assignByteArray(bigArray, bigintsize);
+	delete bigArray;
+	LongInteger liTen = LongInteger(10);
+	LongIntegerUP upliResult = make_unique<LongInteger>(0);
+	LongIntegerUP upliModulus = make_unique<LongInteger>(0);
+	LongInteger::DivAndMod(liBigNumber, liTen, upliResult, upliModulus);
+//	CString strResult = upliResult->toDecimal();
+	CString strModulus = upliModulus->toDecimal();
+
+
 	// Now try some random values to see how it works.
 	UINT base = 1000;
 	UINT increment = 500;
