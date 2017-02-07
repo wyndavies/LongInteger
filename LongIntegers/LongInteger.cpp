@@ -570,9 +570,30 @@ bool LongInteger::subtractNumber(const LongInteger& liMinus)
 		bGreater = true;
 	}
 	else {
-		if (liMinus.size == size && liMinus.digits[liMinus.size - 1] > digits[size - 1])
+		/* This needs fixed
+		   It needs to check all digits
+		*/
+		if (liMinus.size == size)
 		{
-			bGreater = true;
+			bool bLoop = true;
+			UINT uIndex = liMinus.size - 1;
+			while (bLoop) {
+				if (liMinus.digits[uIndex] > digits[uIndex]) {
+					bGreater = true;
+					bLoop = false;
+				}
+				else
+					if (liMinus.digits[uIndex] < digits[uIndex]) {
+						bLoop = false;
+					}
+					else {
+						// Digits are the same
+						if (uIndex > 0)
+							uIndex--;
+						else
+							bLoop = false;
+					}
+			}
 		}
 	}
 
@@ -883,10 +904,14 @@ bool LongInteger::multiplyInternal(const LongInteger& liMult)
 	// the result
 
 	// Some sanity checks
-	if (liMult.size > maxSize) {
-		return false;
+/*	if (liMult.size > maxSize) {
+		UINT origSize = size;
+		size = liMult.size;
+		recalcMaxSize();
+		size = origSize;
+//		return false;
 	}
-
+*/
 	// How big will the resulting number be?
 	UINT inSize = liMult.size;
 	UINT tempSize = size + inSize;
@@ -913,7 +938,7 @@ bool LongInteger::multiplyInternal(const LongInteger& liMult)
 	}
 
 	// Now put the temporary values into the original
-	while (size > tempSize) {
+	while (maxSize < tempSize) {
 		increaseSize();
 		if (bOverflow)
 			return false;
@@ -985,11 +1010,14 @@ void LongInteger::recalcMaxSize()
 	// Used when maxSize needs to be recalculated
 	UINT oldMaxSize = maxSize;
 	maxSize = ((size / SIZESTEP) * SIZESTEP) + SIZESTEP;
+
 	if (maxSize != oldMaxSize) {
+		UINT copySize = oldMaxSize;
+		if (maxSize < oldMaxSize) copySize = maxSize;
 		byte* tempDigits = digits;
 		digits = new byte[maxSize];
 		memset(digits, 0, sizeof(byte) * maxSize);
-		memcpy(digits, tempDigits, sizeof(byte) * oldMaxSize);
+		memcpy(digits, tempDigits, sizeof(byte) * copySize);
 		delete[] tempDigits;
 	}
 }
@@ -1170,8 +1198,8 @@ bool LongInteger::DivAndMod(const LongInteger& liValue, const LongInteger& liDiv
 			// This seems like a lot of work, but it is quicker
 			
 			UINT uIncrement = liValue.size - liDivide.size;
-			if (uIncrement > 1000) {
-				uIncrement = 1000;
+			if (uIncrement <= 2) {
+				uIncrement = 2;
 			}
 			else {
 				uIncrement /= 2;
@@ -2835,7 +2863,11 @@ vector<LongIntegerUP> LongInteger::DivThreeHalvesByTwo(LongIntegerUP& a2, LongIn
 				}
 				if (uDiff > 0)
 					uDiff--;
-
+				if (B->size == 53) {
+					if (B->digits[52] == 3) {
+						int breakpointint = 0;
+					}
+				}
 				*R += (*B << uDiff);
 				*Q -= (LongInteger(1) << uDiff);
 			}

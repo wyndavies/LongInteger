@@ -42,7 +42,7 @@ BEGIN_MESSAGE_MAP(CLongIntegersDlg, CDialogEx)
 	ON_BN_CLICKED(IDCANCEL, &CLongIntegersDlg::OnBnClickedCancel)
 	ON_BN_CLICKED(IDOK, &CLongIntegersDlg::OnBnClickedOk)
 	ON_BN_CLICKED(IDADD, &CLongIntegersDlg::OnClickedIdadd)
-//	ON_EN_UPDATE(IDC_EDIT1, &CLongIntegersDlg::OnUpdateEdit1)
+	//	ON_EN_UPDATE(IDC_EDIT1, &CLongIntegersDlg::OnUpdateEdit1)
 	ON_BN_CLICKED(IDMINUS, &CLongIntegersDlg::OnClickedIdminus)
 	ON_BN_CLICKED(IDMULTIPLY, &CLongIntegersDlg::OnClickedIdmultiply)
 	ON_BN_CLICKED(IDTOCLIP, &CLongIntegersDlg::OnClickedIdtoclip)
@@ -335,6 +335,91 @@ UINT CLongIntegersDlg::StartPowerWork(LPVOID param)
 	return 0;
 }
 
+CString Divit(LongInteger& liBigNumber)
+{
+	CString strResult;
+	UINT digits = 1;
+
+	LongInteger* liWorking = new LongInteger(1);
+
+	if (liWorking->getSize() < (liBigNumber.getSize() / 2) && liBigNumber.getSize() > 2) {
+		// Try a different method
+		// Work out the power and divide repeatedly by 2
+		// Keep a running total of the base value multiplying by itself each loop
+		// When a division by 2 gives an odd number, multiply the running total of the base values to another running total
+
+		vector<bool> bList;
+		UINT power = 1;
+		if (liBigNumber.getSize() > 100) {
+			power = liBigNumber.getSize();
+			power += power;
+		}
+		else {
+			power = liBigNumber.getSize();
+		}
+		digits = power;
+		// Now what are the powers of 2 of this number?
+		UINT n = 0;
+		while (power > 0) {
+			UINT temp = power / 2;
+			if (temp * 2 != power) {
+				bList.push_back(true);
+			} 
+			else {
+				bList.push_back(false);
+			}
+			power = temp;
+			n++;
+		}
+
+		LongInteger liTotal = 1;
+		LongInteger liTen = 10;
+		for (UINT j = 0; j < n; j++)
+		{
+			if (bList[j]) {
+				liTotal *= liTen;
+			}
+			liTen *= liTen;
+		}
+
+		*liWorking = liTotal;
+
+	}
+	else
+	{
+		*liWorking = 10;
+	}
+
+	LongIntegerUP upliRes = make_unique<LongInteger>(0);
+	LongIntegerUP upliMod = make_unique<LongInteger>(0);
+
+	LongInteger::DivAndMod(liBigNumber, *liWorking, upliRes, upliMod);
+
+
+	if (upliMod->getSize() > 1) {
+		strResult = Divit(*upliMod);
+		while (strResult.GetLength() < digits) {
+			strResult = L"0" + strResult;
+		}
+	}
+	else {
+		strResult = upliMod->toDecimal();
+		while (strResult.GetLength() < digits) {
+			strResult = L"0" + strResult;
+		}
+	}
+
+	if (upliRes->getSize() > 1) {
+		strResult = Divit(*upliRes) + strResult;
+	}
+	else {
+		strResult = upliRes->toDecimal() + strResult;
+	}
+
+	delete liWorking;
+	return strResult;
+}
+
 
 void CLongIntegersDlg::OnClickedIdarrow()
 {
@@ -348,6 +433,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// 5 arrow gives 2^(2||||2). Which is a tower 2||||2 high
 	// So each step involves working out the one below.
 	// 2||||2 -> 2|(2|||2) -> 2|(2|(2||2)) -> 2|(2|(2|(2|2)))
+
 
 
 	// Test a different approach to division and see if it is faster
@@ -396,19 +482,26 @@ void CLongIntegersDlg::OnClickedIdarrow()
 
 
 	// Some tests of dividing by 10
-	int bigintsize = 100000;
-	LongInteger::BURKINELZIEGLERCUTOFF = 1000;
+	int bigintsize = 10000;
+	LongInteger::BURKINELZIEGLERCUTOFF = 100;
 	LongInteger liBigNumber;
 	byte* bigArray = new byte[bigintsize];
 	memset(bigArray, 111, bigintsize);
 	liBigNumber.assignByteArray(bigArray, bigintsize);
 	delete bigArray;
-	LongInteger liTen = LongInteger(10);
-	LongIntegerUP upliResult = make_unique<LongInteger>(0);
-	LongIntegerUP upliModulus = make_unique<LongInteger>(0);
-	LongInteger::DivAndMod(liBigNumber, liTen, upliResult, upliModulus);
-//	CString strResult = upliResult->toDecimal();
-	CString strModulus = upliModulus->toDecimal();
+	// Attempting a different approach to converting from hex to base 10
+
+	CString strDecimal, strDecimal2;
+	LongInteger liFred = CString(L"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
+
+	strDecimal = Divit(liBigNumber);
+	strDecimal2 = liBigNumber.toDecimal();
+
+	bool bWorked = strDecimal == strDecimal2;
+	int size1 = strDecimal.GetLength();
+	int size2 = strDecimal2.GetLength();
+
+	return;
 
 
 	// Now try some random values to see how it works.
@@ -427,9 +520,9 @@ void CLongIntegersDlg::OnClickedIdarrow()
 			memset(array2, 55, j);
 			liDiv.assignByteArray(array2, j);
 			delete array2;
-			
 
-			
+
+
 			auto divStart = std::chrono::high_resolution_clock::now();
 			LongIntegerUP upliNQ = make_unique<LongInteger>(0);
 			LongIntegerUP upliNM = make_unique<LongInteger>(0);
@@ -443,7 +536,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 			CString writeString;
 			writeString.Format(L"%d,%d,NA,%d,", i, j, duration);
 
-			for (UINT k = 10; k < 100; k+=10) {
+			for (UINT k = 10; k < 100; k += 10) {
 				LongInteger::BURKINELZIEGLERCUTOFF = k;
 
 				divStart = std::chrono::high_resolution_clock::now();
@@ -451,7 +544,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 				LongInteger::DivAndMod(liVal, liDiv, upliNQ, upliNM);
 				liQ = *upliNQ;
 				liM = *upliNM;
-				
+
 				divEnd = std::chrono::high_resolution_clock::now();
 				rawduration = divEnd - divStart;
 				duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
