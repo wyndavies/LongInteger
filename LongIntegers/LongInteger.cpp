@@ -1080,26 +1080,33 @@ bool LongInteger::equalsZero() const
 }
 
 
-bool LongInteger::powerCalc(LongInteger& value, const LongInteger& powerIn)
+bool LongInteger::powerCalc(LongInteger& liValue, const LongInteger& liPower)
 {
-	// Calculate a power by performing multiplication repeatedly
+	// Calculate the power by using powers of 2
+	// We will have a loop where we divide liPower by 2 and multiply a copy of liValue by itself,
+	// adding this copy to a running total every time liPower is odd
+	// Just realised this is a bit like old-fashioned multiplication
 
-	// First check for special case of power of zero
-	if (powerIn.size == 0)
+	LongInteger liMultiples = liValue;
+	LongInteger liTotal = 1;
+	LongInteger liCounter = liPower;
+
+	while (liCounter > 1)
 	{
-		value = 1;
-		return !bOverflow;
+		// Find out if liCounter is odd
+		UINT lastDigit = liCounter.getDigit(0);
+		UINT oddCheck = lastDigit / 2;
+		if (oddCheck * 2 < lastDigit)
+		{
+			liTotal *= liMultiples;
+		}
+		liCounter /= 2;
+		liMultiples *= liMultiples;
 	}
+	// Last value is alway 1, thus always odd
+	liTotal *= liMultiples;
 
-
-	LongInteger multiplier = value;
-	LongInteger powerCalc;
-	powerCalc = powerIn;
-	--powerCalc;
-	while (!(powerCalc == 0) && !bOverflow && !bShuttingDown) {
-		value *= multiplier;
-		--powerCalc;
-	}
+	liValue = liTotal;
 
 	return !bOverflow;
 }
@@ -1109,16 +1116,18 @@ bool LongInteger::powerCalcHelper(const LongInteger& value, LongInteger& powerIn
 {
 	// Calculate a power by performing multiplication repeatedly
 	// This is a helper for the arrow function - it changes the 2nd parameter rather than the first as would normally be expected
-	LongInteger multiplier = value;
-	LongInteger powerCalc = powerIn;
-	powerIn = value;
-	--powerCalc;
-	while (powerCalc != 0 && !bOverflow && !bShuttingDown) {
-		powerIn *= multiplier;
-		--powerCalc;
-	}
+
+	LongInteger liMult = value;
+	bOverflow = !(powerCalc(liMult, powerIn));
+	powerIn = liMult;
 
 	return !bOverflow;
+}
+
+
+bool LongInteger::powerCalc(int powerIn)
+{
+	return powerCalc(*this, powerIn);
 }
 
 bool LongInteger::powerCalc(const LongInteger& powerIn)
@@ -1126,14 +1135,6 @@ bool LongInteger::powerCalc(const LongInteger& powerIn)
 	return powerCalc(*this, powerIn);
 }
 
-bool LongInteger::powerCalc(int powerIn)
-{
-	LongInteger multiplier = *this;
-	while (powerIn > 0 && !bOverflow && !bShuttingDown) {
-		(*this) *= multiplier;
-	}
-	return !bOverflow;
-}
 
 
 bool LongInteger::divideNumber(const LongInteger& liDivide)

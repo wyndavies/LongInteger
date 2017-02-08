@@ -436,6 +436,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 
 
 
+
 	// Test a different approach to division and see if it is faster
 	LongInteger liVal, liDiv;
 	LongInteger liQ, liM, liQ2;
