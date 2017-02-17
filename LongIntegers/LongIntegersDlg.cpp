@@ -437,145 +437,91 @@ void CLongIntegersDlg::OnClickedIdarrow()
 
 
 
-	// Test a different approach to division and see if it is faster
-	LongInteger liVal, liDiv;
-	LongInteger liQ, liM, liQ2;
-	LongInteger liNQ, liNM;
+
+	// Some tests for multiplication
+	LongInteger liVal1, liVal2, liResult1, liResult2, liResult3;
 
 
-	liVal = CString(L"12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
-	liDiv = CString(L"888");
-
-	liNQ = liVal / liDiv;
-	liNM = liVal % liDiv;
-
-
-	// We will run a test. If the divisor is more than 1 digit in size less than the value, multiply the 
-	// divisor by 256 until it is (keeping a count of how many times
-	// Then loop that many times:
-	//	shift the quotient left 1
-	//  shift the (inflated) divisor right 1
-	//  divide the modulus by the divisor
-	//  add the quotient of this to the original quotient
-
-	UINT count = 0;
-	while (liDiv.getSize() < (liVal.getSize() - 1)) {
-		liDiv.bitshiftleft(8);
-		count++;
-	}
-	liQ = liVal / liDiv;
-	liM = liVal % liDiv;
-	while (count > 0) {
-		liQ.bitshiftleft(8);
-		liDiv.bitshiftright(8);
-		liQ2 = liM / liDiv;
-		liM = liM % liDiv;
-		liQ += liQ2;
-		count--;
-	}
-
-	CString strQ = liQ.toDecimal();
-	CString strM = liM.toDecimal();
-	CString strNQ = liNQ.toDecimal();
-	CString strNM = liNM.toDecimal();
-	bool workedQ = liQ == liNQ;
-	bool workedM = liM == liNM;
-
-
-	// Some tests of dividing by 10
-	int bigintsize = 10000;
-	LongInteger::BURKINELZIEGLERCUTOFF = 100;
-	LongInteger liBigNumber;
-	byte* bigArray = new byte[bigintsize];
-	memset(bigArray, 111, bigintsize);
-	liBigNumber.assignByteArray(bigArray, bigintsize);
-	delete bigArray;
-	// Attempting a different approach to converting from hex to base 10
-
-	CString strDecimal, strDecimal2;
-	LongInteger liFred = CString(L"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
-
-	strDecimal = Divit(liBigNumber);
-	strDecimal2 = liBigNumber.toDecimal();
-
-	bool bWorked = strDecimal == strDecimal2;
-	int size1 = strDecimal.GetLength();
-	int size2 = strDecimal2.GetLength();
-
-	return;
-
-
-	// Now try some random values to see how it works.
-	UINT base = 1000;
-	UINT increment = 500;
 	CStdioFile myFile;
 	bool bSuccess = myFile.Open(L"D:\\result.txt", CFile::modeCreate | CFile::modeWrite);
 
-	for (UINT i = 4000; i <= 10000; i += base) {
-		byte* array1 = new byte[i];
-		memset(array1, 111, i);
-		liVal.assignByteArray(array1, i);
-		delete array1;
-		for (UINT j = 1000; j <= i; j += base) {
-			byte* array2 = new byte[j];
-			memset(array2, 55, j);
-			liDiv.assignByteArray(array2, j);
-			delete array2;
 
+	// Test the different types of multiplication.
+	// Although the Karatsuba algorithm is part of multiplication, we can effectively disable it by setting the
+	// cutoff to a value greater than the number of digits in the numbers involved
+	
+	for (UINT i = 100; i < 10000; i += 100)
+	{
+		// The size of the numbers being multiplied is i
 
+		// Create the numbers
+		byte* tempArray = new byte[i];
+		for (int z = 0; z < i; z++)
+		{
+			tempArray[z] = 100;
+		}
+		liVal1.assignByteArray(tempArray, i);
+		liVal2.assignByteArray(tempArray, i); // This is fine as the method copies the byte array
+		delete tempArray;
+
+		for (UINT j = 5; j < (i / 10); j+=5)
+		{
+			// j is the cutoff point for the algorithms
+
+			// First we do long multiplication
+			LongInteger::KARATSUBACUTOFF = 1000000;
 
 			auto divStart = std::chrono::high_resolution_clock::now();
-			LongIntegerUP upliNQ = make_unique<LongInteger>(0);
-			LongIntegerUP upliNM = make_unique<LongInteger>(0);
-			LongInteger::BURKINELZIEGLERCUTOFF = 1000000; // Effectively disable BZ division
-			LongInteger::DivAndMod(liVal, liDiv, upliNQ, upliNM);
-			liNQ = *upliNQ;
-			liNM = *upliNM;
+
+			liResult1 = liVal1 * liVal2;
+
 			auto divEnd = std::chrono::high_resolution_clock::now();
 			auto rawduration = divEnd - divStart;
 			std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
 			CString writeString;
-			writeString.Format(L"%d,%d,NA,%d,", i, j, duration);
+			writeString.Format(L"%d,%d,Long,%d,", i, j, duration);
+			myFile.WriteString(writeString);
 
-			for (UINT k = 10; k < 100; k += 10) {
-				LongInteger::BURKINELZIEGLERCUTOFF = k;
+			// Now for Karatsuba
+			LongInteger::KARATSUBACUTOFF = j;
+			divStart = std::chrono::high_resolution_clock::now();
+			liResult2 = liVal1 * liVal2;
+			divEnd = std::chrono::high_resolution_clock::now();
+			rawduration = divEnd - divStart;
+			duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
+			writeString.Format(L"%d,%d,Karatsuba,%d,", i, j, duration);
+			myFile.WriteString(writeString);
 
-				divStart = std::chrono::high_resolution_clock::now();
+			// Now for ToomCook3
+			LongInteger::KARATSUBACUTOFF = 1000000; // Disable it to simplify matters
+			LongInteger::TOOMCOOK3CUTOFF = j;
+			divStart = std::chrono::high_resolution_clock::now();
+			liResult3 = LongInteger::ToomCook3(liVal1, liVal2);
+			divEnd = std::chrono::high_resolution_clock::now();
+			rawduration = divEnd - divStart;
+			duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
 
-				LongInteger::DivAndMod(liVal, liDiv, upliNQ, upliNM);
-				liQ = *upliNQ;
-				liM = *upliNM;
-
-				divEnd = std::chrono::high_resolution_clock::now();
-				rawduration = divEnd - divStart;
-				duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
-				CString tempString;
-				tempString.Format(L",%d,%d", k, duration);
-				writeString.Append(tempString);
-
-				//strQ = liQ.toDecimal();
-				//strM = liM.toDecimal();
-				//strNQ = liNQ.toDecimal();
-				//strNM = liNM.toDecimal();
-				workedQ = liQ == liNQ;
-				workedM = liM == liNM;
-				if (!(workedQ && workedM)) {
-					int debugpointint = 0;
-					debugpointint += 10;
-					CString hellothere = L"";
-					hellothere.Format(L"%d", debugpointint);
-				}
+			// Check that everything is all happiness and light
+			bool bWorked;
+			bWorked = liResult1 == liResult2;
+			bWorked &= (liResult1 == liResult3);
+			if (!bWorked)
+			{
+				int debugpointint = 0;
 			}
+
+
+			writeString.Format(L"%d,%d,TC3,%d", i, j, duration);
 
 			myFile.WriteString(writeString);
 			writeString = L"\n";
 			myFile.WriteString(writeString);
 
 		}
+
 	}
+
 	myFile.Close();
-
-
 
 	return;
 

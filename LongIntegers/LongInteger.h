@@ -59,10 +59,12 @@ public:
 	static const byte BASEMAX = 255; // Highest value that can be stored in each digit
 	static const UINT ABSMAXSIZE = 4294967295; // Largest number of values that can be stored (index is by uint, so 2^32-1)
 	static const UINT SIZESTEP = 10000; // Internal byte array is increased or decreased in block of this size
-	static const UINT KARATSBUACUTOFF = 50; // Karatsuba cutoff size. Numbers below this size will use long multiplication
-	static const UINT TOOMCOOK3CUTOFF = 150; // Testing shows this is the optimal value. Update - 150 is the best in debug builds. In release builds it is not. In release it is all over the place.
+//	static const UINT KARATSUBACUTOFF = 50; // Karatsuba cutoff size. Numbers below this size will use long multiplication
+//	static const UINT TOOMCOOK3CUTOFF = 150; // Testing shows this is the optimal value. Update - 150 is the best in debug builds. In release builds it is not. In release it is all over the place.
 //	static const UINT BURKINELZIEGLERCUTOFF = 50; // 50 seems to work well for the recursion point
 
+	static UINT KARATSUBACUTOFF;
+	static UINT TOOMCOOK3CUTOFF;
 	static UINT BURKINELZIEGLERCUTOFF; // Making it non-const so I can test different values
 
 public:
@@ -74,6 +76,7 @@ public:
 	LongInteger(const int);
 	LongInteger(const UINT);
 	LongInteger(const LongInteger&);
+	LongInteger(LongInteger*);
 	LongInteger(CString&);
 	~LongInteger();
 

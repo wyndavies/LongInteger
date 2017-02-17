@@ -13,7 +13,9 @@
 #endif
 
 bool LongInteger::bShuttingDown = false;
-UINT LongInteger::BURKINELZIEGLERCUTOFF = 1000000;
+UINT LongInteger::BURKINELZIEGLERCUTOFF = 50;
+UINT LongInteger::TOOMCOOK3CUTOFF = 100;
+UINT LongInteger::KARATSUBACUTOFF = 50;
 
 void LongInteger::init()
 {
@@ -52,7 +54,7 @@ LongInteger LongInteger::karatsuba(const LongInteger& liOne, const LongInteger &
 // This is a static method
 LongInteger* LongInteger::karatsubaMain(const LongInteger &liOne, const LongInteger &liTwo)
 {
-	if ((liOne.size < KARATSBUACUTOFF) || (liTwo.size < KARATSBUACUTOFF))
+	if ((liOne.size < KARATSUBACUTOFF) || (liTwo.size < KARATSUBACUTOFF))
 	{
 		LongInteger *liReturn = new LongInteger(liOne);
 		liReturn->multiplyInternal(liTwo);
@@ -156,6 +158,19 @@ LongInteger::LongInteger(const LongInteger& oldLongInt)
 	bPositive = oldLongInt.bPositive;
 	bOverflow = oldLongInt.bOverflow;
 	memcpy(digits, oldLongInt.digits, sizeof(byte) * maxSize);
+}
+
+LongInteger::LongInteger(LongInteger* pliCopyInt)
+{
+	// Copy constructor for a pointer.
+	// I've had to create some tortuous workarounds for assignments of points returned from a method
+	size = pliCopyInt->size;
+	maxSize = pliCopyInt->maxSize;
+	reset();
+	bPositive = pliCopyInt->bPositive;
+	bOverflow = pliCopyInt->bOverflow;
+	memcpy(digits, pliCopyInt->digits, sizeof(byte) * maxSize);
+	delete pliCopyInt;
 }
 
 
