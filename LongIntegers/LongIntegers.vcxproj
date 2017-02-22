@@ -185,17 +185,25 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DummyCalledClass.h" />
     <ClInclude Include="LongInteger.h" />
     <ClInclude Include="LongIntegers.h" />
     <ClInclude Include="LongIntegersDlg.h" />
+    <ClInclude Include="LongIntWrapper.h" />
+    <ClInclude Include="QueueOfThreads.h" />
+    <ClInclude Include="ReceiveUpdateClass.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DummyCalledClass.cpp" />
     <ClCompile Include="LongInteger.cpp" />
     <ClCompile Include="LongIntegers.cpp" />
     <ClCompile Include="LongIntegersDlg.cpp" />
+    <ClCompile Include="LongIntWrapper.cpp" />
+    <ClCompile Include="QueueOfThreads.cpp" />
+    <ClCompile Include="ReceiveUpdateClass.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

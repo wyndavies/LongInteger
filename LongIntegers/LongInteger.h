@@ -1,6 +1,8 @@
 #pragma once
 #include <vector>
 #include <memory>
+#include "QueueOfThreads.h"
+
 using std::vector;
 using std::unique_ptr;
 using std::make_unique;
@@ -49,6 +51,7 @@ public:
 
 private:
 	static LongInteger karatsuba(const LongInteger&, const LongInteger&); // This is the front end which also tidies up any memory allocated
+public: // Make this public during development
 	static LongInteger* karatsubaMain(const LongInteger&, const LongInteger&); // This is the recursive part of the karatsuba algorithm
 
 	// Constants
@@ -230,6 +233,8 @@ private:
 	static vector<LongIntegerUP> DivTwoDigitsByOne(LongIntegerUP& AHigh, LongIntegerUP& ALow, LongIntegerUP& B, UINT uNumDigits);
 	// A generic splitting function. Split the input LongInteger into UINT parts of UINT length and return as an array of LongIntegers
 	static vector<LongIntegerUP> split(LongIntegerUP&, UINT, UINT);
+
+	LongInteger* pSharedLongInt;
 
 public:
 	bool multiplyInternal(const LongInteger&);

@@ -436,6 +436,54 @@ void CLongIntegersDlg::OnClickedIdarrow()
 
 
 
+	// Test the threading code
+	QueueOfThreads qot;
+	vector<LongIntWrapper*> vLIW;
+	int numthreads = 20;
+	for (int i = 0; i < numthreads; i++)
+	{
+		LongIntWrapper* liw = new LongIntWrapper;
+		qot.addToQueue(liw);
+		vLIW.push_back(liw);
+	}
+
+	CString strFinishOrder = L"";
+	CString strFileNames = L"";
+
+	int numberFinished = 0;
+	while (numberFinished < numthreads)
+	{
+		int i = 0;
+		bool bFound = false;
+		while (i < vLIW.size() && !bFound)
+		{
+			if (!(vLIW[i]->bFinished))
+			{
+				i++;
+			}
+			else
+			{
+				bFound = true;
+				LongIntWrapper* templiw = vLIW[i];
+				vLIW.erase(vLIW.begin() + i);
+				CString strTemp;
+				strTemp.Format(L", %d", templiw->getID());
+				strFinishOrder += strTemp;
+				strFileNames += templiw->testValue;
+				strFileNames += "\r\n";
+				delete templiw;
+				numberFinished++;
+			}
+		}
+	}
+
+	CString result = strFinishOrder;
+	
+	
+	return;
+
+
+
 
 
 	// Some tests for multiplication
