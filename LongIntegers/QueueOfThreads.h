@@ -6,6 +6,11 @@
 #include "LongIntWrapper.h"
 #include "ReceiveUpdateClass.h"
 
+using std::vector;
+using std::mutex;
+using std::unique_lock;
+using std::condition_variable;
+
 class LongIntWrapper;
 
 class QueueOfThreads : ReceiveUpdateClass
@@ -19,10 +24,10 @@ private:
 	UINT threadsWaiting;
 	UINT maxThreads;
 	static const UINT minThreads = 4;
-	std::mutex lock;
-	std::vector<LongIntWrapper*> queueOfWaitingThreads;
-	std::vector<LongIntWrapper*> queueOfRunningThreads;
-	std::condition_variable cv;
+	mutex myMutex;
+	vector<LongIntWrapper*> queueOfWaitingThreads;
+	vector<LongIntWrapper*> queueOfRunningThreads;
+	condition_variable myConditionVariable;
 	UINT threadID;
 
 public:
@@ -34,6 +39,12 @@ public:
 
 	UINT numOfThreads();
 
-	void receiveUpdate(UINT);
+	// Tell the queue that the current thread has finished
+	void iHaveFinished(UINT id);
+
+	// Tell the queue that the current thread is waiting and so remove it from the count of running threads
+	void iAmWaiting();
+	// Tell the queue that the current thread is ready to start running again
+	void iHaveStoppedWaiting();
 };
 

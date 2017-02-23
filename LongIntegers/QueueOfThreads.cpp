@@ -25,7 +25,7 @@ QueueOfThreads::~QueueOfThreads()
 void QueueOfThreads::decreaseCount(UINT id)
 {
 	try {
-	std::unique_lock<std::mutex> lk(lock);
+	unique_lock<mutex> lock(myMutex);
 	// Find out which thread has finished and remove it from the list
 	UINT index = 0;
 	bool bFound = false;
@@ -51,8 +51,8 @@ void QueueOfThreads::decreaseCount(UINT id)
 
 	queueOfRunningThreads.erase(queueOfRunningThreads.begin() + index);
 	threadsRunning--;
-	lk.unlock();
-	cv.notify_one();
+	lock.unlock();
+	myConditionVariable.notify_one();
 
 	}
 	catch (std::exception e)
@@ -70,7 +70,7 @@ bool QueueOfThreads::addToQueue(LongIntWrapper* newLongInt)
 {
 	try {
 	
-	std::unique_lock<std::mutex> lk(lock);
+	unique_lock<mutex> lock(myMutex);
 
 	newLongInt->setID(threadID);
 	queueOfWaitingThreads.push_back(newLongInt);
@@ -82,7 +82,7 @@ bool QueueOfThreads::addToQueue(LongIntWrapper* newLongInt)
 	// Starting a thread to start a thread may seem weird, but this functionality is just a placeholder
 	std::thread t1(&QueueOfThreads::startAThread, this);
 	t1.detach();
-	lk.unlock();
+	lock.unlock();
 	}
 	catch (std::exception e)
 	{
@@ -102,9 +102,9 @@ void QueueOfThreads::startAThread()
 		return;
 	}
 	try {
-	std::unique_lock<std::mutex> lk(lock);
+	unique_lock<std::mutex> lock(myMutex);
 	// The wait will unlock and then try to reacquire the lock when it wakes up
-	cv.wait(lk, [this]() { return threadsRunning < maxThreads; });
+	myConditionVariable.wait(lock, [this]() { return threadsRunning < maxThreads; });
 
 
 	// Insert code to start a thread
@@ -126,7 +126,7 @@ void QueueOfThreads::startAThread()
 
 	t1.detach();
 
-	lk.unlock();
+	lock.unlock();
 	}
 	catch (std::exception e)
 	{
@@ -137,9 +137,9 @@ void QueueOfThreads::startAThread()
 UINT QueueOfThreads::numOfThreads()
 {
 	// For testing
-	std::unique_lock<std::mutex> lk(lock);
+	unique_lock<mutex> lock(myMutex);
 	return threadsRunning + threadsWaiting;
-	lk.unlock();
+	lock.unlock();
 }
 
 void QueueOfThreads::waitForAllToFinish()
@@ -151,8 +151,38 @@ void QueueOfThreads::waitForAllToFinish()
 	}
 }
 
-void QueueOfThreads::receiveUpdate(UINT id)
+void QueueOfThreads::iHaveFinished(UINT id)
 {
 	decreaseCount(id);
 }
 
+
+void QueueOfThreads::iAmWaiting()
+{
+	if (threadsRunning == 0) abort(); // Test code
+
+	// The current thread is waiting on something, so let the queue know that other threads can be started
+	unique_lock<mutex> lock(myMutex);
+
+	threadsRunning--;
+	threadsWaiting++;
+
+	// Although the lock will release when it goes out of scope, I need to unlock it before calling notify
+	lock.unlock();
+	myConditionVariable.notify_one();
+
+}
+
+
+void QueueOfThreads::iHaveStoppedWaiting()
+{
+	if (threadsWaiting == 0) abort(); // Test code
+
+	unique_lock<mutex> lock(myMutex);
+	myConditionVariable.wait(lock, [this]() { return threadsRunning < maxThreads; });
+
+	threadsRunning++;
+	threadsWaiting--;
+
+	lock.unlock();
+}

@@ -11,6 +11,7 @@ public:
 	~DummyCalledClass();
 
 	CString createAFile(int param1, int param2);
+	CString recursiveCall(int param1, int param2);
 
 };
 

@@ -398,13 +398,13 @@ CString Divit(LongInteger& liBigNumber)
 
 	if (upliMod->getSize() > 1) {
 		strResult = Divit(*upliMod);
-		while (strResult.GetLength() < digits) {
+		while ((UINT)strResult.GetLength() < digits) {
 			strResult = L"0" + strResult;
 		}
 	}
 	else {
 		strResult = upliMod->toDecimal();
-		while (strResult.GetLength() < digits) {
+		while ((UINT)strResult.GetLength() < digits) {
 			strResult = L"0" + strResult;
 		}
 	}
@@ -437,13 +437,16 @@ void CLongIntegersDlg::OnClickedIdarrow()
 
 
 	// Test the threading code
-	QueueOfThreads qot;
+	QueueOfThreads *qot = LongIntWrapper::getQOT();
 	vector<LongIntWrapper*> vLIW;
 	int numthreads = 20;
 	for (int i = 0; i < numthreads; i++)
 	{
 		LongIntWrapper* liw = new LongIntWrapper;
-		qot.addToQueue(liw);
+		DummyCalledClass* pDCC = new DummyCalledClass;
+		liw->setObject(*pDCC);
+		liw->setParams(i+1, i+1);
+		qot->addToQueue(liw);
 		vLIW.push_back(liw);
 	}
 
@@ -471,6 +474,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 				strFinishOrder += strTemp;
 				strFileNames += templiw->testValue;
 				strFileNames += "\r\n";
+				delete &(templiw->getObject());
 				delete templiw;
 				numberFinished++;
 			}
@@ -491,7 +495,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 
 
 	CStdioFile myFile;
-	bool bSuccess = myFile.Open(L"D:\\result.txt", CFile::modeCreate | CFile::modeWrite);
+	BOOL bSuccess = myFile.Open(L"D:\\result.txt", CFile::modeCreate | CFile::modeWrite);
 
 
 	// Test the different types of multiplication.
@@ -504,7 +508,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 
 		// Create the numbers
 		byte* tempArray = new byte[i];
-		for (int z = 0; z < i; z++)
+		for (UINT z = 0; z < i; z++)
 		{
 			tempArray[z] = 100;
 		}

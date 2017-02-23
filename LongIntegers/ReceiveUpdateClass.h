@@ -1,10 +1,13 @@
 #pragma once
+
+// Interface class to define common messages the subclasses can receive
+
 class ReceiveUpdateClass
 {
 public:
 	ReceiveUpdateClass();
 	~ReceiveUpdateClass();
 
-	virtual void receiveUpdate(UINT) = 0;
+	virtual void iHaveFinished(UINT) = 0;
 };
 
