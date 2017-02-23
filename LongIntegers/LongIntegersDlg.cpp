@@ -439,9 +439,9 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// Time to test it out
 	LongInteger::KARATSUBACUTOFF = 3;
 	LongInteger::TOOMCOOK3CUTOFF = 10000;
-	LongInteger liVal1 = 10000000;
-	LongInteger liVal2 = 10000000;
-	LongInteger liResult = liVal1 * liVal2;
+	LongInteger liTestVal1 = 10000000;
+	LongInteger liTestVal2 = 10000000;
+	LongInteger liTestResult = liTestVal1 * liTestVal2;
 
 
 
