@@ -435,6 +435,17 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// 2||||2 -> 2|(2|||2) -> 2|(2|(2||2)) -> 2|(2|(2|(2|2)))
 
 
+	// I've put some of the code in Karatsuba Main.
+	// Time to test it out
+	LongInteger::KARATSUBACUTOFF = 3;
+	LongInteger::TOOMCOOK3CUTOFF = 10000;
+	LongInteger liVal1 = 10000000;
+	LongInteger liVal2 = 10000000;
+	LongInteger liResult = liVal1 * liVal2;
+
+
+
+
 
 	// Test the threading code
 	QueueOfThreads *qot = LongIntWrapper::getQOT();
@@ -444,8 +455,8 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	{
 		LongIntWrapper* liw = new LongIntWrapper;
 		DummyCalledClass* pDCC = new DummyCalledClass;
-		liw->setObject(*pDCC);
-		liw->setParams(i+1, i+1);
+		liw->setDummyObject(*pDCC);
+		liw->setDummyParams(i+1, i+1);
 		qot->addToQueue(liw);
 		vLIW.push_back(liw);
 	}
@@ -474,7 +485,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 				strFinishOrder += strTemp;
 				strFileNames += templiw->testValue;
 				strFileNames += "\r\n";
-				delete &(templiw->getObject());
+				delete &(templiw->getDummyObject());
 				delete templiw;
 				numberFinished++;
 			}

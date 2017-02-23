@@ -186,3 +186,15 @@ void QueueOfThreads::iHaveStoppedWaiting()
 
 	lock.unlock();
 }
+
+
+void QueueOfThreads::waitForThread(LongIntWrapper* pLIW)
+{
+	unique_lock<mutex> lock(myMutex);
+
+	myConditionVariable.wait(lock, [pLIW]() { return pLIW->bFinished; });
+
+	lock.unlock();
+	myConditionVariable.notify_one();
+
+}

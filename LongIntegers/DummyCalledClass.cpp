@@ -41,7 +41,7 @@ CString DummyCalledClass::recursiveCall(int param1, int param2)
 	{
 		param2--;
 		LongIntWrapper* pLIW = new LongIntWrapper();
-		pLIW->setParams(param1, param2);
+		pLIW->setDummyParams(param1, param2);
 		
 		LongIntWrapper::getQOT()->addToQueue(pLIW);
 

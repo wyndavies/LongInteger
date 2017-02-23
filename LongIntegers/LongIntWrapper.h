@@ -18,11 +18,10 @@ public:
 
 private:
 	UINT id;
-	LongInteger* pObject;
 	LongInteger* param1;
 	LongInteger* param2;
 	LongInteger* pResult;
-	ReceiveUpdateClass *callback; // Do this with generics once I actually get it working (strange compiler errors when I used <function>
+	ReceiveUpdateClass *callback;
 	static QueueOfThreads qot; // Only 1 instance of QueueOfThreads
 
 	// For testing
@@ -39,12 +38,15 @@ public:
 	UINT getID();
 	static QueueOfThreads* getQOT();
 
-	void setObject(DummyCalledClass& inpDCC);
-	DummyCalledClass& getObject();
-	void setParams(int, int);
-	int getParam1();
-	int getParam2();
+	LongInteger* getResult();
+	void setParams(LongInteger* pliParam1, LongInteger* pliParam2);
 
+	// For testing
+	void setDummyObject(DummyCalledClass& inpDCC);
+	DummyCalledClass& getDummyObject();
+	void setDummyParams(int, int);
+	int getDummyParam1();
+	int getDummyParam2();
 	CString testValue;
 };
 

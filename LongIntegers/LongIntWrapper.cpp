@@ -6,7 +6,6 @@ QueueOfThreads LongIntWrapper::qot;
 
 LongIntWrapper::LongIntWrapper()
 {
-	pObject = nullptr;
 	param1 = nullptr;
 	param2 = nullptr;
 	pResult = nullptr;
@@ -28,8 +27,11 @@ int LongIntWrapper::startProcess()
 {
 	bRunning = true;
 
+	pResult = LongInteger::karatsubaMain(param1, param2);
+
+
 	// Test code
-	pDCC->recursiveCall(iParam1, iParam2);
+	//pDCC->recursiveCall(iParam1, iParam2);
 
 
 //	pResult = pObject->karatsubaMain(param1, param2);
@@ -64,28 +66,40 @@ UINT LongIntWrapper::getID()
 	return id;
 }
 
-void LongIntWrapper::setParams(int inpar1, int inpar2)
+void LongIntWrapper::setDummyParams(int inpar1, int inpar2)
 {
 	iParam1 = inpar1;
 	iParam2 = inpar2;
 }
 
-int LongIntWrapper::getParam1()
+int LongIntWrapper::getDummyParam1()
 {
 	return iParam1;
 }
 
-int LongIntWrapper::getParam2()
+int LongIntWrapper::getDummyParam2()
 {
 	return iParam2;
 }
 
-void LongIntWrapper::setObject(DummyCalledClass& inpDCC)
+void LongIntWrapper::setDummyObject(DummyCalledClass& inpDCC)
 {
 	pDCC = &inpDCC;
 }
 
-DummyCalledClass& LongIntWrapper::getObject()
+DummyCalledClass& LongIntWrapper::getDummyObject()
 {
 	return *pDCC;
+}
+
+
+LongInteger* LongIntWrapper::getResult()
+{
+	return pResult;
+}
+
+void LongIntWrapper::setParams(LongInteger* pliParam1, LongInteger* pliParam2)
+{
+	param1 = pliParam1;
+	param2 = pliParam2;
 }

@@ -46,5 +46,8 @@ public:
 	void iAmWaiting();
 	// Tell the queue that the current thread is ready to start running again
 	void iHaveStoppedWaiting();
+
+	// Wait for a thread to finish
+	void waitForThread(LongIntWrapper*);
 };
 

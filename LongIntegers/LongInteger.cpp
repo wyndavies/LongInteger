@@ -73,8 +73,19 @@ LongInteger* LongInteger::karatsubaMain(const LongInteger &liOne, const LongInte
 	liOne.split(liLowOne, liHighOne, iHalfSize);
 	liTwo.split(liLowTwo, liHighTwo, iHalfSize);
 
+	// Replace these with calls to the threading routine
+	QueueOfThreads *qot = LongIntWrapper::getQOT();
+	LongIntWrapper* liw = new LongIntWrapper;
+	liw->setParams(liLowOne, liLowTwo);
+	qot->addToQueue(liw);
+	qot->iAmWaiting();
+	qot->waitForThread(liw);
+	qot->iHaveStoppedWaiting();
+	LongInteger* liZ0 = liw->getResult();
+	delete liw;
+
 	// 3 calls made to numbers approximately half the size
-	LongInteger* liZ0 = karatsubaMain(*liLowOne, *liLowTwo);
+//	LongInteger* liZ0 = karatsubaMain(*liLowOne, *liLowTwo);
 	LongInteger* liZ1 = karatsubaMain((*liLowOne + *liHighOne), (*liLowTwo + *liHighTwo));
 	LongInteger* liZ2 = karatsubaMain(*liHighOne, *liHighTwo);
 
