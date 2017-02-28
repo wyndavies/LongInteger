@@ -16,6 +16,8 @@ LongIntWrapper::LongIntWrapper()
 
 LongIntWrapper::~LongIntWrapper()
 {
+	delete param1;
+	delete param2;
 }
 
 QueueOfThreads* LongIntWrapper::getQOT()
@@ -27,7 +29,7 @@ int LongIntWrapper::startProcess()
 {
 	bRunning = true;
 
-	pResult = LongInteger::karatsubaMain(param1, param2);
+	pResult = LongInteger::karatsubaMain(*param1, *param2, true);
 
 
 	// Test code
@@ -46,8 +48,8 @@ int LongIntWrapper::startProcess()
 
 	bRunning = false;
 	// Need a way this can inform QueueOfThreads that it has finished.
-	callback->iHaveFinished(id);
 	bFinished = true;
+	callback->iHaveFinished(id);
 	return 0;
 }
 
@@ -100,6 +102,21 @@ LongInteger* LongIntWrapper::getResult()
 
 void LongIntWrapper::setParams(LongInteger* pliParam1, LongInteger* pliParam2)
 {
-	param1 = pliParam1;
-	param2 = pliParam2;
+	// Copy the parameters
+	param1 = new LongInteger;
+	param2 = new LongInteger;
+
+	*param1 = *pliParam1;
+	*param2 = *pliParam2;
 }
+
+void LongIntWrapper::setParams(LongInteger& liParam1, LongInteger& liParam2)
+{
+	// Copy the parameters
+	param1 = new LongInteger;
+	param2 = new LongInteger;
+
+	*param1 = liParam1;
+	*param2 = liParam2;
+}
+

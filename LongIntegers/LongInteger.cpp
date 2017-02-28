@@ -42,7 +42,7 @@ LongInteger LongInteger::karatsuba(const LongInteger& liOne, const LongInteger &
 	// Wrapper class to handle memory management
 	// The karatsube function needs to put memory on the heap, so the memory needs
 	// to be managed manually. But we want all memory management within the class
-	LongInteger* result = karatsubaMain(liOne, liTwo);
+	LongInteger* result = karatsubaMain(liOne, liTwo, false);
 
 	LongInteger returnValue = *(result);
 	delete result;
@@ -52,7 +52,7 @@ LongInteger LongInteger::karatsuba(const LongInteger& liOne, const LongInteger &
 
 // Implementation of the Karatsuba algorithm for multiplication
 // This is a static method
-LongInteger* LongInteger::karatsubaMain(const LongInteger &liOne, const LongInteger &liTwo)
+LongInteger* LongInteger::karatsubaMain(const LongInteger &liOne, const LongInteger &liTwo, bool bBackgroundThread)
 {
 	if ((liOne.size < KARATSUBACUTOFF) || (liTwo.size < KARATSUBACUTOFF))
 	{
@@ -60,6 +60,7 @@ LongInteger* LongInteger::karatsubaMain(const LongInteger &liOne, const LongInte
 		liReturn->multiplyInternal(liTwo);
 		return liReturn;
 	}
+
 
 	// Determine the size of the numbers, so we know where to split them
 	UINT iSize = (liOne.size > liTwo.size) ? liOne.size : liTwo.size;
@@ -75,19 +76,50 @@ LongInteger* LongInteger::karatsubaMain(const LongInteger &liOne, const LongInte
 
 	// Replace these with calls to the threading routine
 	QueueOfThreads *qot = LongIntWrapper::getQOT();
-	LongIntWrapper* liw = new LongIntWrapper;
-	liw->setParams(liLowOne, liLowTwo);
-	qot->addToQueue(liw);
-	qot->iAmWaiting();
-	qot->waitForThread(liw);
-	qot->iHaveStoppedWaiting();
-	LongInteger* liZ0 = liw->getResult();
-	delete liw;
+	LongIntWrapper* liw0 = new LongIntWrapper;
+	LongIntWrapper* liw1 = new LongIntWrapper;
+	LongIntWrapper* liw2 = new LongIntWrapper;
+	liw0->setParams(liLowOne, liLowTwo);
+	liw1->setParams((*liLowOne + *liHighOne), (*liLowTwo + *liHighTwo));
+	liw2->setParams(liHighOne, liHighTwo);
+	qot->addToQueue(liw0);
+	qot->addToQueue(liw1);
+	qot->addToQueue(liw2);
+	if (bBackgroundThread) {
+		qot->iAmWaiting(); // Only call this if this process is called in a background thread.
+	}
+	CString strOutput;
+	// We will log which thread we are waiting on. The way this has been implemented, this process doesn't know
+	// what its own thread ID is, so we can't log that
+	strOutput.Format(L"Waiting for thread %d to finish\n", liw0->getID());
+	qot->logwithlock(strOutput);
+	qot->waitForThread(liw0);
+	strOutput.Format(L"Stopped waiting on thread %d\n", liw0->getID());
+	qot->logwithlock(strOutput);
+	strOutput.Format(L"Waiting for thread %d to finish\n", liw1->getID());
+	qot->logwithlock(strOutput);
+	qot->waitForThread(liw1);
+	strOutput.Format(L"Stopped waiting on thread %d\n", liw1->getID());
+	qot->logwithlock(strOutput);
+	strOutput.Format(L"Waiting for thread %d to finish\n", liw2->getID());
+	qot->logwithlock(strOutput);
+	qot->waitForThread(liw2);
+	strOutput.Format(L"Stopped waiting on thread %d - Resuming processing\n", liw2->getID());
+	qot->logwithlock(strOutput);
+	if (bBackgroundThread) {
+		qot->iHaveStoppedWaiting();
+	}
+	LongInteger* liZ0 = liw0->getResult();
+	LongInteger* liZ1 = liw1->getResult();
+	LongInteger* liZ2 = liw2->getResult();
+	delete liw0;
+	delete liw1;
+	delete liw2;
 
 	// 3 calls made to numbers approximately half the size
 //	LongInteger* liZ0 = karatsubaMain(*liLowOne, *liLowTwo);
-	LongInteger* liZ1 = karatsubaMain((*liLowOne + *liHighOne), (*liLowTwo + *liHighTwo));
-	LongInteger* liZ2 = karatsubaMain(*liHighOne, *liHighTwo);
+//	LongInteger* liZ1 = karatsubaMain((*liLowOne + *liHighOne), (*liLowTwo + *liHighTwo), false);
+//	LongInteger* liZ2 = karatsubaMain(*liHighOne, *liHighTwo, false);
 
 	// The next step is this calculation:
 	// return (z2*10^(2*m2))+((z1-z2-z0)*10^(m2))+(z0)

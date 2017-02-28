@@ -26,7 +26,7 @@ private:
 	static const UINT minThreads = 4;
 	mutex myMutex;
 	vector<LongIntWrapper*> queueOfWaitingThreads;
-	vector<LongIntWrapper*> queueOfRunningThreads;
+	vector<int> queueOfRunningThreads;
 	condition_variable myConditionVariable;
 	UINT threadID;
 
@@ -49,5 +49,8 @@ public:
 
 	// Wait for a thread to finish
 	void waitForThread(LongIntWrapper*);
+
+	void logwithoutlock(CString);
+	void logwithlock(CString);
 };
 

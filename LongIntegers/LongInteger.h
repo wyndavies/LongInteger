@@ -52,7 +52,8 @@ public:
 private:
 	static LongInteger karatsuba(const LongInteger&, const LongInteger&); // This is the front end which also tidies up any memory allocated
 public: // Make this public during development
-	static LongInteger* karatsubaMain(const LongInteger&, const LongInteger&); // This is the recursive part of the karatsuba algorithm
+		// This is the recursive part of the karatsuba algorithm
+	static LongInteger* karatsubaMain(const LongInteger&, const LongInteger&, bool bBackgroundThread);
 
 	// Constants
 public:

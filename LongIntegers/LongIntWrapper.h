@@ -40,6 +40,7 @@ public:
 
 	LongInteger* getResult();
 	void setParams(LongInteger* pliParam1, LongInteger* pliParam2);
+	void setParams(LongInteger& liParam1, LongInteger& liParam2);
 
 	// For testing
 	void setDummyObject(DummyCalledClass& inpDCC);

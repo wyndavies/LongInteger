@@ -8,6 +8,7 @@ QueueOfThreads::QueueOfThreads()
 	threadsWaiting = 0;
 	threadID = 0;
 	maxThreads = std::thread::hardware_concurrency();
+	maxThreads = 10; // Set a higher value for testing as this laptop only has 2 cores
 	if (maxThreads < minThreads) {
 		maxThreads = minThreads; // Default value
 	}
@@ -25,34 +26,38 @@ QueueOfThreads::~QueueOfThreads()
 void QueueOfThreads::decreaseCount(UINT id)
 {
 	try {
-	unique_lock<mutex> lock(myMutex);
-	// Find out which thread has finished and remove it from the list
-	UINT index = 0;
-	bool bFound = false;
-	while (!bFound && index < queueOfRunningThreads.size())
-	{
-		if (queueOfRunningThreads[index]->getID() == id)
+		unique_lock<mutex> lock(myMutex);
+		// Find out which thread has finished and remove it from the list
+		UINT index = 0;
+		bool bFound = false;
+
+		CString strOutput;
+		strOutput.Format(L"Thread ID %d - Finishing \n", id);
+		logwithoutlock(strOutput);
+
+
+		while (!bFound && index < queueOfRunningThreads.size())
 		{
-			bFound = true;
+			if (queueOfRunningThreads[index] == id)
+			{
+				bFound = true;
+			}
+			else
+			{
+				index++;
+			}
 		}
-		else
+
+		if (!bFound)
 		{
-			index++;
+			abort();
 		}
-	}
+	
+		queueOfRunningThreads.erase(queueOfRunningThreads.begin() + index);
 
-	if (!bFound) abort();
-
-	LongIntWrapper* finishedLIW = queueOfRunningThreads[index];
-	if (finishedLIW == nullptr)
-	{
-		abort();
-	}
-
-	queueOfRunningThreads.erase(queueOfRunningThreads.begin() + index);
-	threadsRunning--;
-	lock.unlock();
-	myConditionVariable.notify_one();
+		threadsRunning--;
+		lock.unlock();
+		myConditionVariable.notify_all();
 
 	}
 	catch (std::exception e)
@@ -70,19 +75,28 @@ bool QueueOfThreads::addToQueue(LongIntWrapper* newLongInt)
 {
 	try {
 	
-	unique_lock<mutex> lock(myMutex);
+		unique_lock<mutex> lock(myMutex);
 
-	newLongInt->setID(threadID);
-	queueOfWaitingThreads.push_back(newLongInt);
-	threadID++;
-	threadsWaiting++;
-	newLongInt->setCallback(this);
-	// I was using a lambda and it was working fine, but this format of thread starting
-	// matches up to the other one.
-	// Starting a thread to start a thread may seem weird, but this functionality is just a placeholder
-	std::thread t1(&QueueOfThreads::startAThread, this);
-	t1.detach();
-	lock.unlock();
+		newLongInt->setID(threadID);
+		queueOfWaitingThreads.push_back(newLongInt);
+
+		CString strOutput;
+		strOutput.Format(L"Thread ID %d - Added to Queue \n", threadID);
+		logwithoutlock(strOutput);
+
+		threadID++;
+		threadsWaiting++;
+		newLongInt->setCallback(this);
+		// I was using a lambda and it was working fine, but this format of thread starting
+		// matches up to the other one.
+		// Starting a thread to start a thread may seem weird, but this functionality is just a placeholder
+		std::thread t1(&QueueOfThreads::startAThread, this);
+
+
+
+		t1.detach();
+		lock.unlock();
+		myConditionVariable.notify_all();
 	}
 	catch (std::exception e)
 	{
@@ -113,12 +127,18 @@ void QueueOfThreads::startAThread()
 		abort();
 	}
 
-	
+
 	LongIntWrapper* tempLIW = queueOfWaitingThreads[0];
 	queueOfWaitingThreads.erase(queueOfWaitingThreads.begin());
-	queueOfRunningThreads.push_back(tempLIW);
+	queueOfRunningThreads.push_back(tempLIW->getID());
 	threadsRunning++;
 	threadsWaiting--;
+
+	
+	CString strOutput;
+	strOutput.Format(L"Thread ID %d - Starting \n", tempLIW->getID());
+	logwithoutlock(strOutput);
+	
 
 	// This format of call seems to have fixed the issues with access violation. Let's hope it
 	// keeps on working.
@@ -127,6 +147,7 @@ void QueueOfThreads::startAThread()
 	t1.detach();
 
 	lock.unlock();
+	myConditionVariable.notify_all();
 	}
 	catch (std::exception e)
 	{
@@ -140,6 +161,7 @@ UINT QueueOfThreads::numOfThreads()
 	unique_lock<mutex> lock(myMutex);
 	return threadsRunning + threadsWaiting;
 	lock.unlock();
+	myConditionVariable.notify_all();
 }
 
 void QueueOfThreads::waitForAllToFinish()
@@ -169,7 +191,7 @@ void QueueOfThreads::iAmWaiting()
 
 	// Although the lock will release when it goes out of scope, I need to unlock it before calling notify
 	lock.unlock();
-	myConditionVariable.notify_one();
+	myConditionVariable.notify_all();
 
 }
 
@@ -185,6 +207,7 @@ void QueueOfThreads::iHaveStoppedWaiting()
 	threadsWaiting--;
 
 	lock.unlock();
+	myConditionVariable.notify_all();
 }
 
 
@@ -195,6 +218,32 @@ void QueueOfThreads::waitForThread(LongIntWrapper* pLIW)
 	myConditionVariable.wait(lock, [pLIW]() { return pLIW->bFinished; });
 
 	lock.unlock();
-	myConditionVariable.notify_one();
+	myConditionVariable.notify_all();
 
+}
+
+
+void QueueOfThreads::logwithoutlock(CString logString)
+{
+	// Called if a lock has already been established
+
+	
+	CStdioFile fiiiiiiiiiiile;
+	BOOL bSuccess = fiiiiiiiiiiile.Open(L"D:\\threads.txt", CFile::modeNoTruncate | CFile::modeWrite | CFile::modeCreate);
+	fiiiiiiiiiiile.SeekToEnd();
+	fiiiiiiiiiiile.WriteString(logString);
+	fiiiiiiiiiiile.Close();
+
+}
+
+void QueueOfThreads::logwithlock(CString logString)
+{
+	unique_lock<mutex> lock(myMutex);
+	CStdioFile fiiiiiiiiiiile;
+	BOOL bSuccess = fiiiiiiiiiiile.Open(L"D:\\threads.txt", CFile::modeNoTruncate | CFile::modeWrite | CFile::modeCreate);
+	fiiiiiiiiiiile.SeekToEnd();
+	fiiiiiiiiiiile.WriteString(logString);
+	fiiiiiiiiiiile.Close();
+	lock.unlock();
+	myConditionVariable.notify_all();
 }
