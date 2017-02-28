@@ -35,9 +35,9 @@ public:
 	void decreaseCount(UINT id);
 	bool addToQueue(LongIntWrapper*);
 	void startAThread();
-	void waitForAllToFinish();
 
 	UINT numOfThreads();
+	void setNumThreads(UINT); // For testing
 
 	// Tell the queue that the current thread has finished
 	void iHaveFinished(UINT id);
@@ -53,4 +53,3 @@ public:
 	void logwithoutlock(CString);
 	void logwithlock(CString);
 };
-

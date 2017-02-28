@@ -68,6 +68,7 @@ public:
 //	static const UINT BURKINELZIEGLERCUTOFF = 50; // 50 seems to work well for the recursion point
 
 	static UINT KARATSUBACUTOFF;
+	static UINT KARATSUBATHREADING;
 	static UINT TOOMCOOK3CUTOFF;
 	static UINT BURKINELZIEGLERCUTOFF; // Making it non-const so I can test different values
 

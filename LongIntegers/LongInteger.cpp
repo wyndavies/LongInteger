@@ -16,6 +16,7 @@ bool LongInteger::bShuttingDown = false;
 UINT LongInteger::BURKINELZIEGLERCUTOFF = 50;
 UINT LongInteger::TOOMCOOK3CUTOFF = 100;
 UINT LongInteger::KARATSUBACUTOFF = 50;
+UINT LongInteger::KARATSUBATHREADING = 1000;
 
 void LongInteger::init()
 {
@@ -74,53 +75,58 @@ LongInteger* LongInteger::karatsubaMain(const LongInteger &liOne, const LongInte
 	liOne.split(liLowOne, liHighOne, iHalfSize);
 	liTwo.split(liLowTwo, liHighTwo, iHalfSize);
 
-	// Replace these with calls to the threading routine
-	QueueOfThreads *qot = LongIntWrapper::getQOT();
-	LongIntWrapper* liw0 = new LongIntWrapper;
-	LongIntWrapper* liw1 = new LongIntWrapper;
-	LongIntWrapper* liw2 = new LongIntWrapper;
-	liw0->setParams(liLowOne, liLowTwo);
-	liw1->setParams((*liLowOne + *liHighOne), (*liLowTwo + *liHighTwo));
-	liw2->setParams(liHighOne, liHighTwo);
-	qot->addToQueue(liw0);
-	qot->addToQueue(liw1);
-	qot->addToQueue(liw2);
-	if (bBackgroundThread) {
-		qot->iAmWaiting(); // Only call this if this process is called in a background thread.
-	}
-	CString strOutput;
-	// We will log which thread we are waiting on. The way this has been implemented, this process doesn't know
-	// what its own thread ID is, so we can't log that
-	strOutput.Format(L"Waiting for thread %d to finish\n", liw0->getID());
-	qot->logwithlock(strOutput);
-	qot->waitForThread(liw0);
-	strOutput.Format(L"Stopped waiting on thread %d\n", liw0->getID());
-	qot->logwithlock(strOutput);
-	strOutput.Format(L"Waiting for thread %d to finish\n", liw1->getID());
-	qot->logwithlock(strOutput);
-	qot->waitForThread(liw1);
-	strOutput.Format(L"Stopped waiting on thread %d\n", liw1->getID());
-	qot->logwithlock(strOutput);
-	strOutput.Format(L"Waiting for thread %d to finish\n", liw2->getID());
-	qot->logwithlock(strOutput);
-	qot->waitForThread(liw2);
-	strOutput.Format(L"Stopped waiting on thread %d - Resuming processing\n", liw2->getID());
-	qot->logwithlock(strOutput);
-	if (bBackgroundThread) {
-		qot->iHaveStoppedWaiting();
-	}
-	LongInteger* liZ0 = liw0->getResult();
-	LongInteger* liZ1 = liw1->getResult();
-	LongInteger* liZ2 = liw2->getResult();
-	delete liw0;
-	delete liw1;
-	delete liw2;
+	LongInteger* liZ0;
+	LongInteger* liZ1;
+	LongInteger* liZ2;
 
-	// 3 calls made to numbers approximately half the size
-//	LongInteger* liZ0 = karatsubaMain(*liLowOne, *liLowTwo);
-//	LongInteger* liZ1 = karatsubaMain((*liLowOne + *liHighOne), (*liLowTwo + *liHighTwo), false);
-//	LongInteger* liZ2 = karatsubaMain(*liHighOne, *liHighTwo, false);
-
+	if (iHalfSize > KARATSUBATHREADING) {
+		QueueOfThreads *qot = LongIntWrapper::getQOT();
+		LongIntWrapper* liw0 = new LongIntWrapper;
+		LongIntWrapper* liw1 = new LongIntWrapper;
+		LongIntWrapper* liw2 = new LongIntWrapper;
+		liw0->setParams(liLowOne, liLowTwo);
+		liw1->setParams((*liLowOne + *liHighOne), (*liLowTwo + *liHighTwo));
+		liw2->setParams(liHighOne, liHighTwo);
+		qot->addToQueue(liw0);
+		qot->addToQueue(liw1);
+		qot->addToQueue(liw2);
+		if (bBackgroundThread) {
+			qot->iAmWaiting(); // Only call this if this process is called in a background thread.
+		}
+		//CString strOutput;
+		// We will log which thread we are waiting on. The way this has been implemented, this process doesn't know
+		// what its own thread ID is, so we can't log that
+		//strOutput.Format(L"Waiting for thread %d to finish\n", liw0->getID());
+		//qot->logwithlock(strOutput);
+		qot->waitForThread(liw0);
+		//strOutput.Format(L"Stopped waiting on thread %d\n", liw0->getID());
+		//qot->logwithlock(strOutput);
+		//strOutput.Format(L"Waiting for thread %d to finish\n", liw1->getID());
+		//qot->logwithlock(strOutput);
+		qot->waitForThread(liw1);
+		//strOutput.Format(L"Stopped waiting on thread %d\n", liw1->getID());
+		//qot->logwithlock(strOutput);
+		//strOutput.Format(L"Waiting for thread %d to finish\n", liw2->getID());
+		//qot->logwithlock(strOutput);
+		qot->waitForThread(liw2);
+		//strOutput.Format(L"Stopped waiting on thread %d - Resuming processing\n", liw2->getID());
+		//qot->logwithlock(strOutput);
+		if (bBackgroundThread) {
+			qot->iHaveStoppedWaiting();
+		}
+		liZ0 = liw0->getResult();
+		liZ1 = liw1->getResult();
+		liZ2 = liw2->getResult();
+		delete liw0;
+		delete liw1;
+		delete liw2;
+	}
+	else {
+		// 3 calls made to numbers approximately half the size
+		liZ0 = karatsubaMain(*liLowOne, *liLowTwo, bBackgroundThread);
+		liZ1 = karatsubaMain((*liLowOne + *liHighOne), (*liLowTwo + *liHighTwo), bBackgroundThread);
+		liZ2 = karatsubaMain(*liHighOne, *liHighTwo, bBackgroundThread);
+	}
 	// The next step is this calculation:
 	// return (z2*10^(2*m2))+((z1-z2-z0)*10^(m2))+(z0)
 	// This calc is in base 10 whereas we are in base BASEVAL, which is the size of 1 byte

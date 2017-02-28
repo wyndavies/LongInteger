@@ -8,7 +8,6 @@ QueueOfThreads::QueueOfThreads()
 	threadsWaiting = 0;
 	threadID = 0;
 	maxThreads = std::thread::hardware_concurrency();
-	maxThreads = 10; // Set a higher value for testing as this laptop only has 2 cores
 	if (maxThreads < minThreads) {
 		maxThreads = minThreads; // Default value
 	}
@@ -31,9 +30,9 @@ void QueueOfThreads::decreaseCount(UINT id)
 		UINT index = 0;
 		bool bFound = false;
 
-		CString strOutput;
-		strOutput.Format(L"Thread ID %d - Finishing \n", id);
-		logwithoutlock(strOutput);
+//		CString strOutput;
+//		strOutput.Format(L"Thread ID %d - Finishing \n", id);
+//		logwithoutlock(strOutput);
 
 
 		while (!bFound && index < queueOfRunningThreads.size())
@@ -80,9 +79,9 @@ bool QueueOfThreads::addToQueue(LongIntWrapper* newLongInt)
 		newLongInt->setID(threadID);
 		queueOfWaitingThreads.push_back(newLongInt);
 
-		CString strOutput;
-		strOutput.Format(L"Thread ID %d - Added to Queue \n", threadID);
-		logwithoutlock(strOutput);
+//		CString strOutput;
+//		strOutput.Format(L"Thread ID %d - Added to Queue \n", threadID);
+//		logwithoutlock(strOutput);
 
 		threadID++;
 		threadsWaiting++;
@@ -135,9 +134,9 @@ void QueueOfThreads::startAThread()
 	threadsWaiting--;
 
 	
-	CString strOutput;
-	strOutput.Format(L"Thread ID %d - Starting \n", tempLIW->getID());
-	logwithoutlock(strOutput);
+//	CString strOutput;
+//	strOutput.Format(L"Thread ID %d - Starting \n", tempLIW->getID());
+//	logwithoutlock(strOutput);
 	
 
 	// This format of call seems to have fixed the issues with access violation. Let's hope it
@@ -164,14 +163,6 @@ UINT QueueOfThreads::numOfThreads()
 	myConditionVariable.notify_all();
 }
 
-void QueueOfThreads::waitForAllToFinish()
-{
-	while (threadsWaiting > 0 || threadsRunning > 0)
-	{
-		// Put code in here to wait on the items in queueOfThreads to exit. I thought of using join(), but it says
-		// it is inaccessible.
-	}
-}
 
 void QueueOfThreads::iHaveFinished(UINT id)
 {
@@ -246,4 +237,10 @@ void QueueOfThreads::logwithlock(CString logString)
 	fiiiiiiiiiiile.Close();
 	lock.unlock();
 	myConditionVariable.notify_all();
+}
+
+
+void QueueOfThreads::setNumThreads(UINT numThreads)
+{
+	maxThreads = numThreads;
 }
