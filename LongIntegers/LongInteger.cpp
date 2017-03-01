@@ -43,6 +43,43 @@ LongInteger LongInteger::karatsuba(const LongInteger& liOne, const LongInteger &
 	// Wrapper class to handle memory management
 	// The karatsube function needs to put memory on the heap, so the memory needs
 	// to be managed manually. But we want all memory management within the class
+
+
+	// Additional section added as part of multi-threading
+	// As the size increases the number of threads increases exponentially if the thread cut-off is a fixed value.
+	// So we will calculate a cut-off value that will allow a suitable number of threads to run - 
+	// not too many and not too few.
+	// Each time a call to KaratsubaMain is made where iHalfSize ends up less than the threading cutoff we get
+	// approx 3 times the number of threads
+	// So take the number of cores, multiply by a fixed value (10 maybe?) to give enough threads that 100% core usage
+	// happens without the queue getting ridiculous.
+	// Then work out what iHalfSize will be and half it n times until 3^n is greater than the value from above.
+
+
+
+	// There is only a single instance of QOT
+	QueueOfThreads *qot = LongIntWrapper::getQOT();
+	UINT deviceCores = qot->getDeviceCores();
+	UINT targetThreads = deviceCores * 10;
+
+	UINT iHalfSize = ((liOne.size > liTwo.size) ? liOne.size : liTwo.size) / 2;
+
+	UINT numSteps = 0;
+	UINT numThreads = 1;
+	while (numThreads < targetThreads)
+	{
+		numSteps++;
+		numThreads = numThreads * 3;
+		iHalfSize /= 2;
+	}
+
+//	if (iHalfSize < 4000) {
+//		iHalfSize = 4000;
+//	}
+
+	LongInteger::KARATSUBATHREADING = iHalfSize;
+
+
 	LongInteger* result = karatsubaMain(liOne, liTwo, false);
 
 	LongInteger returnValue = *(result);
@@ -552,6 +589,10 @@ bool LongInteger::addNumber(const LongInteger& liAdd)
 	if (loopSize > size) {
 		memset(digits + size, 0, (loopSize - size));
 		size = loopSize;
+		if (size >= maxSize)
+		{
+			increaseSize();
+		}
 	}
 
 	short workingVal = 0;
@@ -1454,7 +1495,7 @@ bool LongInteger::increaseSize()
 	// Set the remaining digits to zero
 	memset(newDigits + (maxSize * sizeof(byte)), 0, (newMaxSize - maxSize) * sizeof(byte));
 
-	delete[] digits;
+	delete digits;
 	digits = newDigits;
 	maxSize = newMaxSize;
 

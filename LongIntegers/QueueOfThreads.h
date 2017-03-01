@@ -23,6 +23,7 @@ private:
 	UINT threadsRunning;
 	UINT threadsWaiting;
 	UINT maxThreads;
+	UINT deviceCores;
 	static const UINT minThreads = 4;
 	mutex myMutex;
 	vector<LongIntWrapper*> queueOfWaitingThreads;
@@ -37,7 +38,8 @@ public:
 	void startAThread();
 
 	UINT numOfThreads();
-	void setNumThreads(UINT); // For testing
+	void setNumThreads(UINT);
+	UINT getDeviceCores();
 
 	// Tell the queue that the current thread has finished
 	void iHaveFinished(UINT id);
@@ -52,4 +54,6 @@ public:
 
 	void logwithoutlock(CString);
 	void logwithlock(CString);
+
+
 };

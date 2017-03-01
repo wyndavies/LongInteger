@@ -7,10 +7,15 @@ QueueOfThreads::QueueOfThreads()
 	threadsRunning = 0;
 	threadsWaiting = 0;
 	threadID = 0;
-	maxThreads = std::thread::hardware_concurrency();
-	if (maxThreads < minThreads) {
+	deviceCores = std::thread::hardware_concurrency();
+	if (deviceCores < minThreads) {
 		maxThreads = minThreads; // Default value
 	}
+	else {
+		maxThreads = deviceCores;
+	}
+
+
 }
 
 
@@ -243,4 +248,9 @@ void QueueOfThreads::logwithlock(CString logString)
 void QueueOfThreads::setNumThreads(UINT numThreads)
 {
 	maxThreads = numThreads;
+}
+
+UINT QueueOfThreads::getDeviceCores()
+{
+	return deviceCores;
 }
