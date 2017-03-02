@@ -77,7 +77,8 @@ LongInteger LongInteger::karatsuba(const LongInteger& liOne, const LongInteger &
 //		iHalfSize = 4000;
 //	}
 
-	LongInteger::KARATSUBATHREADING = iHalfSize;
+	// Disable this for the moment as I need to run tests on the exact size of this value
+	//LongInteger::KARATSUBATHREADING = iHalfSize;
 
 
 	LongInteger* result = karatsubaMain(liOne, liTwo, false);

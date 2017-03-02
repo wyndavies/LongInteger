@@ -82,6 +82,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <LibraryPath>D:\Microsoft Visual Studio 14.0\Common7\IDE\Extensions\Microsoft\Microsoft Azure Data Lake Tools for Visual Studio 2015\2.2.2100.0\CppSDK\SDK\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -186,6 +187,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DummyCalledClass.h" />
+    <ClInclude Include="MyHardwareInfo.h" />
     <ClInclude Include="LongInteger.h" />
     <ClInclude Include="LongIntegers.h" />
     <ClInclude Include="LongIntegersDlg.h" />
@@ -198,6 +200,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DummyCalledClass.cpp" />
+    <ClCompile Include="MyHardwareInfo.cpp" />
     <ClCompile Include="LongInteger.cpp" />
     <ClCompile Include="LongIntegers.cpp" />
     <ClCompile Include="LongIntegersDlg.cpp" />

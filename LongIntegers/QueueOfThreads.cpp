@@ -1,20 +1,21 @@
 #include "stdafx.h"
 #include "QueueOfThreads.h"
-
+#include "MyHardwareInfo.h"
 
 QueueOfThreads::QueueOfThreads()
 {
 	threadsRunning = 0;
 	threadsWaiting = 0;
 	threadID = 0;
-	deviceCores = std::thread::hardware_concurrency();
+//	deviceCores = std::thread::hardware_concurrency();
+	MyHardwareInfo mHI;
+	deviceCores = mHI.GetPhysicalCores();
 	if (deviceCores < minThreads) {
 		maxThreads = minThreads; // Default value
 	}
 	else {
 		maxThreads = deviceCores;
 	}
-
 
 }
 

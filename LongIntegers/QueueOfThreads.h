@@ -24,7 +24,7 @@ private:
 	UINT threadsWaiting;
 	UINT maxThreads;
 	UINT deviceCores;
-	static const UINT minThreads = 4;
+	static const UINT minThreads = 4; // 4 seems as good a number as any.
 	mutex myMutex;
 	vector<LongIntWrapper*> queueOfWaitingThreads;
 	vector<int> queueOfRunningThreads;

@@ -48,6 +48,9 @@
     <ClInclude Include="DummyCalledClass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MyHardwareInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LongIntegers.cpp">
@@ -72,6 +75,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DummyCalledClass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MyHardwareInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

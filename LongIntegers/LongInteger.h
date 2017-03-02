@@ -67,10 +67,11 @@ public:
 //	static const UINT TOOMCOOK3CUTOFF = 150; // Testing shows this is the optimal value. Update - 150 is the best in debug builds. In release builds it is not. In release it is all over the place.
 //	static const UINT BURKINELZIEGLERCUTOFF = 50; // 50 seems to work well for the recursion point
 
+// Making these non-const so I can test different values
 	static UINT KARATSUBACUTOFF;
 	static UINT KARATSUBATHREADING;
 	static UINT TOOMCOOK3CUTOFF;
-	static UINT BURKINELZIEGLERCUTOFF; // Making it non-const so I can test different values
+	static UINT BURKINELZIEGLERCUTOFF;
 
 public:
 	// For testing only
