@@ -6,8 +6,8 @@ class ReceiveUpdateClass
 {
 public:
 	ReceiveUpdateClass();
-	~ReceiveUpdateClass();
+	virtual ~ReceiveUpdateClass();
 
-	virtual void iHaveFinished(UINT) = 0;
+	virtual void iHaveFinished(unsigned int) = 0;
 };
 

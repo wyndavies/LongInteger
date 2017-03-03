@@ -1,10 +1,9 @@
 #pragma once
 
 #ifdef _WIN32
-#include <windows.h>
-#include <malloc.h>    
-#include <stdio.h>
-#include <tchar.h>
+typedef BOOL(WINAPI *LPFN_GLPI)(
+	PSYSTEM_LOGICAL_PROCESSOR_INFORMATION,
+	PDWORD);
 #elif MACOS
 #include <sys/param.h>
 #include <sys/sysctl.h>
@@ -12,10 +11,6 @@
 #include <unistd.h>
 #endif
 
-
-typedef BOOL(WINAPI *LPFN_GLPI)(
-	PSYSTEM_LOGICAL_PROCESSOR_INFORMATION,
-	PDWORD);
 
 class MyHardwareInfo
 {
@@ -31,8 +26,9 @@ private:
 	int mLogicalCores;
 
 	int init();
+#ifdef _WIN32
 	DWORD CountSetBits(ULONG_PTR bitMask);
-	
+#endif
 
 
 };

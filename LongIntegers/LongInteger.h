@@ -3,6 +3,8 @@
 #include <memory>
 #include "QueueOfThreads.h"
 
+#define UINT unsigned int
+
 using std::vector;
 using std::unique_ptr;
 using std::make_unique;

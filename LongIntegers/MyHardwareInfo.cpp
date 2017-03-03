@@ -30,6 +30,7 @@ int MyHardwareInfo::GetLogicalCores()
 
 int MyHardwareInfo::init()
 {
+#ifdef _WIN32
 	/* Not even going to pretend I understand this code.
 	Got it from https://msdn.microsoft.com/en-us/library/ms683194
 	*/
@@ -142,10 +143,20 @@ int MyHardwareInfo::init()
 
 	mPhysicalCores = processorCoreCount;
 	mLogicalCores = logicalProcessorCount;
+#else
+	mLogicalCores = std::thread::hardware_concurrency();
+
+	// Struggling to find a way to get the number of physical cores
+	// It is claimed this gives the info. Currently running in a VM
+	// that has been created with 2 cores, no hyper-threading, so
+	// no way to test this at the moment.
+	// Will try on machine at home tomorrow.
+	mPhysicalCores = sysconf(_SC_NPROCESSORS_ONLN);
+#endif
 	return 0;
 }
 
-
+#ifdef _WIN32
 // Helper function to count set bits in the processor mask.
 DWORD MyHardwareInfo::CountSetBits(ULONG_PTR bitMask)
 {
@@ -162,3 +173,4 @@ DWORD MyHardwareInfo::CountSetBits(ULONG_PTR bitMask)
 
 	return bitSetCount;
 }
+#endif
