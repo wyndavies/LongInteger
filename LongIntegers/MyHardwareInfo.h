@@ -5,10 +5,12 @@ typedef BOOL(WINAPI *LPFN_GLPI)(
 	PSYSTEM_LOGICAL_PROCESSOR_INFORMATION,
 	PDWORD);
 #elif MACOS
+// This was taken from stackexchange. I don't have access to a MAC so no idea if this works
 #include <sys/param.h>
 #include <sys/sysctl.h>
 #else
 #include <unistd.h>
+#include <thread>
 #endif
 
 
@@ -29,7 +31,5 @@ private:
 #ifdef _WIN32
 	DWORD CountSetBits(ULONG_PTR bitMask);
 #endif
-
-
 };
 

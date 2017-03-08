@@ -72,8 +72,8 @@ BOOL CLongIntegersDlg::OnInitDialog()
 	m_RichEdit2.LimitText(stuffsize);
 	m_OutputNumber.LimitText(stuffsize);
 
-	m_longInt.setProcessing(nullptr, false);
-	m_longInt.setShuttingDown(false);
+	m_longInt.setProcessing(false);
+//	m_longInt.setShuttingDown(false);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -137,7 +137,8 @@ void CLongIntegersDlg::OnBnClickedCancel()
 	}
 	while (m_longInt.isProcessing())
 	{
-		::WaitForSingleObject(m_longInt.getProcessingHandle(), INFINITE);
+		Sleep(100);
+//		::WaitForSingleObject(m_longInt.getProcessingHandle(), INFINITE);
 	}
 
 	// This exits, so that is good. Don't have to create any special code.
@@ -214,7 +215,9 @@ void CLongIntegersDlg::OnClickedIdmultiply()
 {
 	if (!m_longInt.isProcessing()) {
 		// Do the processing in the background
-		m_longInt.setProcessing(true, AfxBeginThread(CLongIntegersDlg::StartMultWork, reinterpret_cast<LPVOID>(this)));
+		m_longInt.setProcessing(true);
+		AfxBeginThread(CLongIntegersDlg::StartMultWork, reinterpret_cast<LPVOID>(this));
+//		m_longInt.setProcessing(true, AfxBeginThread(CLongIntegersDlg::StartMultWork, reinterpret_cast<LPVOID>(this)));
 	}
 }
 
@@ -278,7 +281,9 @@ void CLongIntegersDlg::OnClickedIddivide()
 {
 	if (!m_longInt.isProcessing())
 	{
-		m_longInt.setProcessing(true, AfxBeginThread(CLongIntegersDlg::StartDivWork, reinterpret_cast<LPVOID>(this)));
+		m_longInt.setProcessing(true);
+		AfxBeginThread(CLongIntegersDlg::StartDivWork, reinterpret_cast<LPVOID>(this));
+//		m_longInt.setProcessing(true, AfxBeginThread(CLongIntegersDlg::StartDivWork, reinterpret_cast<LPVOID>(this)));
 	}
 }
 
@@ -309,7 +314,9 @@ UINT CLongIntegersDlg::StartDivWork(LPVOID param)
 void CLongIntegersDlg::OnClickedIdpower()
 {
 	if (!m_longInt.isProcessing()) {
-		m_longInt.setProcessing(true, m_procthread = AfxBeginThread(CLongIntegersDlg::StartPowerWork, reinterpret_cast<LPVOID>(this)));
+		m_longInt.setProcessing(true);
+		AfxBeginThread(CLongIntegersDlg::StartPowerWork, reinterpret_cast<LPVOID>(this));
+//		m_longInt.setProcessing(true, m_procthread = AfxBeginThread(CLongIntegersDlg::StartPowerWork, reinterpret_cast<LPVOID>(this)));
 	}
 }
 
@@ -434,6 +441,32 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// 2||||2 -> 2|(2|||2) -> 2|(2|(2||2)) -> 2|(2|(2|(2|2)))
 
 
+
+	LongInteger value1;
+	LongInteger value2;
+	LongInteger value3;
+	value1 = 100000;
+	CString output;
+	output = value1.toDecimal();
+	CString value = L"100000000000000000000";
+	value2 = value;
+	output = value2.toDecimal();
+	value3 = value2 * value2;
+	value3 *= value2;
+	value3 *= value2;
+	value3 *= value2;
+	output = value3.toDecimal();
+	int iout = value3.getSize();
+
+	LongInteger::KARATSUBACUTOFF = 20;
+	LongInteger::KARATSUBATHREADING = 50;
+	for (int i = 0; i < 12; i++) {
+		value3 *= value3;
+		iout = value3.getSize();
+	}
+
+
+
 	// I've put some of the code in Karatsuba Main.
 	// Time to test it out
 	LongInteger::KARATSUBACUTOFF = 50;
@@ -459,7 +492,6 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	for (UINT i = 0; i < 10; i ++) {
 		for (UINT j = 1; j < 20; j++) {
 			LongIntWrapper::getQOT()->setNumThreads(j);
-			//			LongInteger::KARATSUBATHREADING = i;
 			for (UINT k = 1000; k <= 10000; k += 1000) {
 
 				LongInteger::KARATSUBATHREADING = k;

@@ -1,6 +1,7 @@
+#ifdef _WIN32
 #include "stdafx.h"
+#endif
 #include "LongIntWrapper.h"
-#include "DummyCalledClass.h"
 
 QueueOfThreads LongIntWrapper::qot;
 
@@ -100,17 +101,7 @@ LongInteger* LongIntWrapper::getResult()
 	return pResult;
 }
 
-void LongIntWrapper::setParams(LongInteger* pliParam1, LongInteger* pliParam2)
-{
-	// Copy the parameters
-	param1 = new LongInteger;
-	param2 = new LongInteger;
-
-	*param1 = *pliParam1;
-	*param2 = *pliParam2;
-}
-
-void LongIntWrapper::setParams(LongInteger& liParam1, LongInteger& liParam2)
+void LongIntWrapper::setParams(const LongInteger& liParam1, const LongInteger& liParam2)
 {
 	// Copy the parameters
 	param1 = new LongInteger;

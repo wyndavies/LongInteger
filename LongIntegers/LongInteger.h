@@ -1,43 +1,92 @@
+/*
+* LongInteger.h
+*
+* Header for LongInteger class. Can handle positive integers up to 4 billion digits in length.
+* It holds the number as a byte array and indexes it using an uint (hence the size limit)
+* Addition, subtraction, multiplication and division and powers are handled.
+* Standard operators - +,-,*,/,+=,-=,/=,*=,<,>,<=,>=,!=,== are handled
+* The = operator is overriden to provide copy by value instead of the default copy by reference
+* It is also overloaded, so that strings and ints can be assigned to a LongInteger
+*
+* The karatsuba algorithm is used to multiply large numbers. It is more complex than long multiplication,
+* but the number of steps needed doesn't increase as rapidly as the number length increases.
+* The karatsuba algorithm is only accessed via the multiplyNumber method
+*
+* ToomCook3 algorithm has been added for multiplying even larger numbers. The implementation looks rather complex, so
+* there may well be inefficiencies. Performance is odd, which convinces me all is not correct
+*
+* Burnikel-Ziegler algorithm for division has been implemented. It ended up with much more code than expected
+* and also handles scenarios that aren't mentioned at all in Burnikel and Ziegler's paper, so that isn't a good sign.
+* It works and divides numbers faster than the division algorithm I implemented for large numbers, where the divisor
+* is at least half the size of the value being divided.
+*
+*
+* The compiler needs to support C++14 to get this code to work.
+* Visual Studio 2015 Community Edition supports this without any amendments needed.
+*
+* I got NetBeans to compile this code by going into
+* Project Properties - C++ Compiler - Additional options - and added '-std=c++14 -pthread'. The -pthread is to
+* add multithreading support otherwise NetBeans gets very confused. I'm not sure if this is specific to NetBeans
+* or whether it is needed for all IDEs using GCC.
+*
+* I couldn't get Eclipse to work with C++14 at all. It just didn't like the option and C++11 doesn't have full
+* support for the multi-threading in use. C++11 also doesn't support std::make_unique, which is odd as it does
+* have std::unique_ptr.
+*
+* Unique Pointers are used because the memory management was getting out of hand and was becoming a real mess.
+* Where it is manageable I've kept using simple points to reduce overheads.
+*
+*/
+
 #pragma once
 #include <vector>
 #include <memory>
 #include "QueueOfThreads.h"
 
-#define UINT unsigned int
+#ifndef _WIN32
+/* Linux includes. Should cover all non-Windows platforms (and Windows, but Windows code was built using Microsoft-specific
+   classes, such as CString), but only tested on Ubuntu 16 so far.
+   For my reference - the preprocessor definitions for different platforms
+   __linux__       Defined on Linux
+   __sun           Defined on Solaris
+   __FreeBSD__     Defined on FreeBSD
+   __NetBSD__      Defined on NetBSD
+   __OpenBSD__     Defined on OpenBSD
+   __APPLE__       Defined on Mac OS X
+   __hpux          Defined on HP-UX
+   __osf__         Defined on Tru64 UNIX (formerly DEC OSF1)
+   __sgi           Defined on Irix
+   _AIX            Defined on AIX
+   _WIN32          Defined on Windows
+
+   I believe that __linux and linux work on the Linux platform as well.
+*/
+#include <string>
+#include <cstring>
+#include <sstream>
+#include <algorithm>
+typedef unsigned char byte; // Didn't realise byte and UINT were Microsoft specific definitions. Added them here for Linux
+typedef unsigned int UINT;
+
+using std::stringstream;
+using std::string;
+#endif
 
 using std::vector;
 using std::unique_ptr;
 using std::make_unique;
 using std::move;
 
-// Header for LongInteger file. Can handle positive integers up to 4 billion digits in length.
-// It holds the number as a byte array and indexes it using an uint (hence the size limit)
-// Addition, subtraction, multiplication and division and powers are handled.
-// Standard operators - +,-,*,/,+=,-=,/=,*=,<,>,<=,>=,!=,== are handled
-// The = operator is overriden to provide copy by value instead of the default copy by reference
-// It is also overloaded, so that strings and ints can be assigned to a LongInteger
-//
-// The karatsuba algorithm is used to multiply large numbers. It is more complex than long multiplication,
-// but the number of steps needed doesn't increase as rapidly as the number length increases.
-// The karatsuba algorithm is only accessed via the multiplyNumber method
-//
-// ToomCook3 algorithm has been added for multiplying even larger numbers. The implementation looks rather complex, so
-// there may well be inefficiencies. Performance is odd, which convinces me all is not correct
-//
-// Burnikel-Ziegler algorithm for division has been implemented. It ended up with much more code than expected
-// and also handles scenarios that aren't mentioned at all in Burnikel and Ziegler's paper, so that isn't a good sign.
-// It works and divides numbers faster than the division algorithm I implemented for large numbers, where the divisor
-// is at least half the size of the value being divided.
 
 class LongInteger;
-typedef unique_ptr<LongInteger> LongIntegerUP;
+typedef unique_ptr<LongInteger> LongIntegerUP; // A shorthand to make it easier to type
 
-class LongInteger
-{
+class LongInteger {
 public:
 	// Have these listed here whilst still working on them
 
-	// Still in testing. Performance is weird (improves dramatically at multiples of 350 and then drops rapidly until the next multiple is hit)
+	// Still in testing. Performance is weird in release build (improves dramatically at multiples of 350 and then drops 
+	// rapidly until the next multiple is hit), but works as expected in debug build. Haven't worked out why.
 	static LongInteger* ToomCook3(const LongInteger&, const LongInteger&);
 
 	// Restoring division seems to work fine. Some more testing needed to see what the performance is
@@ -46,9 +95,11 @@ public:
 	// This is under development. The code is rather messy as I'm struggling to follow the paper due to the heavy usage of maths
 	// terminology I'm unfamiliar with.
 	// So far it shows that it is a lot quicker than long division if the divisor is at least half the size (number of digits)
-	// of the value. Otherwise it is a lot slower
+	// of the value. Otherwise it is a lot slower. So working on a framework to adjust the size of the divisor and then
+	// adjust the results. Despite being a lot more work it is still quicker. Needs quite a bit of testing
+	// to work out the optimal values.
 	static void BurnikelZiegler(const LongInteger&, const LongInteger&, LongIntegerUP&, LongIntegerUP&);
-
+	// This is the framework that does the adjustments prior to calling the BurnikelZiegler method
 	static bool DivAndMod(const LongInteger&, const LongInteger&, LongIntegerUP&, LongIntegerUP&);
 
 private:
@@ -65,11 +116,11 @@ public:
 	static const byte BASEMAX = 255; // Highest value that can be stored in each digit
 	static const UINT ABSMAXSIZE = 4294967295; // Largest number of values that can be stored (index is by uint, so 2^32-1)
 	static const UINT SIZESTEP = 10000; // Internal byte array is increased or decreased in block of this size
-//	static const UINT KARATSUBACUTOFF = 50; // Karatsuba cutoff size. Numbers below this size will use long multiplication
-//	static const UINT TOOMCOOK3CUTOFF = 150; // Testing shows this is the optimal value. Update - 150 is the best in debug builds. In release builds it is not. In release it is all over the place.
-//	static const UINT BURKINELZIEGLERCUTOFF = 50; // 50 seems to work well for the recursion point
+										//	static const UINT KARATSUBACUTOFF = 50; // Karatsuba cutoff size. Numbers below this size will use long multiplication
+										//	static const UINT TOOMCOOK3CUTOFF = 150; // Testing shows this is the optimal value. Update - 150 is the best in debug builds. In release builds it is not. In release it is all over the place.
+										//	static const UINT BURKINELZIEGLERCUTOFF = 50; // 50 seems to work well for the recursion point
 
-// Making these non-const so I can test different values
+										// Making these non-const so I can test different values
 	static UINT KARATSUBACUTOFF;
 	static UINT KARATSUBATHREADING;
 	static UINT TOOMCOOK3CUTOFF;
@@ -85,7 +136,12 @@ public:
 	LongInteger(const UINT);
 	LongInteger(const LongInteger&);
 	LongInteger(LongInteger*);
+#ifdef _WIN32
 	LongInteger(CString&);
+#else
+	// Add in wstring option as well once this is compiling
+	LongInteger(const string&);
+#endif
 	~LongInteger();
 
 	// Useful functions
@@ -93,7 +149,11 @@ public:
 
 	bool assignNumber(int);
 	bool assignNumber(UINT);
+#ifdef _WIN32
 	bool assignNumber(CString&);
+#else
+	bool assignNumber(const string&);
+#endif
 
 	byte getDigit(UINT) const;
 	bool setDigit(UINT, byte);
@@ -104,12 +164,18 @@ public:
 
 
 	// Conversion methods
+#ifdef _WIN32
 	CString toDecimal();
 	CString toHexString() const; // Useful for testing
-	CString toArrayNumbers();    // Also useful for testing
+	CString toArrayNumbers(); // Also useful for testing
+#else
+	string toDecimal();
+	string toHexString() const; // Useful for testing
+	string toArrayNumbers(); // Also useful for testing
+#endif
 	explicit operator int(); // Convert to int. Make it explicit to avoid confusion in other methods
 	explicit operator UINT();
-	
+
 	// Arithmetic functions
 	bool addNumber(int);
 	bool addNumber(const LongInteger&);
@@ -127,7 +193,7 @@ public:
 
 	// Arithmetic operators
 	LongInteger operator+(const LongInteger&) const; // Addition
-    LongInteger operator+() const; // Unary plus
+	LongInteger operator+() const; // Unary plus
 	LongInteger operator-(const LongInteger&) const;
 	LongInteger operator-() const; // Unary negate
 	LongInteger operator*(const LongInteger&) const;
@@ -182,8 +248,8 @@ public:
 	bool bitshiftleft(const LongInteger&);
 	bool bitshiftright(UINT);
 	bool bitshiftleft(UINT);
-	LongInteger operator>>(const LongInteger&);
-	LongInteger operator>>(UINT);
+	LongInteger operator >> (const LongInteger&);
+	LongInteger operator >> (UINT);
 	LongInteger& operator>>=(const LongInteger&);
 	LongInteger& operator>>=(UINT);
 	LongInteger operator<<(const LongInteger&);
@@ -195,12 +261,17 @@ public:
 
 	bool equalsZero() const;
 	bool isProcessing();
-	void setProcessing(bool, CWinThread* = nullptr);
-	HANDLE getProcessingHandle();
+	// Commenting these 2 calls out as I need a better way of waiting on completion
+	// This was a hack to get the program working properly in Windows
+	void setProcessing(bool);
+	//    void setProcessing(bool, CWinThread* = nullptr);
+	//    HANDLE getProcessingHandle();
 	bool isShuttingDown();
 	void setShuttingDown(bool);
 
-	inline bool overflow() const { return bOverflow; }
+	inline bool overflow() const {
+		return bOverflow;
+	}
 
 private:
 	byte* digits = nullptr;
@@ -210,7 +281,9 @@ private:
 	bool bOverflow = false;
 	bool static bShuttingDown;
 	bool bProcessing;
-	CWinThread *thrProcessingRef = nullptr;
+	// Commented out at the moment. Not just because it is Windows specific, but
+	// because I need a more secure way of waiting on completion
+	//    CWinThread *thrProcessingRef = nullptr;
 
 	void init();
 	void reset(); // Reset the internal array
@@ -223,7 +296,7 @@ private:
 	bool increment(); // Helper function for ++
 	bool decrement(); // Helper function for --
 
-	// Helper methods
+					  // Helper methods
 	bool arrowCalc(const LongInteger&, UINT, LongInteger&);
 	bool powerCalcHelper(const LongInteger&, LongInteger&);
 	bool divHelper(int);
@@ -246,14 +319,13 @@ public:
 
 	// comparison operators
 public:
-	inline bool operator<(const LongInteger& rhs) const
-	{
+
+	inline bool operator<(const LongInteger& rhs) const {
 		if (bOverflow || rhs.bOverflow) {
 			return false;
 		}
 
-		if (bPositive != rhs.bPositive)
-		{
+		if (bPositive != rhs.bPositive) {
 			// If this is + and rhs is -, then return -, else return +. So return opposite of bPositive flag
 			return !bPositive;
 		}
@@ -286,16 +358,24 @@ public:
 			if (digits[0] < rhs.digits[0]) {
 				bLessThan = true;
 			}
-		}		
+		}
 
 		return (bLessThan ^ !bPositive); // Return the opposite result if the numbers are negative
 	}
 
-	inline bool operator>(const LongInteger& rhs) const { return rhs < (*this); }
-	inline bool operator<=(const LongInteger& rhs) const { return !((*this) > rhs); }
-	inline bool operator>=(const LongInteger& rhs) const { return !((*this) < rhs); }
-	inline bool operator==(const LongInteger& rhs) const
-	{
+	inline bool operator>(const LongInteger& rhs) const {
+		return rhs < (*this);
+	}
+
+	inline bool operator<=(const LongInteger& rhs) const {
+		return !((*this) > rhs);
+	}
+
+	inline bool operator>=(const LongInteger& rhs) const {
+		return !((*this) < rhs);
+	}
+
+	inline bool operator==(const LongInteger& rhs) const {
 		if (bOverflow || rhs.bOverflow) {
 			return false;
 		}
@@ -323,30 +403,75 @@ public:
 		}
 		return bEqual;
 	}
-	inline bool operator==(int rhs) const
-	{
+
+	inline bool operator==(int rhs) const {
 		if (rhs == 0) {
 			return equalsZero();
 		}
 		return ((*this) == LongInteger(rhs));
 	}
-	
-	inline bool operator!=(const LongInteger& rhs) { return !((*this) == rhs); }
-	inline bool operator!=(int rhs) { return !((*this) == rhs); }
-	
+
+	inline bool operator!=(const LongInteger& rhs) {
+		return !((*this) == rhs);
+	}
+
+	inline bool operator!=(int rhs) {
+		return !((*this) == rhs);
+	}
+
 
 };
 
-inline bool operator==(int lhs, const LongInteger& rhs) { return rhs == lhs; }
-inline bool operator!=(int lhs, const LongInteger& rhs) { return !(rhs == lhs); }
-inline bool operator>(int lhs, const LongInteger& rhs) { return rhs < lhs; }
-inline bool operator<(int lhs, const LongInteger& rhs) { return rhs > lhs; }
+inline bool operator==(int lhs, const LongInteger& rhs) {
+	return rhs == lhs;
+}
 
-inline LongInteger operator+(int lhs, const LongInteger& rhs) { return rhs + lhs;}
-inline LongInteger operator-(int lhs, const LongInteger& rhs) { LongInteger value = lhs; return value - rhs; }
-inline LongInteger operator*(int lhs, const LongInteger& rhs) { return rhs * lhs; }
-inline LongInteger operator/(int lhs, const LongInteger& rhs) { LongInteger value = lhs; return value / rhs; }
-inline LongInteger operator&(int lhs, const LongInteger& rhs) { LongInteger value = lhs; return value & rhs; }
-inline LongInteger operator|(int lhs, const LongInteger& rhs) { LongInteger value = lhs; return value | rhs; }
-inline LongInteger operator^(int lhs, const LongInteger& rhs) { LongInteger value = lhs; return value ^ rhs; }
-inline LongInteger operator>>(int lhs, const LongInteger& rhs) { LongInteger value = lhs; return value >> rhs; }
+inline bool operator!=(int lhs, const LongInteger& rhs) {
+	return !(rhs == lhs);
+}
+
+inline bool operator>(int lhs, const LongInteger& rhs) {
+	return rhs < lhs;
+}
+
+inline bool operator<(int lhs, const LongInteger& rhs) {
+	return rhs > lhs;
+}
+
+inline LongInteger operator+(int lhs, const LongInteger& rhs) {
+	return rhs + lhs;
+}
+
+inline LongInteger operator-(int lhs, const LongInteger& rhs) {
+	LongInteger value = lhs;
+	return value - rhs;
+}
+
+inline LongInteger operator*(int lhs, const LongInteger& rhs) {
+	return rhs * lhs;
+}
+
+inline LongInteger operator/(int lhs, const LongInteger& rhs) {
+	LongInteger value = lhs;
+	return value / rhs;
+}
+
+inline LongInteger operator&(int lhs, const LongInteger& rhs) {
+	LongInteger value = lhs;
+	return value & rhs;
+}
+
+inline LongInteger operator|(int lhs, const LongInteger& rhs) {
+	LongInteger value = lhs;
+	return value | rhs;
+}
+
+inline LongInteger operator^(int lhs, const LongInteger& rhs) {
+	LongInteger value = lhs;
+	return value ^ rhs;
+}
+
+inline LongInteger operator >> (int lhs, const LongInteger& rhs) {
+	LongInteger value = lhs;
+	return value >> rhs;
+}
