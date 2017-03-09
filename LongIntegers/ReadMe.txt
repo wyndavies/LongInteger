@@ -1,12 +1,11 @@
-The containing application was created in Visual Studio 2015 Community Edition, using MFC.
-The LongInteger class itself only uses CString from MFC.
+<b>The containing application was created in Visual Studio 2015 Community Edition, using MFC.</b>
 
 The naming I used for the files is horrible. The containing application used to test the "LongInteger" class is called "LongIntegers". So the file names are all really similar and can lead to confusion.
 
 The program was created on Windows (obviously as it was done in Visual Studio), however the LongInteger class has been modified so that it also compiles and runs on Linux (tested on Ubuntu 16).
 
 The test file used in Linux is as below:
-
+<i>
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -76,7 +75,7 @@ int main(int argc, char** argv) {
     }    
     return 0;
 }
-
+</i>
 Classes needed to run this on Linux are:
 LongInteger
 LongIntWrapper
