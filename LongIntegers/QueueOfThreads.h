@@ -26,7 +26,6 @@ generics or the threading, so I tied it to LongIntWrapper to remove that from th
 #include <queue>
 #include <vector>
 #include <condition_variable>
-//#include "LongIntWrapper.h"
 #include "ReceiveUpdateClass.h"
 
 #ifndef _WIN32
@@ -42,7 +41,6 @@ typedef unsigned int UINT;
 #ifdef _WIN32
 #include "stdafx.h"
 #endif
-#include "QueueOfThreads.h"
 #include "MyHardwareInfo.h"
 #ifndef _WIN32
 #include <iostream>
@@ -54,9 +52,8 @@ using std::mutex;
 using std::unique_lock;
 using std::condition_variable;
 
-//class LongIntWrapper;
-
-template<class T> class QueueOfThreads : ReceiveUpdateClass
+template<class T>
+class QueueOfThreads : ReceiveUpdateClass<T>
 {
 public:
 	QueueOfThreads();
@@ -106,5 +103,5 @@ public:
 
 };
 
-
+// A workaround for the requirement that the declaration and definition of template methods must be in the same file
 #include "QueueOfThreads.hpp"

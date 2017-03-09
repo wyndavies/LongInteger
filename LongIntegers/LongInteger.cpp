@@ -9,7 +9,6 @@
 #include <limits>
 
 
-
 // min and max are undefined before the inclusion of <limits> as Microsoft reused the min and max macros and this causes
 // conflicts with (C++ standard) definitions in <limits>
 

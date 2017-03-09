@@ -42,17 +42,20 @@
     <ClInclude Include="QueueOfThreads.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LongIntWrapper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ReceiveUpdateClass.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DummyCalledClass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MyHardwareInfo.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneralIntWrapper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ReceiveUpdateClass.hpp">
+      <Filter>Template Implementation</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneralIntWrapper.hpp">
+      <Filter>Template Implementation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -66,15 +69,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="LongInteger.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LongIntWrapper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ReceiveUpdateClass.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DummyCalledClass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MyHardwareInfo.cpp">

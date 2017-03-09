@@ -42,8 +42,10 @@
 #include <vector>
 #include <memory>
 #include "QueueOfThreads.h"
-#include "LongIntWrapper.h"
+#include "GeneralIntWrapper.h"
 
+class LongInteger; // Need to put this here so the next line knows what I am talking about
+typedef GeneralIntWrapper<LongInteger> LongIntWrapper; // This is just to make the name shorter
 
 #ifndef _WIN32
 /* Linux includes. Should cover all non-Windows platforms (and Windows, but Windows code was built using Microsoft-specific

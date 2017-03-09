@@ -5,7 +5,6 @@
 #include "stdafx.h"
 #include "LongIntegers.h"
 #include "LongIntegersDlg.h"
-#include "LongIntWrapper.h"
 #include "afxdialogex.h"
 #include <future>
 
@@ -14,8 +13,6 @@
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
-
-// CLongIntegersDlg dialog
 
 
 
@@ -449,18 +446,23 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	value1 = 100000;
 	CString output;
 	output = value1.toDecimal();
-	CString value = L"100000000000000000000";
+	CString value = L"10000000000";
 	byte* byteArray = new byte[10];
 	memset(byteArray, 10, 10);
 	value3.assignByteArray(byteArray, 10);
 	delete byteArray;
 
+	value3 = value; // 1 followed by 10 zeroes
+
 	int iout = 0;
+	//CString theAnswer;
 	LongInteger::KARATSUBACUTOFF = 20;
 	LongInteger::KARATSUBATHREADING = 50;
 	for (int i = 0; i < 15; i++) {
 		value3 *= value3;
+		//theAnswer = value3.toDecimal();
 		iout = value3.getSize();
+		//iout = theAnswer.GetLength();
 	}
 
 	return;
@@ -519,67 +521,12 @@ void CLongIntegersDlg::OnClickedIdarrow()
 
 
 
-	// Test the threading code
-	QueueOfThreads<LongIntWrapper> *qot = LongIntWrapper::getQOT();
-	vector<LongIntWrapper*> vLIW;
-	int numthreads = 20;
-	for (int i = 0; i < numthreads; i++)
-	{
-		LongIntWrapper* liw = new LongIntWrapper;
-		DummyCalledClass* pDCC = new DummyCalledClass;
-		liw->setDummyObject(*pDCC);
-		liw->setDummyParams(i+1, i+1);
-		qot->addToQueue(liw);
-		vLIW.push_back(liw);
-	}
-
-	CString strFinishOrder = L"";
-	CString strFileNames = L"";
-
-	int numberFinished = 0;
-	while (numberFinished < numthreads)
-	{
-		int i = 0;
-		bool bFound = false;
-		while (i < vLIW.size() && !bFound)
-		{
-			if (!(vLIW[i]->bFinished))
-			{
-				i++;
-			}
-			else
-			{
-				bFound = true;
-				LongIntWrapper* templiw = vLIW[i];
-				vLIW.erase(vLIW.begin() + i);
-				CString strTemp;
-				strTemp.Format(L", %d", templiw->getID());
-				strFinishOrder += strTemp;
-				strFileNames += templiw->testValue;
-				strFileNames += "\r\n";
-				delete &(templiw->getDummyObject());
-				delete templiw;
-				numberFinished++;
-			}
-		}
-	}
-
-	CString result = strFinishOrder;
-	
-	
-	return;
-
-
-
-
-
 	// Some tests for multiplication
 	LongInteger liVal1, liVal2, liResult1, liResult2, liResult3;
 
 
 	CStdioFile myFile;
 	//BOOL bSuccess = myFile.Open(L"D:\\result.txt", CFile::modeCreate | CFile::modeWrite);
-
 
 	// Test the different types of multiplication.
 	// Although the Karatsuba algorithm is part of multiplication, we can effectively disable it by setting the
@@ -645,15 +592,12 @@ void CLongIntegersDlg::OnClickedIdarrow()
 				int debugpointint = 0;
 			}
 
-
 			writeString.Format(L"%d,%d,TC3,%d", i, j, duration);
 
 			myFile.WriteString(writeString);
 			writeString = L"\n";
 			myFile.WriteString(writeString);
-
 		}
-
 	}
 
 	myFile.Close();
