@@ -2,7 +2,7 @@
 
 This started out as part of a completely different piece of work. I ended up needing to do calculations with a number bigger than MAX_INT,
 so I created a wrapped class to hold this.
-Over time I've gradually expanded this class to have more and more functionality.
+Over time I've gradually expanded this class to have more and more functionality. I've also amended it to run on Linux (tested on Ubuntu).
 
 Internally it holds the values as a byte array. A UINT is used to index the array, which gives it a size limit of 4,294,967,296 digits. The largest number it can hold should be around 1.09e+2466, which is big enough for most purposes.
 
@@ -30,3 +30,11 @@ ToDo:
 Multiplication except in the bands between multiples of 350 & 400 - i.e. 350-400 digits, 700-800, 1050-1200, etc - where it is much
 faster)
 - Do more testings of the Karatsuba algorithm in Release builds. Rechecking it (during the TC3 tests) shows it seems much less efficient than Long Division. Either that, or Long Division gets much more efficient in Release builds. The crossover point seems to shift from 40-50 digits up to nearly 1000 digits in Release builds.
+- Add multithreading for ToomCook3 and Burnikel/Ziegler
+- Find a quicker power algorithm (a quicker way was found, but it wasn't a huge improvement)
+- Find a quicker way to convert from Base 256 to decimal
+- Make the classes more generic so as to lower the interdependencies.
+
+Done:
+- Added multithreading (only for Karatsuba algorithm)
+- Made the QueueOfThreads class a template.
