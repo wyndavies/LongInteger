@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "LongIntegers.h"
 #include "LongIntegersDlg.h"
+#include "LongIntWrapper.h"
 #include "afxdialogex.h"
 #include <future>
 
@@ -449,23 +450,20 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	CString output;
 	output = value1.toDecimal();
 	CString value = L"100000000000000000000";
-	value2 = value;
-	output = value2.toDecimal();
-	value3 = value2 * value2;
-	value3 *= value2;
-	value3 *= value2;
-	value3 *= value2;
-	output = value3.toDecimal();
-	int iout = value3.getSize();
+	byte* byteArray = new byte[10];
+	memset(byteArray, 10, 10);
+	value3.assignByteArray(byteArray, 10);
+	delete byteArray;
 
+	int iout = 0;
 	LongInteger::KARATSUBACUTOFF = 20;
 	LongInteger::KARATSUBATHREADING = 50;
-	for (int i = 0; i < 12; i++) {
+	for (int i = 0; i < 15; i++) {
 		value3 *= value3;
 		iout = value3.getSize();
 	}
 
-
+	return;
 
 	// I've put some of the code in Karatsuba Main.
 	// Time to test it out
@@ -522,7 +520,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 
 
 	// Test the threading code
-	QueueOfThreads *qot = LongIntWrapper::getQOT();
+	QueueOfThreads<LongIntWrapper> *qot = LongIntWrapper::getQOT();
 	vector<LongIntWrapper*> vLIW;
 	int numthreads = 20;
 	for (int i = 0; i < numthreads; i++)

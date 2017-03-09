@@ -3,7 +3,7 @@
 #endif
 #include "LongIntWrapper.h"
 
-QueueOfThreads LongIntWrapper::qot;
+QueueOfThreads<LongIntWrapper> LongIntWrapper::qot;
 
 LongIntWrapper::LongIntWrapper()
 {
@@ -21,7 +21,7 @@ LongIntWrapper::~LongIntWrapper()
 	delete param2;
 }
 
-QueueOfThreads* LongIntWrapper::getQOT()
+QueueOfThreads<LongIntWrapper>* LongIntWrapper::getQOT()
 {
 	return &qot;
 }

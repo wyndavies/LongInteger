@@ -1,13 +1,11 @@
-#ifdef _WIN32
-#include "stdafx.h"
-#endif
-#include "QueueOfThreads.h"
-#include "MyHardwareInfo.h"
-#ifndef _WIN32
-#include <iostream>
-#endif
+/*
+Implementation of the QueueOfThreads template
+Managed to work out how to move it into a separate file
+The .h file includes this file at the end. All seems to work just fine.
+*/
 
-QueueOfThreads::QueueOfThreads() {
+template <class T>
+QueueOfThreads<T>::QueueOfThreads() {
 	threadsRunning = 0;
 	threadsWaiting = 0;
 	threadID = 0;
@@ -23,14 +21,16 @@ QueueOfThreads::QueueOfThreads() {
 
 }
 
-QueueOfThreads::~QueueOfThreads() {
+template <class T>
+QueueOfThreads<T>::~QueueOfThreads() {
 	// Can't exit whilst threads are running.
 	// Set the shutting down flag (all should have a reference to that - use an interface)
 	// and wait for them to finish
 
 }
 
-void QueueOfThreads::decreaseCount(UINT id) {
+template <class T>
+void QueueOfThreads<T>::decreaseCount(UINT id) {
 	try {
 		unique_lock<mutex> lock(myMutex);
 		// Find out which thread has finished and remove it from the list
@@ -79,7 +79,8 @@ void QueueOfThreads::decreaseCount(UINT id) {
 
 }
 
-bool QueueOfThreads::addToQueue(LongIntWrapper* newLongInt) {
+template <class T>
+bool QueueOfThreads<T>::addToQueue(T* newLongInt) {
 	try {
 
 		unique_lock<mutex> lock(myMutex);
@@ -97,7 +98,7 @@ bool QueueOfThreads::addToQueue(LongIntWrapper* newLongInt) {
 		// I was using a lambda and it was working fine, but this format of thread starting
 		// matches up to the other one.
 		// Starting a thread to start a thread may seem weird, but this functionality is just a placeholder
-		std::thread t1(&QueueOfThreads::startAThread, this);
+		std::thread t1(&QueueOfThreads<T>::startAThread, this);
 
 
 
@@ -122,7 +123,8 @@ bool QueueOfThreads::addToQueue(LongIntWrapper* newLongInt) {
 	return true;
 }
 
-void QueueOfThreads::startAThread() {
+template <class T>
+void QueueOfThreads<T>::startAThread() {
 	if (threadsWaiting == 0) {
 		return;
 	}
@@ -139,7 +141,7 @@ void QueueOfThreads::startAThread() {
 		}
 
 
-		LongIntWrapper* tempLIW = queueOfWaitingThreads[0];
+		T* tempLIW = queueOfWaitingThreads[0];
 		queueOfWaitingThreads.erase(queueOfWaitingThreads.begin());
 		queueOfRunningThreads.push_back(tempLIW->getID());
 		threadsRunning++;
@@ -153,7 +155,7 @@ void QueueOfThreads::startAThread() {
 
 		// This format of call seems to have fixed the issues with access violation. Let's hope it
 		// keeps on working.
-		std::thread t1(&LongIntWrapper::startProcess, tempLIW);
+		std::thread t1(&T::startProcess, tempLIW);
 
 		t1.detach();
 
@@ -169,7 +171,8 @@ void QueueOfThreads::startAThread() {
 	}
 }
 
-UINT QueueOfThreads::numOfThreads() {
+template <class T>
+UINT QueueOfThreads<T>::numOfThreads() {
 	// For testing
 	unique_lock<mutex> lock(myMutex);
 	return threadsRunning + threadsWaiting;
@@ -177,7 +180,8 @@ UINT QueueOfThreads::numOfThreads() {
 	myConditionVariable.notify_all();
 }
 
-void QueueOfThreads::iHaveFinished(UINT id) {
+template <class T>
+void QueueOfThreads<T>::iHaveFinished(UINT id) {
 	decreaseCount(id);
 #ifdef __linux__
 	// Linux test code
@@ -185,7 +189,8 @@ void QueueOfThreads::iHaveFinished(UINT id) {
 #endif
 }
 
-void QueueOfThreads::iAmWaiting() {
+template <class T>
+void QueueOfThreads<T>::iAmWaiting() {
 	if (threadsRunning == 0) abort(); // Test code
 
 									  // The current thread is waiting on something, so let the queue know that other threads can be started
@@ -200,7 +205,8 @@ void QueueOfThreads::iAmWaiting() {
 
 }
 
-void QueueOfThreads::iHaveStoppedWaiting() {
+template <class T>
+void QueueOfThreads<T>::iHaveStoppedWaiting() {
 	if (threadsWaiting == 0) abort(); // Test code
 
 	unique_lock<mutex> lock(myMutex);
@@ -214,7 +220,8 @@ void QueueOfThreads::iHaveStoppedWaiting() {
 	myConditionVariable.notify_all();
 }
 
-void QueueOfThreads::waitForThread(LongIntWrapper* pLIW) {
+template <class T>
+void QueueOfThreads<T>::waitForThread(T* pLIW) {
 	unique_lock<mutex> lock(myMutex);
 
 	myConditionVariable.wait(lock, [pLIW]() {
@@ -226,7 +233,8 @@ void QueueOfThreads::waitForThread(LongIntWrapper* pLIW) {
 }
 
 #ifdef _WIN32
-void QueueOfThreads::logwithoutlock(CString logString) {
+template <class T>
+void QueueOfThreads<T>::logwithoutlock(CString logString) {
 	// Called if a lock has already been established
 
 
@@ -238,7 +246,8 @@ void QueueOfThreads::logwithoutlock(CString logString) {
 
 }
 #else
-void QueueOfThreads::logwithoutlock(string logString) {
+template <class T>
+void QueueOfThreads<T>::logwithoutlock(string logString) {
 	// Called if a lock has already been established
 
 	ofstream ffiillee;
@@ -252,7 +261,8 @@ void QueueOfThreads::logwithoutlock(string logString) {
 #endif
 
 #ifdef _WIN32
-void QueueOfThreads::logwithlock(CString logString) {
+template <class T>
+void QueueOfThreads<T>::logwithlock(CString logString) {
 	unique_lock<mutex> lock(myMutex);
 	CStdioFile fiiiiiiiiiiile;
 	BOOL bSuccess = fiiiiiiiiiiile.Open(L"D:\\threads.txt", CFile::modeNoTruncate | CFile::modeWrite | CFile::modeCreate);
@@ -263,7 +273,8 @@ void QueueOfThreads::logwithlock(CString logString) {
 	myConditionVariable.notify_all();
 }
 #else
-void QueueOfThreads::logwithlock(string logString) {
+template <class T>
+void QueueOfThreads<T>::logwithlock(string logString) {
 	unique_lock<mutex> lock(myMutex);
 	ofstream ffiillee;
 	ffiillee.open("~/Desktop/threads.txt", ofstream::out | ofstream::ate | ofstream::app);
@@ -278,10 +289,12 @@ void QueueOfThreads::logwithlock(string logString) {
 
 #endif
 
-void QueueOfThreads::setNumThreads(UINT numThreads) {
+template <class T>
+void QueueOfThreads<T>::setNumThreads(UINT numThreads) {
 	maxThreads = numThreads;
 }
 
-UINT QueueOfThreads::getDeviceCores() {
+template <class T>
+UINT QueueOfThreads<T>::getDeviceCores() {
 	return deviceCores;
 }

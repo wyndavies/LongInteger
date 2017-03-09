@@ -42,6 +42,8 @@
 #include <vector>
 #include <memory>
 #include "QueueOfThreads.h"
+#include "LongIntWrapper.h"
+
 
 #ifndef _WIN32
 /* Linux includes. Should cover all non-Windows platforms (and Windows, but Windows code was built using Microsoft-specific

@@ -26,7 +26,7 @@ generics or the threading, so I tied it to LongIntWrapper to remove that from th
 #include <queue>
 #include <vector>
 #include <condition_variable>
-#include "LongIntWrapper.h"
+//#include "LongIntWrapper.h"
 #include "ReceiveUpdateClass.h"
 
 #ifndef _WIN32
@@ -38,14 +38,25 @@ using std::ofstream;
 typedef unsigned int UINT;
 #endif
 
+
+#ifdef _WIN32
+#include "stdafx.h"
+#endif
+#include "QueueOfThreads.h"
+#include "MyHardwareInfo.h"
+#ifndef _WIN32
+#include <iostream>
+#endif
+
+
 using std::vector;
 using std::mutex;
 using std::unique_lock;
 using std::condition_variable;
 
-class LongIntWrapper;
+//class LongIntWrapper;
 
-class QueueOfThreads : ReceiveUpdateClass
+template<class T> class QueueOfThreads : ReceiveUpdateClass
 {
 public:
 	QueueOfThreads();
@@ -58,7 +69,7 @@ private:
 	UINT deviceCores;
 	static const UINT minThreads = 4; // 4 seems as good a number as any.
 	mutex myMutex;
-	vector<LongIntWrapper*> queueOfWaitingThreads;
+	vector<T*> queueOfWaitingThreads;
 	vector<int> queueOfRunningThreads;
 	condition_variable myConditionVariable;
 	UINT threadID;
@@ -66,7 +77,7 @@ private:
 public:
 	// Methods
 	void decreaseCount(UINT id);
-	bool addToQueue(LongIntWrapper*);
+	bool addToQueue(T*);
 	void startAThread();
 
 	UINT numOfThreads();
@@ -82,7 +93,7 @@ public:
 	void iHaveStoppedWaiting();
 
 	// Wait for a thread to finish
-	void waitForThread(LongIntWrapper*);
+	void waitForThread(T*);
 
 #ifdef _WIN32
 	void logwithoutlock(CString);
@@ -94,3 +105,6 @@ public:
 
 
 };
+
+
+#include "QueueOfThreads.hpp"

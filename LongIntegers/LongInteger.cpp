@@ -2,10 +2,13 @@
 #include "stdafx.h"
 #endif
 #include "LongInteger.h"
+
 #include <stdexcept>
 #undef min
 #undef max
 #include <limits>
+
+
 
 // min and max are undefined before the inclusion of <limits> as Microsoft reused the min and max macros and this causes
 // conflicts with (C++ standard) definitions in <limits>
@@ -57,7 +60,7 @@ LongInteger LongInteger::karatsuba(const LongInteger& liOne, const LongInteger &
 
 
 	// There is only a single instance of QOT
-	QueueOfThreads *qot = LongIntWrapper::getQOT();
+	QueueOfThreads<LongIntWrapper> *qot = LongIntWrapper::getQOT();
 	UINT deviceCores = qot->getDeviceCores();
 	UINT targetThreads = deviceCores * 10;
 
@@ -115,7 +118,7 @@ LongInteger* LongInteger::karatsubaMain(const LongInteger &liOne, const LongInte
 	LongInteger* liZ2;
 
 	if (iHalfSize > KARATSUBATHREADING) {
-		QueueOfThreads *qot = LongIntWrapper::getQOT();
+		QueueOfThreads<LongIntWrapper> *qot = LongIntWrapper::getQOT();
 		LongIntWrapper* liw0 = new LongIntWrapper;
 		LongIntWrapper* liw1 = new LongIntWrapper;
 		LongIntWrapper* liw2 = new LongIntWrapper;

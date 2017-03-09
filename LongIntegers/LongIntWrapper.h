@@ -13,7 +13,8 @@ BurnikelZeigler.
 
 #pragma once
 #include "LongInteger.h"
-#include "ReceiveUpdateClass.h" // Interface
+#include "ReceiveUpdateClass.h"
+#include "QueueOfThreads.h"
 /*
 This code is specific to LongInteger. Get this working first before making a generic class
 */
@@ -25,7 +26,7 @@ typedef unsigned int UINT;
 #endif
 
 class LongInteger;
-class QueueOfThreads;
+//class QueueOfThreads;
 
 class LongIntWrapper
 {
@@ -39,7 +40,7 @@ private:
 	LongInteger* param2;
 	LongInteger* pResult;
 	ReceiveUpdateClass *callback;
-	static QueueOfThreads qot; // Only 1 instance of QueueOfThreads
+	static QueueOfThreads<LongIntWrapper> qot; // Only 1 instance of QueueOfThreads
 
 							   // For testing
 	DummyCalledClass* pDCC;
@@ -53,7 +54,7 @@ public:
 	void setCallback(ReceiveUpdateClass*);
 	void setID(UINT);
 	UINT getID();
-	static QueueOfThreads* getQOT();
+	static QueueOfThreads<LongIntWrapper>* getQOT();
 
 	LongInteger* getResult();
 	//	void setParams(LongInteger* pliParam1, LongInteger* pliParam2);

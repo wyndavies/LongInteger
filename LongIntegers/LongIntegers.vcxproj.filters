@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Template Implementation">
+      <UniqueIdentifier>{52d6d53b-094f-4743-a08e-98ee49d1e138}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -65,9 +68,6 @@
     <ClCompile Include="LongInteger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="QueueOfThreads.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="LongIntWrapper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -89,6 +89,9 @@
   <ItemGroup>
     <None Include="res\LongIntegers.rc2">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="QueueOfThreads.hpp">
+      <Filter>Template Implementation</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

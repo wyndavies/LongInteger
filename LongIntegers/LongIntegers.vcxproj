@@ -205,7 +205,6 @@
     <ClCompile Include="LongIntegers.cpp" />
     <ClCompile Include="LongIntegersDlg.cpp" />
     <ClCompile Include="LongIntWrapper.cpp" />
-    <ClCompile Include="QueueOfThreads.cpp" />
     <ClCompile Include="ReceiveUpdateClass.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -218,6 +217,7 @@
     <ResourceCompile Include="LongIntegers.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="QueueOfThreads.hpp" />
     <None Include="res\LongIntegers.rc2" />
   </ItemGroup>
   <ItemGroup>
