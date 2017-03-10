@@ -84,6 +84,7 @@ using std::move;
 
 class LongInteger;
 typedef unique_ptr<LongInteger> LongIntegerUP; // A shorthand to make it easier to type
+typedef LongInteger* (*LIfunction)(const LongInteger&, const LongInteger&, bool);
 
 class LongInteger {
 public:

@@ -455,14 +455,15 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	value3 = value; // 1 followed by 10 zeroes
 
 	int iout = 0;
-	//CString theAnswer;
+	int hexiout = 0;
+	CString theAnswer;
 	LongInteger::KARATSUBACUTOFF = 20;
 	LongInteger::KARATSUBATHREADING = 50;
 	for (int i = 0; i < 15; i++) {
 		value3 *= value3;
-		//theAnswer = value3.toDecimal();
-		iout = value3.getSize();
-		//iout = theAnswer.GetLength();
+		theAnswer = value3.toDecimal();
+		iout = theAnswer.GetLength();
+		hexiout = value3.getSize();
 	}
 
 	return;

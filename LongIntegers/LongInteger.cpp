@@ -8,6 +8,7 @@
 #undef max
 #include <limits>
 
+#include <functional>
 
 // min and max are undefined before the inclusion of <limits> as Microsoft reused the min and max macros and this causes
 // conflicts with (C++ standard) definitions in <limits>
@@ -124,6 +125,10 @@ LongInteger* LongInteger::karatsubaMain(const LongInteger &liOne, const LongInte
 		liw0->setParams(*liLowOne, *liLowTwo);
 		liw1->setParams((*liLowOne + *liHighOne), (*liLowTwo + *liHighTwo));
 		liw2->setParams(*liHighOne, *liHighTwo);
+		LIfunction fp = &LongInteger::karatsubaMain;
+		liw0->setStartMethod(fp);
+		liw1->setStartMethod(fp);
+		liw2->setStartMethod(fp);
 		qot->addToQueue(liw0);
 		qot->addToQueue(liw1);
 		qot->addToQueue(liw2);

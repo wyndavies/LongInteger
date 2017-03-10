@@ -11,12 +11,12 @@ At the moment it just calls the karatsuba algorithm. Will need to be amended to 
 #pragma once
 
 #ifndef _WIN32
-// I'm not sure why I have to include this typedef again as it is in LongInteger.h
 typedef unsigned int UINT;
 #endif
 
-#include <type_traits>
 #include "QueueOfThreads.h"
+
+
 
 template<class T> class GeneralIntWrapper
 {
@@ -24,12 +24,15 @@ public:
 	GeneralIntWrapper();
 	~GeneralIntWrapper();
 
+	typedef T* (*Tfunction)(const T&, const T&, bool);
+
 private:
 	UINT id;
 	T* param1;
 	T* param2;
 	T* pResult;
-	ReceiveUpdateClass<GeneralIntWrapper<T>> *callback;
+	ReceiveUpdateClass<GeneralIntWrapper<T>> *callbackObject;
+	Tfunction startMethod;
 	static QueueOfThreads<GeneralIntWrapper<T>> qot;
 
 public:
@@ -37,6 +40,7 @@ public:
 	bool bFinished;
 	int startProcess();
 	void setCallback(ReceiveUpdateClass<GeneralIntWrapper<T>>*);
+	void setStartMethod(Tfunction newMethod);
 	void setID(UINT);
 	UINT getID();
 	static QueueOfThreads<GeneralIntWrapper<T>>* getQOT();

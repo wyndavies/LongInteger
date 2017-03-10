@@ -33,14 +33,10 @@ generics or the threading, so I tied it to LongIntWrapper to remove that from th
 #include <fstream>
 using std::string;
 using std::ofstream;
-// For some obscure reason I have to include this typedef yet again. Doesn't seem to carry from 1 header to another
 typedef unsigned int UINT;
 #endif
 
 
-#ifdef _WIN32
-#include "stdafx.h"
-#endif
 #include "MyHardwareInfo.h"
 #ifndef _WIN32
 #include <iostream>
@@ -58,6 +54,7 @@ class QueueOfThreads : ReceiveUpdateClass<T>
 public:
 	QueueOfThreads();
 	~QueueOfThreads();
+
 private:
 	// Attributes
 	UINT threadsRunning;

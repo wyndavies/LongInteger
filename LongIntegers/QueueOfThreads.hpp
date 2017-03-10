@@ -95,6 +95,10 @@ bool QueueOfThreads<T>::addToQueue(T* newLongInt) {
 		threadID++;
 		threadsWaiting++;
 		newLongInt->setCallback(this);
+		// Amend to start any old method
+//		newLongInt->setStartMethod(newMethod);
+//		newLongInt->setStartMethod(&(LongInteger::karatsubaMain));
+
 		// I was using a lambda and it was working fine, but this format of thread starting
 		// matches up to the other one.
 		// Starting a thread to start a thread may seem weird, but this functionality is just a placeholder

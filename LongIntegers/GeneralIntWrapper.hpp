@@ -30,20 +30,27 @@ int GeneralIntWrapper<T>::startProcess()
 	bRunning = true;
 
 	// Need to find a way to get this to call any method required
-	pResult = (T*)T::karatsubaMain(*param1, *param2, true);
+//	pResult = (T*)T::karatsubaMain(*param1, *param2, true);
+	pResult = startMethod(*(param1), *(param2), true);
 
 
 	bRunning = false;
 	// Need a way this can inform QueueOfThreads that it has finished.
 	bFinished = true;
-	callback->iHaveFinished(id);
+	callbackObject->iHaveFinished(id);
 	return 0;
 }
 
 template <class T>
-void GeneralIntWrapper<T>::setCallback(ReceiveUpdateClass<GeneralIntWrapper<T>>* newcallback)
+void GeneralIntWrapper<T>::setCallback(ReceiveUpdateClass<GeneralIntWrapper<T>>* newcallbackObject)
 {
-	callback = newcallback;
+	callbackObject = newcallbackObject;
+}
+
+template <class T>
+void GeneralIntWrapper<T>::setStartMethod(Tfunction newMethod)
+{
+	startMethod = newMethod;
 }
 
 template <class T>
