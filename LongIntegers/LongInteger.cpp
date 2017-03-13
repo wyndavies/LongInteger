@@ -79,7 +79,7 @@ LongInteger LongInteger::karatsuba(const LongInteger& liOne, const LongInteger &
 	}
 
 	// Disable this for the moment as I need to run tests on the exact size of this value
-	LongInteger::KARATSUBATHREADING = iHalfSize;
+//	LongInteger::KARATSUBATHREADING = iHalfSize;
 
 
 	LongInteger* result = karatsubaMain(liOne, liTwo, false);
@@ -2287,6 +2287,7 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 	liReturn->bPositive = bFinalSign;
 	if (liReturn->equalsZero()) liReturn->bPositive = true;
 
+
 	return liReturn;
 }
 
@@ -2312,6 +2313,7 @@ UINT LongInteger::toomsplit(LongInteger** liList, UINT uDigits) const {
 		liList[i]->maxSize = (uStep - (uStep % SIZESTEP)) + SIZESTEP;
 		liList[i]->reset();
 		memcpy(liList[i]->digits, digits + uStart, uEnd - uStart);
+		liList[i]->checkSize(); // Get rid of any leading zeroes
 	}
 
 	if (uNumSplits < 3)
