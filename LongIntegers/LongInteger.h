@@ -84,7 +84,9 @@ using std::move;
 
 class LongInteger;
 typedef unique_ptr<LongInteger> LongIntegerUP; // A shorthand to make it easier to type
-typedef LongInteger* (*LIfunction)(const LongInteger&, const LongInteger&, bool);
+// This for passing a pointer to a function that takes 2 const LongInteger parameters and a bool and returns a pointer to a LongInteger
+// The function pointer is referred to as 'Lifunction' in the code
+typedef LongInteger* (*LIfunction)(const LongInteger&, const LongInteger&, bool); 
 
 class LongInteger {
 public:
@@ -92,7 +94,7 @@ public:
 
 	// Still in testing. Performance is weird in release build (improves dramatically at multiples of 350 and then drops 
 	// rapidly until the next multiple is hit), but works as expected in debug build. Haven't worked out why.
-	static LongInteger* ToomCook3(const LongInteger&, const LongInteger&);
+	static LongInteger* ToomCook3(const LongInteger&, const LongInteger&, bool bBackgroundThread = false);
 
 	// Restoring division seems to work fine. Some more testing needed to see what the performance is
 	static void RestoringDivision(LongInteger&, LongInteger&, LongInteger*, LongInteger*);
@@ -129,6 +131,7 @@ public:
 	static UINT KARATSUBACUTOFF;
 	static UINT KARATSUBATHREADING;
 	static UINT TOOMCOOK3CUTOFF;
+	static UINT TOOMCOOK3THREADING;
 	static UINT BURKINELZIEGLERCUTOFF;
 
 public:

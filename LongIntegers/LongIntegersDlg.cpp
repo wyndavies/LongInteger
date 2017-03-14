@@ -467,19 +467,21 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	}
 	li2 = li1;
 
+	LongInteger::TOOMCOOK3THREADING = 50; // Let us get some multi-threading going
 	for (int i = 0; i < 1; i++)
 	{
 		li3 = li1 * li2;
-		LongInteger::TOOMCOOK3CUTOFF = 24;
+		LongInteger::TOOMCOOK3CUTOFF = 100;
+		LongInteger::TOOMCOOK3THREADING = 10000000;
 		li4 = LongInteger::ToomCook3(li1, li2);
-		LongInteger::TOOMCOOK3CUTOFF = 25;
+		LongInteger::TOOMCOOK3THREADING = li1.getSize() / 5;
 		li5 = LongInteger::ToomCook3(li1, li2);
-		LongInteger::TOOMCOOK3CUTOFF = 30;
+		LongInteger::TOOMCOOK3THREADING = (li1.getSize() / 10);
 		li6 = LongInteger::ToomCook3(li1, li2);
-		LongInteger::TOOMCOOK3CUTOFF = 35;
+		LongInteger::TOOMCOOK3THREADING = (li1.getSize() / 50);
 		li7 = LongInteger::ToomCook3(li1, li2);
 
-		bool answer1 = li3 == li4;
+		bool answer1 = (li3 == li4);
 		bool answer2 = li3 == li5;
 		bool answer3 = li3 == li6;
 		bool answer4 = li3 == li7;
@@ -495,7 +497,8 @@ void CLongIntegersDlg::OnClickedIdarrow()
 
 	for (int i = 0; i < 10; i++)
 	{
-		LongInteger::TOOMCOOK3CUTOFF = 50;
+		LongInteger::TOOMCOOK3CUTOFF = 100;
+		LongInteger::TOOMCOOK3THREADING = li1.getSize() / 5;
 		li3 = li1 * li2; // TC3 isn't integrated into the standard multiplication yet
 		li4 = LongInteger::ToomCook3(li1, li2);
 

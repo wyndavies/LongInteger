@@ -29,10 +29,8 @@ int GeneralIntWrapper<T>::startProcess()
 {
 	bRunning = true;
 
-	// Need to find a way to get this to call any method required
-//	pResult = (T*)T::karatsubaMain(*param1, *param2, true);
+	// This will call any method that takes 2 parameters of type T and a 3rd parameter of bool
 	pResult = startMethod(*(param1), *(param2), true);
-
 
 	bRunning = false;
 	// Need a way this can inform QueueOfThreads that it has finished.

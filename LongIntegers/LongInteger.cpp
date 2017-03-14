@@ -20,6 +20,7 @@
 bool LongInteger::bShuttingDown = false;
 UINT LongInteger::BURKINELZIEGLERCUTOFF = 50;
 UINT LongInteger::TOOMCOOK3CUTOFF = 100;
+UINT LongInteger::TOOMCOOK3THREADING = 100;
 UINT LongInteger::KARATSUBACUTOFF = 50;
 UINT LongInteger::KARATSUBATHREADING = 1000;
 
@@ -74,12 +75,12 @@ LongInteger LongInteger::karatsuba(const LongInteger& liOne, const LongInteger &
 		iHalfSize /= 2;
 	}
 
-	if (iHalfSize < 50) {
-		iHalfSize = 50;
+	// Not sure if this is the optimal cutoff value
+	if (iHalfSize < 500) {
+		iHalfSize = 500;
 	}
 
-	// Disable this for the moment as I need to run tests on the exact size of this value
-//	LongInteger::KARATSUBATHREADING = iHalfSize;
+	LongInteger::KARATSUBATHREADING = iHalfSize;
 
 
 	LongInteger* result = karatsubaMain(liOne, liTwo, false);
@@ -1276,9 +1277,6 @@ bool LongInteger::DivAndMod(const LongInteger& liValue, const LongInteger& liDiv
 			liNewDivide <<= liOffset;
 
 			DivAndMod(liValue, liNewDivide, upliQuotient, upliModulus);
-			//			BurnikelZiegler(liValue, liNewDivide, upliQuotient, upliModulus);
-
-
 
 			liNewDivide.bitshiftright(liOffset);
 			LongIntegerUP upliNewQuotient = make_unique<LongInteger>(0);
@@ -1887,10 +1885,8 @@ bool LongInteger::bitshiftright(UINT uShift) {
 	// Now move each digit by any bits left over
 	UINT iUnderflow = 0;
 	UINT iTemp;
-	UINT index;
-	for (UINT uLoop = size; uLoop > 0; --uLoop) {
-		index = uLoop; // Index of digit to adjust converted to a UINT
-		index--; // A workaround to deal with LongIntegers (and UINT) not being negative and the end test for the loop
+	// A separate index variable is a workaround to deal with LongIntegers (and UINT) not being negative and the end test for the loop
+	for (UINT uLoop = size, index = size - 1; uLoop > 0; --uLoop, --index) {
 		iTemp = digits[index] >> iMoveBits;
 		iTemp += iUnderflow;
 		iUnderflow = digits[index] & bBitMask;
@@ -2112,7 +2108,7 @@ LongInteger& LongInteger::operator<<=(UINT rhs) {
 	return *this;
 }
 
-LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger& liTwo) {
+LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger& liTwo, bool bBackgroundThread) {
 	// A sanity check
 	if (liOne.equalsZero() || liTwo.equalsZero())
 		return new LongInteger(0);
@@ -2204,17 +2200,77 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 	//
 	// This is where some recursion comes into effect.
 	// If the operands are small enough we switch to a different algorithm
-	// Testing needing to determine at what value that happens
+
+	// We will also check for threading
 
 	LongInteger * liPointwise[5];
-	for (UINT i = 0; i < 5; i++) {
-		if (liEvalM[i]->size > TOOMCOOK3CUTOFF || liEvalN[i]->size > TOOMCOOK3CUTOFF) {
-			liPointwise[i] = ToomCook3(*liEvalM[i], *liEvalN[i]);
+	
+	if (LongInteger::TOOMCOOK3THREADING > liOne.size)
+	{
+		for (UINT i = 0; i < 5; i++) {
+			if (liEvalM[i]->size > TOOMCOOK3CUTOFF || liEvalN[i]->size > TOOMCOOK3CUTOFF) {
+				liPointwise[i] = ToomCook3(*liEvalM[i], *liEvalN[i]);
+			}
+			else {
+				liPointwise[i] = new LongInteger;
+				*liPointwise[i] = *liEvalM[i] * *liEvalN[i];
+			}
 		}
-		else {
-			liPointwise[i] = new LongInteger;
-			*liPointwise[i] = *liEvalM[i] * *liEvalN[i];
+	}
+	else
+	{
+		QueueOfThreads<LongIntWrapper> *qot = LongIntWrapper::getQOT();
+		LongIntWrapper* liw0 = new LongIntWrapper;
+		LongIntWrapper* liw1 = new LongIntWrapper;
+		LongIntWrapper* liw2 = new LongIntWrapper;
+		LongIntWrapper* liw3 = new LongIntWrapper;
+		LongIntWrapper* liw4 = new LongIntWrapper;
+
+		liw0->setParams(*liEvalM[0], *liEvalN[0]);
+		liw1->setParams(*liEvalM[1], *liEvalN[1]);
+		liw2->setParams(*liEvalM[2], *liEvalN[2]);
+		liw3->setParams(*liEvalM[3], *liEvalN[3]);
+		liw4->setParams(*liEvalM[4], *liEvalN[4]);
+		
+		LIfunction fp = &LongInteger::ToomCook3;
+		
+		liw0->setStartMethod(fp);
+		liw1->setStartMethod(fp);
+		liw2->setStartMethod(fp);
+		liw3->setStartMethod(fp);
+		liw4->setStartMethod(fp);
+		
+		qot->addToQueue(liw0);
+		qot->addToQueue(liw1);
+		qot->addToQueue(liw2);
+		qot->addToQueue(liw3);
+		qot->addToQueue(liw4);
+
+		if (bBackgroundThread) {
+				qot->iAmWaiting(); // Only call this if this process is called in a background thread.
 		}
+
+		qot->waitForThread(liw0);
+		qot->waitForThread(liw1);
+		qot->waitForThread(liw2);
+		qot->waitForThread(liw3);
+		qot->waitForThread(liw4);
+
+		if (bBackgroundThread) {
+			qot->iHaveStoppedWaiting();
+		}
+
+		liPointwise[0] = liw0->getResult();
+		liPointwise[1] = liw1->getResult();
+		liPointwise[2] = liw2->getResult();
+		liPointwise[3] = liw3->getResult();
+		liPointwise[4] = liw4->getResult();
+
+		delete liw0;
+		delete liw1;
+		delete liw2;
+		delete liw3;
+		delete liw4;
 	}
 
 	// 4 - Interpolation
@@ -2254,7 +2310,7 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 	*liResult[3] = (*liPointwise[3] - *liPointwise[1]) / 3;
 	*liResult[1] = (*liPointwise[1] - *liPointwise[2]) >> 1;
 	*liResult[2] = *liPointwise[2] - *liPointwise[0];
-	*liResult[3] = (*liResult[2] - *liResult[3]) / 2 + 2 * *liPointwise[4];
+	*liResult[3] = (*liResult[2] - *liResult[3]) / 2 + (*liPointwise[4] << 1);
 	*liResult[2] = *liResult[2] + *liResult[1] - *liResult[4];
 	*liResult[1] = *liResult[1] - *liResult[3];
 
@@ -2770,7 +2826,6 @@ vector<LongIntegerUP> LongInteger::DivThreeHalvesByTwo(LongIntegerUP& a2, LongIn
 		else {
 			LongIntegerUP Q2 = make_unique<LongInteger>(0);
 			DivAndMod(*Q, *b1, Q2, R);
-			;
 			Q = move(Q2);
 		}
 	}

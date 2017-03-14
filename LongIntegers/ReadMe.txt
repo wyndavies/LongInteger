@@ -78,8 +78,7 @@ int main(int argc, char** argv) {
 
 Classes needed to run this on Linux are:
 LongInteger
-LongIntWrapper
+GeneralIntWrapper
 MyHardwareInfo
 QueueOfThreads
 ReceivedUpdateClass
-DummyCalledClass (will be removed as a dependency in an update, but still using it to test stuff right now)
