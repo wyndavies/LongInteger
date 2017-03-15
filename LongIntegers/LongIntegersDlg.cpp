@@ -439,18 +439,8 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// 2||||2 -> 2|(2|||2) -> 2|(2|(2||2)) -> 2|(2|(2|(2|2)))
 
 
-	// Now to try putting multi-threading into ToomCook3
 	LongInteger::KARATSUBACUTOFF = 50;
-	LongInteger::KARATSUBATHREADING = 5000;
-	LongInteger::TOOMCOOK3CUTOFF = 24;
-
-	LongInteger liOne = CString(L"41638844164534459402802472045834022345406340376082654658086604446859844904276675103");
-	LongInteger liTwo = liOne;
-	LongInteger liK = liOne * liTwo;
-	LongInteger liTC = LongInteger::ToomCook3(liOne, liTwo);
-	bool same = liK == liTC;
-
-
+	LongInteger::TOOMCOOK3CUTOFF = 100;
 
 	LongInteger li1, li2, li3, li4, li5, li6, li7, li8, li9;
 	CString result1, result2, result3, result4;
@@ -461,93 +451,33 @@ void CLongIntegersDlg::OnClickedIdarrow()
 
 
 
-	for (int i = 0; i < 16; i++)
+	for (int i = 0; i < 20; i++)
 	{
-		li1 *= li1;
-	}
-	li2 = li1;
-
-	LongInteger::TOOMCOOK3THREADING = 50; // Let us get some multi-threading going
-	for (int i = 0; i < 1; i++)
-	{
+		LongInteger::KARATSUBATHREADING = li1.getSize() / 3;
+		LongInteger::TOOMCOOK3THREADING = li1.getSize() / 5;
+		if (LongInteger::KARATSUBATHREADING < 5) LongInteger::KARATSUBATHREADING = 5;
+		if (LongInteger::TOOMCOOK3THREADING < 5) LongInteger::TOOMCOOK3THREADING = 5;
+		//		LongInteger::KARATSUBATHREADING = 5;
+//		LongInteger::TOOMCOOK3THREADING = 100;
 		li3 = li1 * li2;
-		LongInteger::TOOMCOOK3CUTOFF = 100;
-		LongInteger::TOOMCOOK3THREADING = 10000000;
+		// This works because I have created an assignment operator to copy pointers to non-pointers plus it also
+		// cleans up the memory. Could be an issue if you want to reuse the pointer.
 		li4 = LongInteger::ToomCook3(li1, li2);
-		LongInteger::TOOMCOOK3THREADING = li1.getSize() / 5;
-		li5 = LongInteger::ToomCook3(li1, li2);
-		LongInteger::TOOMCOOK3THREADING = (li1.getSize() / 10);
-		li6 = LongInteger::ToomCook3(li1, li2);
-		LongInteger::TOOMCOOK3THREADING = (li1.getSize() / 50);
-		li7 = LongInteger::ToomCook3(li1, li2);
-
-		bool answer1 = (li3 == li4);
-		bool answer2 = li3 == li5;
-		bool answer3 = li3 == li6;
-		bool answer4 = li3 == li7;
-		bool totalanswer = answer1 & answer2 & answer3 & answer4;
-		if (!totalanswer) {
-			CString different = L"Yes";
-		}
-
-		li1 = li3;
-		li2 = li3;
-	}
-	li2 = li1;
-
-	for (int i = 0; i < 10; i++)
-	{
-		LongInteger::TOOMCOOK3CUTOFF = 100;
-		LongInteger::TOOMCOOK3THREADING = li1.getSize() / 5;
-		li3 = li1 * li2; // TC3 isn't integrated into the standard multiplication yet
-		li4 = LongInteger::ToomCook3(li1, li2);
-
+//		result3 = li3.toDecimal();
+//		result4 = li4.toDecimal();
 		if (li3 == li4)
 		{
-			result2 = L"Worked";
+			result1 = L"Happyhappy";
 		}
 		else
 		{
-			result2 = L"Failed";
-			// Try to narrow down why/where it has failed
-
-			LongInteger::KARATSUBACUTOFF = 500000;
-			LongInteger::TOOMCOOK3CUTOFF = 50;
-			li6 = LongInteger::ToomCook3(li1, li2);
-			LongInteger::TOOMCOOK3CUTOFF = 500;
-			li7 = LongInteger::ToomCook3(li1, li2);
-			LongInteger::TOOMCOOK3CUTOFF = 5000;
-			li8 = LongInteger::ToomCook3(li1, li2);
-
-			LongInteger::KARATSUBACUTOFF = 50;
-			LongInteger::KARATSUBATHREADING = 100;
-			LongInteger::TOOMCOOK3CUTOFF = 50;
-
-			bool answer1 = li3 == li5;
-			bool answer2 = li3 == li6;
-			bool answer3 = li3 == li7;
-			bool answer4 = li3 == 1i8;
-			bool totalanswer = answer1 & answer2 & answer3 & answer4;
-
-			while (li3 != li4)
-			{
-				li2 >>= 800;
-				li3 = li1 * li2;
-				li4 = LongInteger::ToomCook3(li1, li2);
-			}
-
-			result3 = li3.toHexString();
-			result4 = li4.toHexString();
-			CStdioFile logFile;
-			BOOL bSuccess = logFile.Open(L"D:\\multiplyfail.txt", CFile::modeCreate | CFile::modeWrite);
-			logFile.WriteString(result3);
-			logFile.WriteString(L"\n");
-			logFile.WriteString(result4);
-			logFile.Close();
+			result1 = L"Muchsad";
+			return;
 		}
 		li1 = li3;
 		li2 = li3;
 	}
+
 
 
 	

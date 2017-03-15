@@ -26,12 +26,11 @@
 *
 * I got NetBeans to compile this code by going into
 * Project Properties - C++ Compiler - Additional options - and added '-std=c++14 -pthread'. The -pthread is to
-* add multithreading support otherwise NetBeans gets very confused. I'm not sure if this is specific to NetBeans
-* or whether it is needed for all IDEs using GCC.
-*
-* I couldn't get Eclipse to work with C++14 at all. It just didn't like the option and C++11 doesn't have full
-* support for the multi-threading in use. C++11 also doesn't support std::make_unique, which is odd as it does
-* have std::unique_ptr.
+* add multithreading support otherwise NetBeans gets very confused.
+* 
+* Managed to get Eclipse to compile the code as well, although I cannot get the IDE to recognise C++14 code
+* It insists there are errors, but hit compile and it builds fine. It will also debug and step through the code
+* without issues, but still with warnings about unrecognised code all over the place.
 *
 * Unique Pointers are used because the memory management was getting out of hand and was becoming a real mess.
 * Where it is manageable I've kept using simple points to reduce overheads.
@@ -43,9 +42,6 @@
 #include <memory>
 #include "QueueOfThreads.h"
 #include "GeneralIntWrapper.h"
-
-class LongInteger; // Need to put this here so the next line knows what I am talking about
-typedef GeneralIntWrapper<LongInteger> LongIntWrapper; // This is just to make the name shorter
 
 #ifndef _WIN32
 /* Linux includes. Should cover all non-Windows platforms (and Windows, but Windows code was built using Microsoft-specific
@@ -81,23 +77,23 @@ using std::unique_ptr;
 using std::make_unique;
 using std::move;
 
-
+// The class is named below with no implementation so as to avoid a Catch-22 situation with the typedefs
+// The typedefs need to be defined using class LongInteger, but class LongInteger needs the typedefs
+// So this definition says "I'm going to use a class called LongInteger and I'll fill in the details later on"
 class LongInteger;
-typedef unique_ptr<LongInteger> LongIntegerUP; // A shorthand to make it easier to type
+typedef GeneralIntWrapper<LongInteger> LongIntWrapper; // A shorthand to make it easier to type
+typedef unique_ptr<LongInteger> LongIntegerUP; // Ditto
 // This for passing a pointer to a function that takes 2 const LongInteger parameters and a bool and returns a pointer to a LongInteger
 // The function pointer is referred to as 'Lifunction' in the code
 typedef LongInteger* (*LIfunction)(const LongInteger&, const LongInteger&, bool); 
 
 class LongInteger {
 public:
-	// Have these listed here whilst still working on them
+	// Have these listed here (public and at the top of the class) whilst still working on them
 
 	// Still in testing. Performance is weird in release build (improves dramatically at multiples of 350 and then drops 
 	// rapidly until the next multiple is hit), but works as expected in debug build. Haven't worked out why.
 	static LongInteger* ToomCook3(const LongInteger&, const LongInteger&, bool bBackgroundThread = false);
-
-	// Restoring division seems to work fine. Some more testing needed to see what the performance is
-	static void RestoringDivision(LongInteger&, LongInteger&, LongInteger*, LongInteger*);
 
 	// This is under development. The code is rather messy as I'm struggling to follow the paper due to the heavy usage of maths
 	// terminology I'm unfamiliar with.
@@ -110,10 +106,14 @@ public:
 	static bool DivAndMod(const LongInteger&, const LongInteger&, LongIntegerUP&, LongIntegerUP&);
 
 private:
-	static LongInteger karatsuba(const LongInteger&, const LongInteger&); // This is the front end which also tidies up any memory allocated
+	// This is the front end to the Karatsuba algorithm which also tidies up any memory allocated
+	static LongInteger karatsubaStart(const LongInteger&, const LongInteger&);
+    // Restoring division seems to work fine. Some more testing needed to see what the performance is
+	static void RestoringDivision(LongInteger&, LongInteger&, LongInteger*, LongInteger*);
+
 public: // Make this public during development
 		// This is the recursive part of the karatsuba algorithm
-	static LongInteger* karatsubaMain(const LongInteger&, const LongInteger&, bool bBackgroundThread);
+	static LongInteger* karatsuba(const LongInteger&, const LongInteger&, bool bBackgroundThread = false);
 
 	// Constants
 public:

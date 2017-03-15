@@ -42,7 +42,7 @@ void LongInteger::reset() {
 	bPositive = true; // Can only be true or false, so we'll treat zero as positive
 }
 
-LongInteger LongInteger::karatsuba(const LongInteger& liOne, const LongInteger &liTwo) {
+LongInteger LongInteger::karatsubaStart(const LongInteger& liOne, const LongInteger &liTwo) {
 	// Wrapper class to handle memory management
 	// The karatsube function needs to put memory on the heap, so the memory needs
 	// to be managed manually. But we want all memory management within the class
@@ -52,7 +52,7 @@ LongInteger LongInteger::karatsuba(const LongInteger& liOne, const LongInteger &
 	// As the size increases the number of threads increases exponentially if the thread cut-off is a fixed value.
 	// So we will calculate a cut-off value that will allow a suitable number of threads to run - 
 	// not too many and not too few.
-	// Each time a call to KaratsubaMain is made where iHalfSize ends up less than the threading cutoff we get
+	// Each time a call to Karatsuba is made where iHalfSize ends up less than the threading cutoff we get
 	// approx 3 times the number of threads
 	// So take the number of cores, multiply by a fixed value (10 maybe?) to give enough threads that 100% core usage
 	// happens without the queue getting ridiculous.
@@ -80,10 +80,11 @@ LongInteger LongInteger::karatsuba(const LongInteger& liOne, const LongInteger &
 		iHalfSize = 500;
 	}
 
-	LongInteger::KARATSUBATHREADING = iHalfSize;
+	// Comment out during performance testing
+//	LongInteger::KARATSUBATHREADING = iHalfSize;
 
 
-	LongInteger* result = karatsubaMain(liOne, liTwo, false);
+	LongInteger* result = karatsuba(liOne, liTwo);
 
 	LongInteger returnValue = *(result);
 	delete result;
@@ -94,7 +95,7 @@ LongInteger LongInteger::karatsuba(const LongInteger& liOne, const LongInteger &
 // Implementation of the Karatsuba algorithm for multiplication
 // This is a static method
 
-LongInteger* LongInteger::karatsubaMain(const LongInteger &liOne, const LongInteger &liTwo, bool bBackgroundThread)
+LongInteger* LongInteger::karatsuba(const LongInteger &liOne, const LongInteger &liTwo, bool bBackgroundThread)
 {
 	if ((liOne.size < KARATSUBACUTOFF) || (liTwo.size < KARATSUBACUTOFF)) {
 		LongInteger *liReturn = new LongInteger(liOne);
@@ -126,7 +127,7 @@ LongInteger* LongInteger::karatsubaMain(const LongInteger &liOne, const LongInte
 		liw0->setParams(*liLowOne, *liLowTwo);
 		liw1->setParams((*liLowOne + *liHighOne), (*liLowTwo + *liHighTwo));
 		liw2->setParams(*liHighOne, *liHighTwo);
-		LIfunction fp = &LongInteger::karatsubaMain;
+		LIfunction fp = &LongInteger::karatsuba;
 		liw0->setStartMethod(fp);
 		liw1->setStartMethod(fp);
 		liw2->setStartMethod(fp);
@@ -166,9 +167,9 @@ LongInteger* LongInteger::karatsubaMain(const LongInteger &liOne, const LongInte
 	}
 	else {
 		// 3 calls made to numbers approximately half the size
-		liZ0 = karatsubaMain(*liLowOne, *liLowTwo, bBackgroundThread);
-		liZ1 = karatsubaMain((*liLowOne + *liHighOne), (*liLowTwo + *liHighTwo), bBackgroundThread);
-		liZ2 = karatsubaMain(*liHighOne, *liHighTwo, bBackgroundThread);
+		liZ0 = karatsuba(*liLowOne, *liLowTwo, bBackgroundThread);
+		liZ1 = karatsuba((*liLowOne + *liHighOne), (*liLowTwo + *liHighTwo), bBackgroundThread);
+		liZ2 = karatsuba(*liHighOne, *liHighTwo, bBackgroundThread);
 	}
 	// The next step is this calculation:
 	// return (z2*10^(2*m2))+((z1-z2-z0)*10^(m2))+(z0)
@@ -968,7 +969,7 @@ bool LongInteger::multiplyNumber(const LongInteger& liMult) {
 	else
 		bFinal = true;
 
-	(*this) = karatsuba(*this, liMult);
+	(*this) = karatsubaStart(*this, liMult);
 
 	// Handle the special case of multiplying zero by a negative number
 	if (size == 0) bFinal = true;
@@ -994,15 +995,9 @@ bool LongInteger::multiplyInternal(const LongInteger& liMult) {
 	// Multiplying needs to be done 1 digit of the multiplier at a time and we need another memory storage area to hold
 	// the result
 
-	// Some sanity checks
-	/*	if (liMult.size > maxSize) {
-	UINT origSize = size;
-	size = liMult.size;
-	recalcMaxSize();
-	size = origSize;
-	//		return false;
-	}
-	*/
+
+	bool bFinalSign = !(bPositive ^ liMult.bPositive);
+
 	// How big will the resulting number be?
 	UINT inSize = liMult.size;
 	UINT tempSize = size + inSize;
@@ -1040,6 +1035,8 @@ bool LongInteger::multiplyInternal(const LongInteger& liMult) {
 
 	size = tempSize;
 	checkSize();
+
+	bPositive = bFinalSign;
 
 	return true;
 }
@@ -2212,8 +2209,9 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 				liPointwise[i] = ToomCook3(*liEvalM[i], *liEvalN[i]);
 			}
 			else {
-				liPointwise[i] = new LongInteger;
-				*liPointwise[i] = *liEvalM[i] * *liEvalN[i];
+				liPointwise[i] = karatsuba(*liEvalM[i], *liEvalN[i], bBackgroundThread);
+//				liPointwise[i] = new LongInteger;
+//				*liPointwise[i] = *liEvalM[i] * *liEvalN[i];
 			}
 		}
 	}
@@ -2313,6 +2311,7 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 	*liResult[3] = (*liResult[2] - *liResult[3]) / 2 + (*liPointwise[4] << 1);
 	*liResult[2] = *liResult[2] + *liResult[1] - *liResult[4];
 	*liResult[1] = *liResult[1] - *liResult[3];
+
 
 	// 5 - Recomposition
 	//
