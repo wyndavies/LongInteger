@@ -107,7 +107,7 @@ public:
 
 private:
 	// This is the front end to the Karatsuba algorithm which also tidies up any memory allocated
-	static LongInteger karatsubaStart(const LongInteger&, const LongInteger&);
+	static LongInteger multiplyChooser(const LongInteger&, const LongInteger&);
     // Restoring division seems to work fine. Some more testing needed to see what the performance is
 	static void RestoringDivision(LongInteger&, LongInteger&, LongInteger*, LongInteger*);
 

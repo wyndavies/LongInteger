@@ -42,9 +42,9 @@ void LongInteger::reset() {
 	bPositive = true; // Can only be true or false, so we'll treat zero as positive
 }
 
-LongInteger LongInteger::karatsubaStart(const LongInteger& liOne, const LongInteger &liTwo) {
+LongInteger LongInteger::multiplyChooser(const LongInteger& liOne, const LongInteger &liTwo) {
 	// Wrapper class to handle memory management
-	// The karatsube function needs to put memory on the heap, so the memory needs
+	// The karatsuba and ToomCook3 functions needs to put memory on the heap, so the memory needs
 	// to be managed manually. But we want all memory management within the class
 
 
@@ -58,36 +58,66 @@ LongInteger LongInteger::karatsubaStart(const LongInteger& liOne, const LongInte
 	// happens without the queue getting ridiculous.
 	// Then work out what iHalfSize will be and half it n times until 3^n is greater than the value from above.
 
+	UINT minCalc = 500;
+	if (liOne.getSize() > 500 || liTwo.getSize() > 500)
+	{
 
+		// There is only a single instance of QOT
+		QueueOfThreads<LongIntWrapper> *qot = LongIntWrapper::getQOT();
+		UINT deviceCores = qot->getDeviceCores();
+		UINT targetThreads = deviceCores * 10;
 
-	// There is only a single instance of QOT
-	QueueOfThreads<LongIntWrapper> *qot = LongIntWrapper::getQOT();
-	UINT deviceCores = qot->getDeviceCores();
-	UINT targetThreads = deviceCores * 10;
+		UINT uKCutOff = ((liOne.size > liTwo.size) ? liOne.size : liTwo.size) / 2;
+		UINT uTCcutOff = uKCutOff;
 
-	UINT iHalfSize = ((liOne.size > liTwo.size) ? liOne.size : liTwo.size) / 2;
+		UINT numThreads = 1;
+		while (numThreads < targetThreads) {
+			numThreads = numThreads * 3;
+			uKCutOff /= 2;
+		}
+		numThreads = 1;
+		while (numThreads < targetThreads) {
+			numThreads = numThreads * 5;
+			uTCcutOff /= 2;
+		}
 
-	UINT numSteps = 0;
-	UINT numThreads = 1;
-	while (numThreads < targetThreads) {
-		numSteps++;
-		numThreads = numThreads * 3;
-		iHalfSize /= 2;
+		// Not sure if this is the optimal cutoff value
+		if (uKCutOff < 500) {
+			uKCutOff = 500;
+		}
+		if (uTCcutOff < 500) {
+			uTCcutOff = 500;
+		}
+
+		// Comment out during performance testing
+		LongInteger::KARATSUBATHREADING = uKCutOff;
+		LongInteger::TOOMCOOK3THREADING = uTCcutOff;
+	}
+	else
+	{
+		LongInteger::KARATSUBATHREADING = LongInteger::ABSMAXSIZE;
+		LongInteger::TOOMCOOK3THREADING = LongInteger::ABSMAXSIZE;
 	}
 
-	// Not sure if this is the optimal cutoff value
-	if (iHalfSize < 500) {
-		iHalfSize = 500;
+	// Call ToomCook3, Karatsuba or Long Multiplication?
+
+	LongInteger* returnValue;
+	if ((liOne.size > TOOMCOOK3CUTOFF) || (liTwo.size > TOOMCOOK3CUTOFF))
+	{
+		returnValue = ToomCook3(liOne, liTwo);
+	}
+	else {
+		if ((liOne.size > KARATSUBACUTOFF) || (liTwo.size > KARATSUBACUTOFF))
+		{
+			returnValue = karatsuba(liOne, liTwo);
+		}
+		else
+		{
+			returnValue = new LongInteger(liOne);
+			returnValue->multiplyInternal(liTwo);
+		}
 	}
 
-	// Comment out during performance testing
-//	LongInteger::KARATSUBATHREADING = iHalfSize;
-
-
-	LongInteger* result = karatsuba(liOne, liTwo);
-
-	LongInteger returnValue = *(result);
-	delete result;
 	return returnValue;
 }
 
@@ -97,12 +127,6 @@ LongInteger LongInteger::karatsubaStart(const LongInteger& liOne, const LongInte
 
 LongInteger* LongInteger::karatsuba(const LongInteger &liOne, const LongInteger &liTwo, bool bBackgroundThread)
 {
-	if ((liOne.size < KARATSUBACUTOFF) || (liTwo.size < KARATSUBACUTOFF)) {
-		LongInteger *liReturn = new LongInteger(liOne);
-		liReturn->multiplyInternal(liTwo);
-		return liReturn;
-	}
-
 	// Determine the size of the numbers, so we know where to split them
 	UINT iSize = (liOne.size > liTwo.size) ? liOne.size : liTwo.size;
 	UINT iHalfSize = iSize / 2;
@@ -969,7 +993,7 @@ bool LongInteger::multiplyNumber(const LongInteger& liMult) {
 	else
 		bFinal = true;
 
-	(*this) = karatsubaStart(*this, liMult);
+	(*this) = multiplyChooser(*this, liMult);
 
 	// Handle the special case of multiplying zero by a negative number
 	if (size == 0) bFinal = true;
@@ -2210,8 +2234,6 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 			}
 			else {
 				liPointwise[i] = karatsuba(*liEvalM[i], *liEvalN[i], bBackgroundThread);
-//				liPointwise[i] = new LongInteger;
-//				*liPointwise[i] = *liEvalM[i] * *liEvalN[i];
 			}
 		}
 	}
