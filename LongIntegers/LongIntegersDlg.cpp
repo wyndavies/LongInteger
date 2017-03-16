@@ -462,18 +462,18 @@ void CLongIntegersDlg::OnClickedIdarrow()
 		li3 = li1 * li2;
 		// This works because I have created an assignment operator to copy pointers to non-pointers plus it also
 		// cleans up the memory. Could be an issue if you want to reuse the pointer.
-		li4 = LongInteger::ToomCook3(li1, li2);
+//		li4 = LongInteger::ToomCook3(li1, li2);
 //		result3 = li3.toDecimal();
 //		result4 = li4.toDecimal();
-		if (li3 == li4)
-		{
-			result1 = L"Happyhappy";
-		}
-		else
-		{
-			result1 = L"Muchsad";
-			return;
-		}
+//		if (li3 == li4)
+//		{
+//			result1 = L"Happyhappy";
+//		}
+//		else
+//		{
+//			result1 = L"Muchsad";
+//			return;
+//		}
 		li1 = li3;
 		li2 = li3;
 	}

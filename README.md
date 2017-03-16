@@ -39,6 +39,9 @@ If you are using an older version of GCC or a compiler that doesn't have C++14 s
 Options for compiler with C++11 support:
 -std=c++11 -pthread
 
+From the command line:
+g++ -std=c++11 -pthread  main.cpp LongInteger.cpp MyHardwareInfo.cpp -o LongIntegerTest.exe
+
 The C++11 code has been tested using GCC on a variety of Linux platforms. On Solaris I couldn't get an up-to-date version of GCC working, so I used Solaris Studio. This builds the code, but errors when it is running, claiming a pure virtual method has been called (but rather nicely doesn't point out what that method actually is).
 
 

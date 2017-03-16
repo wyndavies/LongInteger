@@ -127,6 +127,13 @@ LongInteger LongInteger::multiplyChooser(const LongInteger& liOne, const LongInt
 
 LongInteger* LongInteger::karatsuba(const LongInteger &liOne, const LongInteger &liTwo, bool bBackgroundThread)
 {
+	if ((liOne.size < KARATSUBACUTOFF) && (liTwo.size < KARATSUBACUTOFF))
+	{
+		LongInteger *returnValue = new LongInteger(liOne);
+		returnValue->multiplyInternal(liTwo);
+		return returnValue;
+	}
+
 	// Determine the size of the numbers, so we know where to split them
 	UINT iSize = (liOne.size > liTwo.size) ? liOne.size : liTwo.size;
 	UINT iHalfSize = iSize / 2;
