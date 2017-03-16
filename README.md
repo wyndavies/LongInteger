@@ -39,7 +39,8 @@ If you are using an older version of GCC or a compiler that doesn't have C++14 s
 Options for compiler with C++11 support:
 -std=c++11 -pthread
 
-Update: This code errors when running on Solaris using C++11. It works on Ubuntu. Needs more investigation.
+The C++11 code has been tested using GCC on a variety of Linux platforms. On Solaris I couldn't get an up-to-date version of GCC working, so I used Solaris Studio. This builds the code, but errors when it is running, claiming a pure virtual method has been called (but rather nicely doesn't point out what that method actually is).
+
 
 ToDo:
 - Remove some remaining tests for UINTs being less than zero (legacy of when I was using ints for indexing)
@@ -54,8 +55,6 @@ ToDo:
 Multiplication except in the bands between multiples of 350 & 400 - i.e. 350-400 digits, 700-800, 1050-1200, etc - where it is much
 faster)
 - Do more testings of the Karatsuba algorithm in Release builds. Rechecking it (during the TC3 tests) shows it seems much less efficient than Long Division. Either that, or Long Division gets much more efficient in Release builds. The crossover point seems to shift from 40-50 digits up to nearly 1000 digits in Release builds.
-- Tidy up multithreading for ToomCook3 algorithm.
-- Integrate ToomCook3 into the standard multiplication algorithm
 - Find a quicker power algorithm (a quicker way was found, but it wasn't a huge improvement)
 - Find a quicker way to convert from Base 256 to decimal
 - Make the classes more generic so as to lower the interdependencies.
@@ -64,3 +63,5 @@ Done:
 - Added multithreading to ToomCook3 and Karatsuba algorithms. Can't see any way to add it to the Burnikel-Ziegler division algorithm as each step requires the output of the immediately preceeding step.
 - Made the QueueOfThreads class a template.
 - Replace LongIntWrapper with template class GeneralIntWrapper.
+- Tidy up multithreading for ToomCook3 algorithm.
+- Integrate ToomCook3 into the standard multiplication algorithm
