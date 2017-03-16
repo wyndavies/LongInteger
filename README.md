@@ -39,6 +39,8 @@ If you are using an older version of GCC or a compiler that doesn't have C++14 s
 Options for compiler with C++11 support:
 -std=c++11 -pthread
 
+Update: This code errors when running on Solaris using C++11. It works on Ubuntu. Needs more investigation.
+
 ToDo:
 - Remove some remaining tests for UINTs being less than zero (legacy of when I was using ints for indexing)
 - Finish off the BZ division algorithm and integrate it into the standard division call
