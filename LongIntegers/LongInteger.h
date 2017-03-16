@@ -72,6 +72,8 @@ using std::stringstream;
 using std::string;
 #endif
 
+// This definition is to add compatibility with C++11. The code is intended for C++14, but it turns out
+// the template below is all that is needed to run under the C++11 standard
 #if __cplusplus == 201103L
 template<typename T, typename... Args>
 std::unique_ptr<T> make_unique(Args&&... args) {
@@ -81,7 +83,9 @@ std::unique_ptr<T> make_unique(Args&&... args) {
 
 using std::vector;
 using std::unique_ptr;
+#if __cplusplus != 201103L
 using std::make_unique;
+#endif
 using std::move;
 
 // The class is named below with no implementation so as to avoid a Catch-22 situation with the typedefs
