@@ -17,6 +17,28 @@ It supports:
 - Comparisons
 - operator overloads for everything I could think of
 
+To get the code to run on Ubuntu you need the following files:
+GeneralIntWrapper.h
+GeneralIntWrapper.hpp
+LongInteger.h
+LongInteger.cpp
+MyHardwareInfo.h
+MyHardwareInfo.cpp
+QueueOfThreads.h
+QueueOfThreads.hpp
+ReceiveUpdateClass.h
+ReceiveUpdateClass.hpp
+main.cpp (optional - you can design your own)
+
+
+If you are using a current version of GCC (tested with GCC 5.4 on Ubuntu) you can build the code using the following options:
+-std=c++14 -pthread
+In NetBeans or Eclipse you can add these options by going to Project Properties -> Build -> C++ Compiler -> Additional Options
+
+If you are using an older version of GCC or a compiler that doesn't have C++14 support, but does have C++11 support then you need to set slightly different options. There is a small piece of code at the top of LongIntegers.h that adds a definition for make_unique<> if it detects that the compiler is running in C++11 mode.
+Options for compiler with C++11 support:
+-std=c++11 -pthread
+
 ToDo:
 - Remove some remaining tests for UINTs being less than zero (legacy of when I was using ints for indexing)
 - Finish off the BZ division algorithm and integrate it into the standard division call
