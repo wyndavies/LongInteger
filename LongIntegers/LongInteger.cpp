@@ -2219,8 +2219,8 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 	*liEvalN[1] = *liP0N + *liN[1];
 	*liEvalM[2] = *liP0M - *liM[1];
 	*liEvalN[2] = *liP0N - *liN[1];
-	*liEvalM[3] = ((*liEvalM[2] + *liM[2]) * 2) - *liM[0];
-	*liEvalN[3] = ((*liEvalN[2] + *liN[2]) * 2) - *liN[0];
+	*liEvalM[3] = ((*liEvalM[2] + *liM[2]) << 1) - *liM[0];
+	*liEvalN[3] = ((*liEvalN[2] + *liN[2]) << 1) - *liN[0];
 	*liEvalM[4] = *liM[2];
 	*liEvalN[4] = *liN[2];
 
