@@ -35,7 +35,7 @@ If you are using a current version of GCC (tested with GCC 5.4 on Ubuntu) you ca
 -std=c++14 -pthread
 In NetBeans or Eclipse you can add these options by going to Project Properties -> Build -> C++ Compiler -> Additional Options
 
-If you are using an older version of GCC or a compiler that doesn't have C++14 support, but does have C++11 support then you need to set slightly different options. There is a small piece of code at the top of LongIntegers.h that adds a definition for make_unique<> if it detects that the compiler is running in C++11 mode.
+If you are using an older version of GCC or a compiler that doesn't have C++14 support, but does have C++11 support then you need to set slightly different options. There is a small piece of code at the top of LongIntegers.h that adds a definition for make_unique<> if it detects that the compiler is running in C++11 mode. It turns out that is all that is missing for running under C++11.
 Options for compiler with C++11 support:
 -std=c++11 -pthread
 
