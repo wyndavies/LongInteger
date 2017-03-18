@@ -43,6 +43,8 @@ From the command line:
 g++ -std=c++11 -pthread  main.cpp LongInteger.cpp MyHardwareInfo.cpp -o LongIntegerTest.exe
 
 The C++11 code has been tested using GCC on a variety of Linux platforms. On Solaris I couldn't get an up-to-date version of GCC working, so I used Solaris Studio. This builds the code, but errors when it is running, claiming a pure virtual method has been called (but rather nicely doesn't point out what that method actually is).
+Update on Solaris: worked out the objection it has is not to my code, but to the C++11 threading model. Great. I've build GCC 6.3 on a VM on my machine at home. When I can summon up the energy I'll test it out.
+Update2: Testing on OpenSUSE produced an odd outcome. It errors when I try to build from the command line (the errors are claiming all the standard library functions are missing, which is usually a sign that it doesn't support C++ 11), but when I build it from NetBeans - using GCC - it works just fine. So that is a puzzle. My command line options work on other brands of Linux so I dunno what is different.
 
 
 ToDo:
