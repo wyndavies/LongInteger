@@ -10,6 +10,7 @@
 
 #include <functional>
 
+
 // min and max are undefined before the inclusion of <limits> as Microsoft reused the min and max macros and this causes
 // conflicts with (C++ standard) definitions in <limits>
 
@@ -575,12 +576,128 @@ string LongInteger::toDecimal()
 	return output;
 }
 
-LongInteger::operator int() {
+#ifdef _WIN32
+CString LongInteger::toDecimal() const
+#else
+
+string LongInteger::toDecimal() const
+#endif
+{
+	// Convert the internal number into a decimal string
+	// Create a copy of the number and start dividing each digit by 10, putting the overflow into the
+	// number below, with the last overflow dropping out into the string
+
+	// Trying to find some way to improve the algorithm below as this is by far the slowest part of the program
+	// Converting large digits to decimal takes an unreasonable amount of time
+
+	// Sanity check
+	if (bOverflow) {
+#ifdef _WIN32
+		return (L"NULL");
+#else
+		return "NULL";
+#endif
+
+	}
+#ifdef _WIN32
+	CString output = L"";
+#else
+	string output = "";
+	stringstream outputstream;
+#endif
+
+	if (equalsZero()) {
+#ifdef _WIN32
+		output = L"0";
+#else
+		output = "0";
+#endif
+		return output;
+	}
+
+	// Find out how big we need to make the copy
+	UINT listSize;
+	// Check we don't have leading zeroes
+	for (listSize = size - 1; listSize > 0 && digits[listSize] == 0; listSize--);
+	if (listSize == 0 && digits[0] == 0) return output;
+#ifdef _WIN32
+	output.Preallocate(listSize * 3); // An attempt to speed things up a little bit
+#endif
+	byte* listCopy = new byte[listSize + 1];
+
+	memcpy(listCopy, digits, sizeof(byte) * (listSize + 1));
+
+	bool finished = false;
+	UINT value = 0;
+	UINT remainder = 0;
+	while (!finished) {
+		remainder = 0;
+		// The use of 2 variables below is because UINTs can't be negative, so need to test for more than zero
+		// This then leads to every index reference being (counter-1), unless we've already calculated it.
+		// The approach below produces a tiny improvement over using a single variable. Every little bit helps
+		for (UINT counter = listSize + 1, index = listSize; counter > 0; counter--, index--) {
+			value = listCopy[index] + (remainder << BASEVALBITS); // Slight improvement over multiplying by BASEVAL (256)
+			listCopy[index] = value / 10; // Surprisingly using bit hacking slowed this function down by a factor of 4
+			remainder = value - (listCopy[index] * 10); // Using bit manipulation to multiply also slows this down by nearly 4 times
+		}
+		// The append below has a tiny impact on performance - less than 1%
+#ifdef _WIN32
+		output.AppendFormat(L"%d", remainder);
+#else
+		outputstream << remainder;
+#endif
+
+		// Check the temp list to see if we've finished
+		while (listSize > 0 && listCopy[listSize] == 0) {
+			listSize--;
+		}
+		if (listSize == 0 && listCopy[0] == 0) {
+			finished = true;
+		}
+		if (bShuttingDown) {
+			delete[] listCopy;
+#ifdef _WIN32
+			return CString(L"Shutting Down");
+#else
+			return "Shutting Down";
+#endif
+		}
+	}
+	// The string is done, but it is backwards
+#ifdef _WIN32
+	output.MakeReverse();
+#else
+	output = outputstream.str();
+	std::reverse(output.begin(), output.end());
+#endif
+
+	if (!bPositive) {
+#ifdef _WIN32
+		output = L"-" + output;
+#else
+		output = "-" + output;
+#endif
+	}
+	delete[] listCopy;
+
+	return output;
+}
+
+
+LongInteger::operator int() const
+{
 	// Check the number held can be stored in an int
 	if (size > sizeof(int))
 		return 0;
-	if (abs(*this) > (std::numeric_limits<int>::max()))
-		return 0;
+	if (this->bPositive) {
+		if ((*this) > (std::numeric_limits<int>::max()))
+			return 0;
+	}
+	else {
+		if(((*this) * (-1)) > (std::numeric_limits<int>::max()))
+			return 0;
+	}
+	
 
 	int iResult = (UINT)(*this); // Call the UINT conversion so we don't have to write the conversion code twice
 	if (!bPositive)
@@ -589,7 +706,9 @@ LongInteger::operator int() {
 	return iResult;
 }
 
-LongInteger::operator UINT() {
+
+LongInteger::operator UINT() const
+{
 	// Convert the LongInteger into an unsigned int. If it is too big, return 0
 	// Assume the user wants the absolute value, so we won't worry about pesky negative signs
 	if (size > sizeof(UINT))
@@ -603,7 +722,8 @@ LongInteger::operator UINT() {
 	return uResult;
 }
 
-UINT LongInteger::UINTpower(UINT base, UINT power) {
+
+UINT LongInteger::UINTpower(UINT base, UINT power) const {
 	UINT result = 1;
 	for (UINT i = 0; i < power; i++) {
 		result *= base;
@@ -2977,4 +3097,110 @@ LongIntegerUP LongInteger::merge(vector<LongIntegerUP>& vList, UINT uNumParts, U
 	liReturn = make_unique<LongInteger>(liWorking);
 
 	return liReturn;
+}
+
+
+bool LongInteger::factorial()
+{
+	// Can't find any way other than multiplying sequentially, but I'll have a think
+
+	if (!bPositive)
+	{
+		bOverflow = true;
+		return false;
+	}
+
+	if (equalsZero())
+	{
+		assignNumber(1);
+		return !bOverflow;
+	}
+
+	LongInteger *counter = new LongInteger(this);
+	LongInteger *runningTotal = new LongInteger(1);
+
+	while (*counter > 1 && runningTotal->bPositive)
+	{
+		*runningTotal *= *counter;
+		*runningTotal--;
+	}
+
+	if (runningTotal->bPositive)
+	{
+		copy(*runningTotal);
+	}
+	else
+	{
+		bOverflow = true;
+	}
+	return !bOverflow;
+}
+
+
+LongInteger LongInteger::sqrt(const LongInteger& liInput)
+{
+	// Calculate the positive square root (rounded to the nearest integer) of the input value
+
+	// Now the question is ... how do you calculate square roots for a number held in a byte array?
+
+	// The square root will have approximately half the number of digits and the leading digit will be approximately the
+	// square root of the leading digit (if odd number of digits) or 2 leading digits (if even no of digits)
+
+	LongInteger liGuess; // The guess at what the square root is
+
+	UINT index = 0;
+	for (UINT i = 0; i < liInput.size; i+=2)
+	{
+		UINT temp = liInput.digits[i];
+		if ((i + 1) < liInput.size)
+			temp += (BASEVAL * liInput.digits[i + 1]);
+		temp = std::sqrt(temp);
+		LongInteger liTemp(temp);
+		liTemp <<= (BASEVALBITS * index);
+		liGuess += liTemp;
+		index++;
+	}
+
+	// We now have a guess for the squareroot.
+	// Using the Babylonian method:
+	// To calculate sqrt(a), we take guess x and see if x^2 == a.
+	// If not, we take (x + a/x)/2 as the new x and try again
+	//
+	// This won't work as we don't have decimals and what is an acceptable difference when dealing with huge numbers?
+	// Also rounding down or up? We need to round down.
+	// Solution in terms of decimals is the modulus.
+	// So....
+	// Take guess x
+	// Divide a by x (taking modulus as well)
+	// Result is rd.rm
+	// answerhigh = rd*rd
+	// answermid = rd*rm*2
+	// answerlow = rm*rm
+	// am2d.am2m = answermid/x
+	// ah2 = answerhigh + am2d
+	// am2m2 = am2m * x
+	// addmods = answerlow + am2m2
+	// addmodsdiv = addmods / x (discard modulus)
+	// addmodsdiv2 = addmodsdiv / x (discard modulus)
+	// final = ah2 + addmodsdiv2
+	// 
+	// If abs(final - a) is less than x then we are in the right range. If final >= a then this is the answer,
+	// else subtract one from final for the answer.
+	// If abs(final - a) is greater or equal to x then try a new estimate:
+	// x = (x + a/x) / 2
+
+
+	bool foundX = false;
+	while (!foundX)
+	{
+		// We have a guess at X in liGuess
+
+
+
+
+
+	}
+
+
+
 }

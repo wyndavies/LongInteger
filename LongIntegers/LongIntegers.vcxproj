@@ -192,24 +192,31 @@
     <ClInclude Include="LongInteger.h" />
     <ClInclude Include="LongIntegers.h" />
     <ClInclude Include="LongIntegersDlg.h" />
+    <ClInclude Include="PrimeSieve.h" />
+    <ClInclude Include="PrimeSwing.h" />
     <ClInclude Include="QueueOfThreads.h" />
     <ClInclude Include="ReceiveUpdateClass.h" />
     <ClInclude Include="ReceiveUpdateClass.hpp" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="UtilityFunctions.h" />
+    <ClInclude Include="UtilityTypes.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MyHardwareInfo.cpp" />
     <ClCompile Include="LongInteger.cpp" />
     <ClCompile Include="LongIntegers.cpp" />
     <ClCompile Include="LongIntegersDlg.cpp" />
+    <ClCompile Include="PrimeSieve.cpp" />
+    <ClCompile Include="PrimeSwing.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="UtilityFunctions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="LongIntegers.rc" />

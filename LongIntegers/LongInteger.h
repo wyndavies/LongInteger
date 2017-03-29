@@ -115,6 +115,9 @@ public:
 	static void BurnikelZiegler(const LongInteger&, const LongInteger&, LongIntegerUP&, LongIntegerUP&);
 	// This is the framework that does the adjustments prior to calling the BurnikelZiegler method
 	static bool DivAndMod(const LongInteger&, const LongInteger&, LongIntegerUP&, LongIntegerUP&);
+	
+
+	static LongInteger sqrt(const LongInteger&);
 
 private:
 	// This is the front end to the Karatsuba algorithm which also tidies up any memory allocated
@@ -185,15 +188,17 @@ public:
 	// Conversion methods
 #ifdef _WIN32
 	CString toDecimal();
+	CString toDecimal() const;
 	CString toHexString() const; // Useful for testing
 	CString toArrayNumbers(); // Also useful for testing
 #else
 	string toDecimal();
+	string toDecimal() const;
 	string toHexString() const; // Useful for testing
 	string toArrayNumbers(); // Also useful for testing
 #endif
-	explicit operator int(); // Convert to int. Make it explicit to avoid confusion in other methods
-	explicit operator UINT();
+	explicit operator int() const; // Convert to int. Make it explicit to avoid auto casting which will cause confusion
+	explicit operator UINT() const;
 
 	// Arithmetic functions
 	bool addNumber(int);
@@ -209,6 +214,7 @@ public:
 	bool powerCalc(int);
 	bool arrowCalc(UINT, int);
 	bool modulus(const LongInteger&);
+	bool factorial();
 
 	// Arithmetic operators
 	LongInteger operator+(const LongInteger&) const; // Addition
@@ -322,7 +328,7 @@ private:
 	bool divByByte(byte);
 	bool multHelper(int);
 	bool multHelper2(UINT);
-	UINT UINTpower(UINT, UINT);
+	UINT UINTpower(UINT, UINT) const;
 
 	// Helper methods for Burnikel-Ziegler division
 	static LongIntegerUP merge(vector<LongIntegerUP>& vList, UINT uNumParts, UINT uSizeParts);
@@ -455,6 +461,14 @@ inline bool operator>(int lhs, const LongInteger& rhs) {
 
 inline bool operator<(int lhs, const LongInteger& rhs) {
 	return rhs > lhs;
+}
+
+inline bool operator>=(int lhs, const LongInteger& rhs) {
+	return !(lhs < rhs);
+}
+
+inline bool operator<=(int lhs, const LongInteger& rhs) {
+	return !(lhs > rhs);
 }
 
 inline LongInteger operator+(int lhs, const LongInteger& rhs) {

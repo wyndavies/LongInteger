@@ -10,6 +10,8 @@
 
 #include <chrono>
 
+#include "PrimeSieve.h"
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -438,9 +440,34 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// So each step involves working out the one below.
 	// 2||||2 -> 2|(2|||2) -> 2|(2|(2||2)) -> 2|(2|(2|(2|2)))
 
+	PrimeSieve ps(LongInteger(10000));
+
+	for (int i = 0; i < ps.GetNumberOfPrimes(); i++)
+	{
+		CString prime = (ps.GetPrime(i)).toDecimal();
+	}
+
+
+
+	return;
 
 	LongInteger::KARATSUBACUTOFF = 50;
 	LongInteger::TOOMCOOK3CUTOFF = 100;
+
+	// Test the factorial function
+	LongInteger liFactorialMax = 100;
+	LongInteger liResult;
+	CString result;
+	for (LongInteger i = 0; i < liFactorialMax; i++)
+	{
+		liResult = i;
+		liResult.factorial();
+		result = liResult.toDecimal();
+	}
+
+
+	return;
+
 
 	LongInteger li1, li2, li3, li4, li5, li6, li7, li8, li9;
 	CString result1, result2, result3, result4;
