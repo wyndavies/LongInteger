@@ -120,6 +120,7 @@ public:
 	static LongInteger sqrt(const LongInteger&);
 	static LongInteger sqr(const LongInteger&);
 	static LongInteger pow(const LongInteger&, const LongInteger&);
+	static LongInteger factorial(const LongInteger&);
 
 private:
 	// This is the front end to the Karatsuba algorithm which also tidies up any memory allocated

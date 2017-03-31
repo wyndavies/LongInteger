@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #endif
 #include "LongInteger.h"
+#include "PrimeSwing.h"
 
 #include <stdexcept>
 #undef min
@@ -3118,13 +3119,17 @@ bool LongInteger::factorial()
 		return !bOverflow;
 	}
 
-	LongInteger *counter = new LongInteger(this);
+	LongInteger *counter = new LongInteger(*this);
 	LongInteger *runningTotal = new LongInteger(1);
+	CString strcount = counter->toDecimal();
+	CString strtotal = runningTotal->toDecimal();
 
 	while (*counter > 1 && runningTotal->bPositive)
 	{
 		*runningTotal *= *counter;
-		*runningTotal--;
+		(*counter)--;
+		strcount = counter->toDecimal();
+		strtotal = runningTotal->toDecimal();
 	}
 
 	if (runningTotal->bPositive)
@@ -3211,4 +3216,11 @@ LongInteger LongInteger::pow(const LongInteger& liValue, const LongInteger& liPo
 	LongInteger liReturn(liValue);
 	liReturn.powerCalc(liPower);
 	return liReturn;
+}
+
+
+LongInteger LongInteger::factorial(const LongInteger& liValue)
+{
+	PrimeSwing ps;
+	return ps.Factorial(liValue);
 }

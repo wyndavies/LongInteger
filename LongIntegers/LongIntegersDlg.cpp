@@ -486,15 +486,19 @@ void CLongIntegersDlg::OnClickedIdarrow()
 
 
 	LongInteger unsquared = CString(L"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
-	LongInteger squared = unsquared * unsquared;
+	LongInteger squared = LongInteger::sqr(unsquared);
 	LongInteger squareroot = LongInteger::sqrt(squared);
 	bool squareworks = unsquared == squareroot;
-	
+	squared--;
+	squareroot = LongInteger::sqrt(squared);
+	squareworks = (unsquared - 1) == squareroot;
+
 
 
 	PrimeSwing ps;
 	LongInteger liPSResult;
 	LongInteger liPSResultli;
+	LongInteger liFactorial;
 	CString psResult;
 	bool psWorked, psWorked2;
 	CString psAnswer[] = { L"1", L"1", L"2", L"6", L"24", L"120", L"720", L"5040", L"40320", L"362880", L"3628800",
@@ -515,20 +519,39 @@ void CLongIntegersDlg::OnClickedIdarrow()
 		{
 			CString failed = L"failed";
 		}
-	}
-
-
-	for (int i = 10000; i <= 200000; i++)
-	{
-		liPSResult = ps.Factorial(i);
-		liPSResultli = ps.Factorial(LongInteger(i));
-		if (liPSResult != liPSResultli)
+		liFactorial = LongInteger::factorial(i);
+		psWorked = liPSResult == liFactorial;
+		if (!psWorked)
 		{
-			CString outcome = L"Worry";
+			CString failed = L"failed";
 		}
 	}
 
 
+	for (int i = 100; i < 10001; i+=100)
+	{
+		liPSResult = i;
+		liPSResult.factorial();
+		liPSResultli = ps.Factorial(LongInteger(i));
+		liFactorial = LongInteger::factorial(i);
+
+		psWorked = liPSResult == liPSResultli;
+		psWorked2 = liPSResult == liFactorial;
+		if (!(psWorked && psWorked2))
+		{
+			CString failed = L"failed";
+			CString oldStyleFactorial = liPSResult.toDecimal();
+			CString externalCalced = liPSResultli.toDecimal();
+			CString internalCalced = liFactorial.toDecimal();
+		}
+	}
+
+
+
+	for (int i = 10000; i <= 200000; i+=10000)
+	{
+		liFactorial = LongInteger::factorial(i);
+	}
 
 	return;
 
