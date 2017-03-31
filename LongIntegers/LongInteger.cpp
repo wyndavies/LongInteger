@@ -60,7 +60,7 @@ LongInteger LongInteger::multiplyChooser(const LongInteger& liOne, const LongInt
 	// Then work out what iHalfSize will be and half it n times until 3^n is greater than the value from above.
 
 	UINT minCalc = 500;
-	if (liOne.getSize() > 500 || liTwo.getSize() > 500)
+	if (liOne.size > 500 || liTwo.size > 500)
 	{
 
 		// There is only a single instance of QOT
@@ -694,7 +694,7 @@ LongInteger::operator int() const
 			return 0;
 	}
 	else {
-		if(((*this) * (-1)) > (std::numeric_limits<int>::max()))
+		if(abs(*this) > (std::numeric_limits<int>::max()))
 			return 0;
 	}
 	
@@ -2261,7 +2261,9 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 	if (liOne.equalsZero() || liTwo.equalsZero())
 		return new LongInteger(0);
 
-	// kFactor is the split level. This will be initially implemented as Toom-3, which uses a kFactor of 3
+	// kFactor is the split level. This will be implemented as Toom-3, which uses a kFactor of 3
+	// The algorithm is specific to a kFactor of 3, but I'll create this constant to make it clear
+	// why (and when) I'm using 3. This will be help if I ever try to implement ToomCook with a different kFactor
 	const UINT kFactor = 3;
 
 	// Note the signs of the two inputs for the final result
@@ -2278,9 +2280,9 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 
 	// 1 - Splitting
 	// We split the numbers up into kFactor bits.
-	LongInteger * liM[3];
-	LongInteger * liN[3];
-	for (UINT i = 0; i < 3; i++) {
+	LongInteger * liM[kFactor];
+	LongInteger * liN[kFactor];
+	for (UINT i = 0; i < kFactor; i++) {
 		liM[i] = new LongInteger;
 		liN[i] = new LongInteger;
 	}
@@ -2288,9 +2290,9 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 
 	UINT uSplit;
 
-	// Split the numbers into 3 parts
+	// Split the numbers into kFactor(3) parts
 	uSplit = liOne.size > liTwo.size ? liOne.size : liTwo.size;
-	uSplit /= 3;
+	uSplit /= kFactor;
 	if (uSplit == 0) uSplit = 1;
 
 	uSplit = liOne.toomsplit(liM, uSplit);
@@ -2475,7 +2477,7 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 	}
 
 	// Memory clean up
-	for (UINT i = 0; i < 3; i++) {
+	for (UINT i = 0; i < kFactor; i++) {
 		delete liM[i];
 		delete liN[i];
 	}
@@ -3143,8 +3145,8 @@ LongInteger LongInteger::sqrt(const LongInteger& liInput)
 
 	// Now the question is ... how do you calculate square roots for a number held in a byte array?
 
-	// The square root will have approximately half the number of digits and the leading digit will be approximately the
-	// square root of the leading digit (if odd number of digits) or 2 leading digits (if even no of digits)
+	// The square root will have approximately half the number of digits and the leading digit will be changed to the
+	// square root of itself. This has so far given a reasonable starting guess value
 
 	LongInteger liGuess; // The guess at what the square root is
 
@@ -3154,53 +3156,59 @@ LongInteger LongInteger::sqrt(const LongInteger& liInput)
 		UINT temp = liInput.digits[i];
 		if ((i + 1) < liInput.size)
 			temp += (BASEVAL * liInput.digits[i + 1]);
-		temp = std::sqrt(temp);
 		LongInteger liTemp(temp);
 		liTemp <<= (BASEVALBITS * index);
 		liGuess += liTemp;
 		index++;
 	}
+	liGuess.digits[liGuess.size - 1] = (byte)std::sqrt(liGuess.digits[liGuess.size - 1]);
 
 	// We now have a guess for the squareroot.
 	// Using the Babylonian method:
-	// To calculate sqrt(a), we take guess x and see if x^2 == a.
+	// To calculate sqrt(a), we take guess x and see if x^2 is within 1 of a.
 	// If not, we take (x + a/x)/2 as the new x and try again
-	//
-	// This won't work as we don't have decimals and what is an acceptable difference when dealing with huge numbers?
-	// Also rounding down or up? We need to round down.
-	// Solution in terms of decimals is the modulus.
-	// So....
-	// Take guess x
-	// Divide a by x (taking modulus as well)
-	// Result is rd.rm
-	// answerhigh = rd*rd
-	// answermid = rd*rm*2
-	// answerlow = rm*rm
-	// am2d.am2m = answermid/x
-	// ah2 = answerhigh + am2d
-	// am2m2 = am2m * x
-	// addmods = answerlow + am2m2
-	// addmodsdiv = addmods / x (discard modulus)
-	// addmodsdiv2 = addmodsdiv / x (discard modulus)
-	// final = ah2 + addmodsdiv2
-	// 
-	// If abs(final - a) is less than x then we are in the right range. If final >= a then this is the answer,
-	// else subtract one from final for the answer.
-	// If abs(final - a) is greater or equal to x then try a new estimate:
-	// x = (x + a/x) / 2
-
+	// This will need to be tested for very large values. Tests of up to 100,000 digit numbers have
+	// passed and the performance has been good.
 
 	bool foundX = false;
+	LongInteger liPossible;
+
 	while (!foundX)
 	{
-		// We have a guess at X in liGuess
-
-
-
-
-
+		liPossible = (liGuess + (liInput / liGuess)) / 2;
+		if (abs(liPossible - liGuess) <= 1)
+		{
+			foundX = true;
+			liGuess = liPossible;
+			// We've found an answer that is either the value we want or 1 more than the value we want
+			// (remember we are rounding down, so 4.999999 would become 4)
+			if((liGuess * liGuess) > liInput)
+			{
+				liGuess--;
+			}
+		}
+		else
+		{
+			liGuess = liPossible;
+		}
 	}
 
+	return liGuess;
+}
+
+LongInteger LongInteger::sqr(const LongInteger& liValue)
+{
+	// I've ended up wanted to square values often enough that a dedicated function for it would be useful
+	return (liValue * liValue);
+}
 
 
+LongInteger LongInteger::pow(const LongInteger& liValue, const LongInteger& liPower)
+{
+	// A more user-friendly power calculation algorithm.
+	// It calls the powerCalc algorithm in such a way that the 2 input parameters aren't changed and the return
+	// value is the result rather than a bool
+	LongInteger liReturn(liValue);
+	liReturn.powerCalc(liPower);
+	return liReturn;
 }

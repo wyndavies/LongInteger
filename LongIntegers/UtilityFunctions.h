@@ -74,10 +74,6 @@ public:
 			// Multiply them
 			LongInteger prod = (*itFirst) * (*itSecond);
 
-			CString first = itFirst->toDecimal();
-			CString second = itSecond->toDecimal();
-			CString result = prod.toDecimal();
-
 			// Remove them from container
 			sorted.erase(itFirst);
 			sorted.erase(itSecond);

@@ -10,7 +10,7 @@
 
 #include <chrono>
 
-#include "PrimeSieve.h"
+#include "PrimeSwing.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -440,11 +440,92 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// So each step involves working out the one below.
 	// 2||||2 -> 2|(2|||2) -> 2|(2|(2||2)) -> 2|(2|(2|(2|2)))
 
-	PrimeSieve ps(LongInteger(10000));
 
-	for (int i = 0; i < ps.GetNumberOfPrimes(); i++)
+	// Oops - forgot to test the LongInteger squareroot function
+//	LongInteger liSquare(255);
+//	LongInteger liSqrt;
+/*	liSqrt = LongInteger::sqrt(liSquare);
+
+	for (int i = 1; i <= 100; i++)
 	{
-		CString prime = (ps.GetPrime(i)).toDecimal();
+		CString output = LongInteger::sqrt(LongInteger(i)).toDecimal();
+	}
+	*/
+/*	CString output;
+	LongInteger squared;
+	LongInteger squareroot;
+	for (int i = 6781; i < 10000; i++)
+	{
+		squared = i * i;
+		squareroot = LongInteger::sqrt(squared);
+		if (squareroot != i)
+		{
+			output = L"Failed";
+		}
+
+		squared--;
+		squareroot = LongInteger::sqrt(squared);
+		if (squareroot != (i - 1))
+		{
+			output = L"Failed";
+			CString one = squared.toDecimal();
+			CString two = squareroot.toDecimal();
+		}
+
+		squared++;
+		squared++;
+		squareroot = LongInteger::sqrt(squared);
+		if (squareroot != i)
+		{
+			output = L"Failed";
+		}
+
+
+	}
+*/
+
+
+	LongInteger unsquared = CString(L"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
+	LongInteger squared = unsquared * unsquared;
+	LongInteger squareroot = LongInteger::sqrt(squared);
+	bool squareworks = unsquared == squareroot;
+	
+
+
+	PrimeSwing ps;
+	LongInteger liPSResult;
+	LongInteger liPSResultli;
+	CString psResult;
+	bool psWorked, psWorked2;
+	CString psAnswer[] = { L"1", L"1", L"2", L"6", L"24", L"120", L"720", L"5040", L"40320", L"362880", L"3628800",
+		L"39916800", L"479001600", L"6227020800", L"87178291200", L"1307674368000", L"20922789888000", L"355687428096000", L"6402373705728000", L"121645100408832000", L"2432902008176640000",
+		L"51090942171709440000", L"1124000727777607680000", L"25852016738884976640000", L"620448401733239439360000", L"15511210043330985984000000", L"403291461126605635584000000", L"10888869450418352160768000000", L"304888344611713860501504000000", L"8841761993739701954543616000000", L"265252859812191058636308480000000",
+		L"8222838654177922817725562880000000", L"263130836933693530167218012160000000", L"8683317618811886495518194401280000000", L"295232799039604140847618609643520000000", L"10333147966386144929666651337523200000000", L"371993326789901217467999448150835200000000", L"13763753091226345046315979581580902400000000", L"523022617466601111760007224100074291200000000", L"20397882081197443358640281739902897356800000000", L"815915283247897734345611269596115894272000000000"
+	};
+
+	for (int i = 1; i < 41; i++)
+	{
+		liPSResult = ps.Factorial(i);
+		liPSResultli = ps.Factorial(LongInteger(i));
+		psResult = liPSResult.toDecimal();
+
+		psWorked = psResult == psAnswer[i];
+		psWorked2 = liPSResultli == liPSResult;
+		if (!(psWorked && psWorked2))
+		{
+			CString failed = L"failed";
+		}
+	}
+
+
+	for (int i = 10000; i <= 200000; i++)
+	{
+		liPSResult = ps.Factorial(i);
+		liPSResultli = ps.Factorial(LongInteger(i));
+		if (liPSResult != liPSResultli)
+		{
+			CString outcome = L"Worry";
+		}
 	}
 
 
@@ -664,3 +745,4 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	m_OutputNumber.SetWindowTextW(m_longInt.toDecimal());
 
 }
+

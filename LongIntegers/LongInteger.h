@@ -118,6 +118,8 @@ public:
 	
 
 	static LongInteger sqrt(const LongInteger&);
+	static LongInteger sqr(const LongInteger&);
+	static LongInteger pow(const LongInteger&, const LongInteger&);
 
 private:
 	// This is the front end to the Karatsuba algorithm which also tidies up any memory allocated
@@ -282,7 +284,7 @@ public:
 	LongInteger& operator<<=(const LongInteger&);
 	LongInteger& operator<<=(UINT);
 
-	LongInteger abs(const LongInteger&);
+	static LongInteger abs(const LongInteger&);
 
 	bool equalsZero() const;
 	bool isProcessing();

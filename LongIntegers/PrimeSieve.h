@@ -35,7 +35,7 @@ public:
 	
 	/** Get number of prime numbers in sieve */
 	const LongInteger GetNumberOfPrimes() const { return m_NumberOfPrimes; }
-	const int GetNumberOfPrimes() const { return m_NumberOfPrimes; }
+//	const int GetNumberOfPrimes() const { return m_NumberOfPrimes; }
 
 	/** Gives the product of primes in range [_low, _high] */
 	LongInteger Primorial(int low, int high);

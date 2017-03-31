@@ -98,8 +98,9 @@ void PrimeSwing::RecFactorial(LongInteger& result, LongInteger& number, PrimeSie
 LongInteger PrimeSwing::Swing(int number, PrimeSieve& sieve)
 {
 	// Small precalculated values
-	if (number < 33)
+	if (number < 33) {
 		return smallOddSwing[number];
+	}
 
 	// Fetch multiplies
 	IntVec multiplies = GetMultiplies(number, sieve);
@@ -112,8 +113,9 @@ LongInteger PrimeSwing::Swing(int number, PrimeSieve& sieve)
 LongInteger PrimeSwing::Swing(LongInteger& number, PrimeSieve& sieve)
 {
 	// Small precalculated values
-	if (number < 33)
+	if (number < 33) {
 		return smallOddSwing[(int)number];
+	}
 
 	// Fetch multiplies
 	LongIntVec multiplies = GetMultiplies(number, sieve);
@@ -129,7 +131,9 @@ IntVec PrimeSwing::GetMultiplies(int number, PrimeSieve& sieve)
 	IntVec multiplies;
 	int sqrtN = static_cast<int>(sqrt(static_cast<double>(number)));
 
-	int maxIdx = sieve.GetPrimeIndex(sqrtN, 2, sieve.GetNumberOfPrimes());
+	LongInteger limaxIdx = sieve.GetPrimeIndex(sqrtN, 2, (int)sieve.GetNumberOfPrimes());
+	int maxIdx = (int)limaxIdx;
+
 	for (int i = 1; i < maxIdx; ++i)
 	{
 		int prime = (int)sieve.GetPrime(i);
@@ -161,16 +165,18 @@ IntVec PrimeSwing::GetMultiplies(int number, PrimeSieve& sieve)
 
 LongIntVec PrimeSwing::GetMultiplies(LongInteger& number, PrimeSieve& sieve)
 {
+	// This will need to be modified once I have a vector-equivalent class that can be indexed by LongIntegers
+
 	LongIntVec multiplies;
 	// Ah-ha - need to get a square root function for LongInteger
-	int sqrtN = static_cast<int>(sqrt(static_cast<double>(number)));
+	LongInteger sqrtN = LongInteger::sqrt(number);
 
-	int maxIdx = sieve.GetPrimeIndex(sqrtN, 2, sieve.GetNumberOfPrimes());
-	for (int i = 1; i < maxIdx; ++i)
+	LongInteger maxIdx = sieve.GetPrimeIndex(sqrtN, 2, (int)sieve.GetNumberOfPrimes());
+	for (LongInteger i = 1; i < maxIdx; ++i)
 	{
-		int prime = (int)sieve.GetPrime(i);
+		LongInteger prime = sieve.GetPrime((int)i);
 
-		int q = number, p = 1;
+		LongInteger q = number, p = 1;
 
 		while ((q /= prime) > 0)
 			if ((q & 1) == 1)
@@ -180,12 +186,12 @@ LongIntVec PrimeSwing::GetMultiplies(LongInteger& number, PrimeSieve& sieve)
 			multiplies.push_back(p);
 	}
 
-	int minIdx = maxIdx;
-	maxIdx = sieve.GetPrimeIndex(number / 3, minIdx, (int)(sieve.GetNumberOfPrimes()));
+	LongInteger minIdx = maxIdx;
+	maxIdx = sieve.GetPrimeIndex(number / 3, (int)minIdx, (int)sieve.GetNumberOfPrimes());
 
-	for (int i = minIdx; i < maxIdx; ++i)
+	for (LongInteger i = minIdx; i < maxIdx; ++i)
 	{
-		int prime = (int)sieve.GetPrime(i);
+		LongInteger prime = sieve.GetPrime((int)i);
 
 		if (((number / prime) & 1) == 1)
 			multiplies.push_back(prime);

@@ -12,7 +12,9 @@ PrimeSieve::PrimeSieve(int n)
 
 
 PrimeSieve::PrimeSieve(LongInteger lin)
+	: m_LIPrimes(GetPiHighBound((int)lin))
 {
+	// The estimate for the size is required otherwise I get out of bounds errors.
 	MakePrimeList(lin);
 }
 
@@ -108,8 +110,10 @@ void PrimeSieve::MakePrimeList(int n)
 void PrimeSieve::MakePrimeList(LongInteger lin)
 {
 	// Fetch two first primes manually
-	m_LIPrimes.push_back(2);
-	m_LIPrimes.push_back(3);
+	m_LIPrimes[0] = 2;
+	m_LIPrimes[1] = 3;
+//	m_LIPrimes.push_back(2);
+//	m_LIPrimes.push_back(3);
 
 	// Fetch vector representing composite numbers
 	// [index] -- number
@@ -132,7 +136,8 @@ void PrimeSieve::MakePrimeList(LongInteger lin)
 	{
 		if (!composite[i++])
 		{
-			m_LIPrimes.push_back(p);
+			m_LIPrimes[j] = p;
+//			m_LIPrimes.push_back(p);
 			++j;
 		}
 
