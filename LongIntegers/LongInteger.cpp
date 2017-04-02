@@ -21,8 +21,8 @@
 
 bool LongInteger::bShuttingDown = false;
 UINT LongInteger::BURKINELZIEGLERCUTOFF = 50;
-UINT LongInteger::TOOMCOOK3CUTOFF = 100;
-UINT LongInteger::TOOMCOOK3THREADING = 100;
+UINT LongInteger::TOOMCOOK3CUTOFF = 150;
+UINT LongInteger::TOOMCOOK3THREADING = 1000;
 UINT LongInteger::KARATSUBACUTOFF = 50;
 UINT LongInteger::KARATSUBATHREADING = 1000;
 
@@ -3121,15 +3121,11 @@ bool LongInteger::factorial()
 
 	LongInteger *counter = new LongInteger(*this);
 	LongInteger *runningTotal = new LongInteger(1);
-	CString strcount = counter->toDecimal();
-	CString strtotal = runningTotal->toDecimal();
 
 	while (*counter > 1 && runningTotal->bPositive)
 	{
 		*runningTotal *= *counter;
 		(*counter)--;
-		strcount = counter->toDecimal();
-		strtotal = runningTotal->toDecimal();
 	}
 
 	if (runningTotal->bPositive)
@@ -3159,8 +3155,6 @@ LongInteger LongInteger::sqrt(const LongInteger& liInput)
 	for (UINT i = 0; i < liInput.size; i+=2)
 	{
 		UINT temp = liInput.digits[i];
-		if ((i + 1) < liInput.size)
-			temp += (BASEVAL * liInput.digits[i + 1]);
 		LongInteger liTemp(temp);
 		liTemp <<= (BASEVALBITS * index);
 		liGuess += liTemp;

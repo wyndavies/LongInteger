@@ -13,7 +13,11 @@
 
 //////////////////////////////////////////////////////////////////////////
 
-// Based on code created by Roman Pasechnik
+// Based on the code of Roman Pasechnik. The logic has had no changes. I have simply adapted it to work with my LongInteger class
+//
+// Using a set of LongIntegers instead of a set of ints seems to have worked just fine without any further changes.
+//
+// The original comments have been left in the code
 
 class UtilityFunctions
 {
@@ -27,6 +31,7 @@ public:
 
 
 	// The function below might need to be modified for LongIntegers
+	// Might not be needed anymore as I don't think it is called on ints now.
 
 	/* Returns the number of one-bits in the two's complement binary
 	* representation of the specified value.  This function is
@@ -43,7 +48,7 @@ public:
 
 	static const int bitCount[];
 
-	static LongInteger BitCount(LongInteger &lin);
+	static LongInteger BitCount(const LongInteger &lin);
 
 	/* Sorting numbers keeps the resulting products more nearly equal in size
 	* than would the simpler approach.

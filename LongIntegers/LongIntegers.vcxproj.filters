@@ -86,13 +86,13 @@
     <ClCompile Include="MyHardwareInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PrimeSieve.cpp">
-      <Filter>Header Files</Filter>
-    </ClCompile>
     <ClCompile Include="PrimeSwing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="UtilityFunctions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PrimeSieve.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

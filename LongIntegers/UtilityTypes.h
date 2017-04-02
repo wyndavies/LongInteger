@@ -3,7 +3,7 @@
 #ifndef _UTILITYTYPES_H_
 #define _UTILITYTYPES_H_
 
-// Copying from the code of Roman Pasechnik. Modifying it for my purposes, mostly to help me understand how it works
+// Based on the code of Roman Pasechnik. Modified to work with my LongInteger class
 
 #include <vector>
 #include <set>
@@ -17,7 +17,7 @@ typedef std::vector<int> IntVec;
 typedef std::vector<bool> BoolVec;
 
 /** Set of big integers */
-typedef std::multiset<LongInteger> LongIntSet;
+typedef std::multiset<LongInteger> LongIntSet; // Multiset needed as it can contain duplicate values. std::set doesn't allow duplicates
 
 /** Vector of LongIntegers */
 typedef std::vector<LongInteger> LongIntVec;

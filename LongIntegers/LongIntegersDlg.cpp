@@ -528,30 +528,24 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	}
 
 
-	for (int i = 100; i < 10001; i+=100)
+/*	for (int i = 1000; i < 10001; i+=1000)
 	{
 		liPSResult = i;
 		liPSResult.factorial();
-		liPSResultli = ps.Factorial(LongInteger(i));
 		liFactorial = LongInteger::factorial(i);
 
-		psWorked = liPSResult == liPSResultli;
-		psWorked2 = liPSResult == liFactorial;
-		if (!(psWorked && psWorked2))
+		psWorked = liPSResult == liFactorial;
+		if (!(psWorked))
 		{
 			CString failed = L"failed";
 			CString oldStyleFactorial = liPSResult.toDecimal();
-			CString externalCalced = liPSResultli.toDecimal();
 			CString internalCalced = liFactorial.toDecimal();
 		}
 	}
+*/
 
 
-
-	for (int i = 10000; i <= 200000; i+=10000)
-	{
-		liFactorial = LongInteger::factorial(i);
-	}
+	liFactorial = LongInteger::factorial(1000000);
 
 	return;
 

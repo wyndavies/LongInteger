@@ -4,6 +4,12 @@
 
 #include <cmath>
 
+// Based on the code of Roman Pasechnik. The logic has had no changes. I have simply adapted it to work with my LongInteger class
+
+// This is the code that calculates the prime factors.
+// My maths isn't great and Pasechnik didn't put much in the way of comments in the code, so I couldn't explain how the logic works
+// The original comments have been left in the code
+
 PrimeSieve::PrimeSieve(int n)
 	: m_LIPrimes(GetPiHighBound(n))
 {
@@ -11,7 +17,7 @@ PrimeSieve::PrimeSieve(int n)
 }
 
 
-PrimeSieve::PrimeSieve(LongInteger lin)
+PrimeSieve::PrimeSieve(const LongInteger& lin)
 	: m_LIPrimes(GetPiHighBound((int)lin))
 {
 	// The estimate for the size is required otherwise I get out of bounds errors.
@@ -107,7 +113,7 @@ void PrimeSieve::MakePrimeList(int n)
 }
 
 
-void PrimeSieve::MakePrimeList(LongInteger lin)
+void PrimeSieve::MakePrimeList(const LongInteger& lin)
 {
 	// Fetch two first primes manually
 	m_LIPrimes[0] = 2;
@@ -160,7 +166,7 @@ LongInteger PrimeSieve::Primorial(int low, int high)
 }
 
 
-LongInteger PrimeSieve::Primorial(LongInteger low, LongInteger high)
+LongInteger PrimeSieve::Primorial(LongInteger& low, LongInteger& high)
 {
 	int minIdx = GetPrimeIndex(low, 3, m_NumberOfPrimes);
 	int maxIdx = GetPrimeIndex(high, minIdx, m_NumberOfPrimes);
@@ -193,7 +199,7 @@ int PrimeSieve::GetPrimeIndex(int number, int lowerBound, int upperBound) const
 	return lowerBound;
 }
 
-int PrimeSieve::GetPrimeIndex(LongInteger number, int lowerBound, int upperBound) const
+int PrimeSieve::GetPrimeIndex(LongInteger& number, int lowerBound, int upperBound) const
 {
 	// Binary search
 

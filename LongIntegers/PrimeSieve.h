@@ -11,7 +11,7 @@
 #endif
 #include "LongInteger.h"
 
-// Based on the code of Roman Pasechnik. Adapted to work with my LongInteger class
+// Based on the code of Roman Pasechnik. The logic has had no changes. I have simply adapted it to work with my LongInteger class
 
 // Will need to replace the vector class with a user defined type as a vector has a max size determined by size_t (which
 // is usually the same as int
@@ -23,7 +23,7 @@ public:
 	/** Constructor.
 	Constructs a prime sieve for the integer range [1,n]. */
 	PrimeSieve(int i);
-	PrimeSieve(LongInteger li);
+	PrimeSieve(const LongInteger& li);
 
 
 	/** Get prime by index */
@@ -31,7 +31,7 @@ public:
 	
 	/** Returns prime index in collection */
 	int GetPrimeIndex(int number, int lowerBound, int upperBound) const;
-	int GetPrimeIndex(LongInteger number, int lowerBound, int upperBound) const;
+	int GetPrimeIndex(LongInteger& number, int lowerBound, int upperBound) const;
 	
 	/** Get number of prime numbers in sieve */
 	const LongInteger GetNumberOfPrimes() const { return m_NumberOfPrimes; }
@@ -39,7 +39,7 @@ public:
 
 	/** Gives the product of primes in range [_low, _high] */
 	LongInteger Primorial(int low, int high);
-	LongInteger Primorial(LongInteger low, LongInteger high);
+	LongInteger Primorial(LongInteger& low, LongInteger& high);
 
 
 
@@ -69,7 +69,7 @@ private:
 	/** Transforms the sieve of Eratosthenes
 	into the sequence of prime numbers. */
 	void MakePrimeList(int n);
-	void MakePrimeList(LongInteger li);
+	void MakePrimeList(const LongInteger& li);
 
 
 	//////////////////////////////////////////////////////////////////////////

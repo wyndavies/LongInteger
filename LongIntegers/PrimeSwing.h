@@ -19,7 +19,7 @@ public:
 
 	/** Computes factorial of integer number */
 	LongInteger Factorial(int number);
-	LongInteger Factorial(LongInteger number);
+	LongInteger Factorial(const LongInteger& number);
 protected:
 	LongInteger Swing(int number, PrimeSieve& sieve);
 	LongInteger Swing(LongInteger& number, PrimeSieve& sieve);

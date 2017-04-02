@@ -2,6 +2,12 @@
 
 #include <cmath>
 
+// Based on the code of Roman Pasechnik. The logic has had no changes. I have simply adapted it to work with my LongInteger class
+
+// This is the code that calculates the factorials. If n < 20 it uses the normal method, otherwise it uses Roman Pasechnik implementation.
+// My maths isn't great and Pasechnik didn't put much in the way of comments in the code, so I couldn't explain how the logic works
+// The original comments have been left in the code
+
 PrimeSwing::PrimeSwing()
 {
 }
@@ -41,7 +47,7 @@ LongInteger PrimeSwing::Factorial(int number)
 }
 
 
-LongInteger PrimeSwing::Factorial(LongInteger number)
+LongInteger PrimeSwing::Factorial(const LongInteger& number)
 {
 	LongInteger result;
 
@@ -57,7 +63,7 @@ LongInteger PrimeSwing::Factorial(LongInteger number)
 	}
 
 	PrimeSieve sieve(number);
-	RecFactorial(result, number, sieve);
+	RecFactorial(result, (int)number, sieve);
 	result <<= (number - UtilityFunctions::BitCount(number));
 
 	return result;
@@ -172,18 +178,22 @@ LongIntVec PrimeSwing::GetMultiplies(LongInteger& number, PrimeSieve& sieve)
 	LongInteger sqrtN = LongInteger::sqrt(number);
 
 	LongInteger maxIdx = sieve.GetPrimeIndex(sqrtN, 2, (int)sieve.GetNumberOfPrimes());
+	LongInteger* prime = new LongInteger();
+	LongInteger* q = new LongInteger();
+	LongInteger* p = new LongInteger();
 	for (LongInteger i = 1; i < maxIdx; ++i)
 	{
-		LongInteger prime = sieve.GetPrime((int)i);
+		*prime = sieve.GetPrime((int)i);
 
-		LongInteger q = number, p = 1;
+		*q = number;
+		*p = 1;
 
-		while ((q /= prime) > 0)
-			if ((q & 1) == 1)
-				p *= prime;
+		while ((*q != prime) > 0)
+			if ((q->getDigit(0) & 1) == 1)
+				*p *= prime;
 
-		if (p > 1)
-			multiplies.push_back(p);
+		if (*p > 1)
+			multiplies.push_back(*p);
 	}
 
 	LongInteger minIdx = maxIdx;
@@ -196,6 +206,10 @@ LongIntVec PrimeSwing::GetMultiplies(LongInteger& number, PrimeSieve& sieve)
 		if (((number / prime) & 1) == 1)
 			multiplies.push_back(prime);
 	}
+
+	delete prime;
+	delete p;
+	delete q;
 
 	return multiplies;
 }
