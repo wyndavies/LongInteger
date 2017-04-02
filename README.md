@@ -9,10 +9,12 @@ Internally it holds the values as a byte array. A UINT is used to index the arra
 It supports:
 - Addition
 - Subtraction
-- Multiplication (uses Karatsuba algorithm. Toom-Cook3 algorithm in testing)
-- Division (Burnikel/Ziegler algorithm being developed)
+- Multiplication (uses Karatsuba algorithm. Toom-Cook3 algorithm. Multi-threading.)
+- Division (Burnikel/Ziegler algorithm)
+- Factorials (uses an adaption of Roman Pasachnik's Prime Swing algorithm ... still needs work as it uses too much memory)
 - Bitwise operations
 - Powers
+- Square Root (uses Babylonian algorithm - performance seems okayish)
 - Donald Knuth's up-arrow function (hyper-exponentials)
 - Comparisons
 - operator overloads for everything I could think of
@@ -70,3 +72,6 @@ Done:
 - Replace LongIntWrapper with template class GeneralIntWrapper.
 - Tidy up multithreading for ToomCook3 algorithm.
 - Integrate ToomCook3 into the standard multiplication algorithm
+- Add factorial algorithm
+- Add square root function
+- Add square function (front-end to power algorithm which does pow(2))
