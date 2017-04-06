@@ -22,6 +22,7 @@
 class UtilityFunctions
 {
 public:
+	// WD - not sure why this function is here. It didn't seem to get called in the original code so dunno.
 	template<typename T>
 	static T log2(T _n)
 	{
@@ -30,8 +31,7 @@ public:
 
 
 
-	// The function below might need to be modified for LongIntegers
-	// Might not be needed anymore as I don't think it is called on ints now.
+	// The bitcount for ints is not called anymore, but left in for reference. Might delete it later. Not decided.
 
 	/* Returns the number of one-bits in the two's complement binary
 	* representation of the specified value.  This function is
@@ -56,14 +56,20 @@ public:
 	* Such sorting is more efficient than repeated N?1 multiplies since it forms big multiplies,
 	* allowing Karatsuba and higher algorithms to be used. And even below the Karatsuba threshold
 	* a big block of work can be more efficient for the base case algorithm. */
+	// Above comment is from Roman Pasachnik. I've implemented Karatsuba and ToomCook3 and multithreading for
+	// the multiplication. Using multiset seems to give quite good performance, at least relative to the time
+	// taken for multiplication. Once the set gets big enough for the updates to be noticeable the set is so
+	// big that the multiplication - even with optimisations - is substantial. Nonetheless I'll look at quicker
+	// alternatives. Maybe a FIFO queue?
 	template<typename _InputIterator>
 	static LongInteger SequenceProduct(const _InputIterator& _begin,
 		const _InputIterator& _end)
 	{
 		// First copy collection to sorted container
 		LongIntSet sorted;
-		for (_InputIterator it = _begin; it != _end; ++it)
+		for (_InputIterator it = _begin; it != _end; ++it) {
 			sorted.insert(*it);
+		}
 
 		// Start from smaller numbers
 		// Get first and second smallest numbers
@@ -101,6 +107,10 @@ public:
 		// Maybe using of std::set is not a best choice.
 	}
 
+
+//	template<typename _InputIterator>
+	static LongInteger SequenceProduct2(const LongIntMap::iterator& _begin,
+		const LongIntMap::iterator& _end);
 
 };
 

@@ -115,12 +115,16 @@ public:
 	static void BurnikelZiegler(const LongInteger&, const LongInteger&, LongIntegerUP&, LongIntegerUP&);
 	// This is the framework that does the adjustments prior to calling the BurnikelZiegler method
 	static bool DivAndMod(const LongInteger&, const LongInteger&, LongIntegerUP&, LongIntegerUP&);
+	static bool DivAndMod(const LongInteger&, const LongInteger&, LongInteger&, LongInteger&);
 	
 
 	static LongInteger sqrt(const LongInteger&);
 	static LongInteger sqr(const LongInteger&);
 	static LongInteger pow(const LongInteger&, const LongInteger&);
 	static LongInteger factorial(const LongInteger&);
+	static LongInteger log(const LongInteger&);
+	static LongInteger log(const LongInteger&, const LongInteger&);
+	static LongInteger ln(const LongInteger&);
 
 private:
 	// This is the front end to the Karatsuba algorithm which also tidies up any memory allocated
@@ -150,6 +154,8 @@ public:
 	static UINT TOOMCOOK3CUTOFF;
 	static UINT TOOMCOOK3THREADING;
 	static UINT BURKINELZIEGLERCUTOFF;
+
+	static const LongInteger E;
 
 public:
 	// For testing only
@@ -436,6 +442,11 @@ public:
 		if (rhs == 0) {
 			return equalsZero();
 		}
+		// There are enough comparisons to 1 to justify a dedicated short-cut test
+		if (rhs == 1) {
+			return(size == 1 && digits[0] == 1); 
+		}
+
 		return ((*this) == LongInteger(rhs));
 	}
 

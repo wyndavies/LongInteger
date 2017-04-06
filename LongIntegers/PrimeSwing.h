@@ -18,21 +18,21 @@ public:
 
 
 	/** Computes factorial of integer number */
-	LongInteger Factorial(int number);
+//	LongInteger Factorial(int number);
 	LongInteger Factorial(const LongInteger& number);
 protected:
-	LongInteger Swing(int number, PrimeSieve& sieve);
-	LongInteger Swing(LongInteger& number, PrimeSieve& sieve);
+//	LongInteger Swing(int number, PrimeSieve& sieve);
+	LongInteger Swing(const LongInteger& number, PrimeSieve& sieve);
 
 private:
 	/** Computes factorial of integer number recursively */
-	virtual void RecFactorial(LongInteger& result, int number, PrimeSieve& sieve);
-	virtual void RecFactorial(LongInteger& result, LongInteger& number, PrimeSieve& sieve);
+//	virtual void RecFactorial(LongInteger& result, int number, PrimeSieve& sieve);
+	virtual void RecFactorial(LongInteger& result, const LongInteger& number, PrimeSieve& sieve);
 
 
 	/** Gets multiplies for Swing function. */
-	IntVec GetMultiplies(int number, PrimeSieve& sieve);
-	LongIntVec GetMultiplies(LongInteger& number, PrimeSieve& sieve);
+//	IntVec GetMultiplies(int number, PrimeSieve& sieve);
+	LongIntVec GetMultiplies(const LongInteger& number, PrimeSieve& sieve);
 
 	static const int smallOddSwing[];
 };

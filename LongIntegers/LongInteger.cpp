@@ -25,6 +25,7 @@ UINT LongInteger::TOOMCOOK3CUTOFF = 150;
 UINT LongInteger::TOOMCOOK3THREADING = 1000;
 UINT LongInteger::KARATSUBACUTOFF = 50;
 UINT LongInteger::KARATSUBATHREADING = 1000;
+const LongInteger LongInteger::E = CString(L"215364474464724850177511348352"); // approx value of e * (256^12)
 
 void LongInteger::init() {
 	// Create the byte array. Default size of SIZESTEP
@@ -1373,6 +1374,25 @@ bool LongInteger::divideNumber(const LongInteger& liDivide) {
 	return bOverflow;
 }
 
+bool LongInteger::DivAndMod(const LongInteger& liValue, const LongInteger& liDivide, LongInteger& liQuotient, LongInteger& liModulus)
+{
+	// Front end to DivAndMod that takes the quotient and modulus values as LongInteger references
+	LongIntegerUP upliQuotient;
+	LongIntegerUP upliModulus;
+
+	upliQuotient = make_unique<LongInteger>(liQuotient);
+	upliModulus = make_unique<LongInteger>(liModulus);
+
+	bool worked = DivAndMod(liValue, liDivide, upliQuotient, upliModulus);
+
+	if (worked) {
+		liQuotient = *upliQuotient;
+		liModulus = *upliModulus;
+	}
+	return worked;
+}
+
+
 bool LongInteger::DivAndMod(const LongInteger& liValue, const LongInteger& liDivide, LongIntegerUP& upliQuotient, LongIntegerUP& upliModulus) {
 	// The divide and modulus functions were created separately, but it will save a lot of hassle by combining them - especially as
 	// it is the same code in the 2 functions
@@ -1490,6 +1510,7 @@ bool LongInteger::DivAndMod(const LongInteger& liValue, const LongInteger& liDiv
 	return bSuccess;
 }
 
+
 bool LongInteger::divideNumber(int iDivide) {
 	// Divide using an integer
 
@@ -1514,6 +1535,7 @@ bool LongInteger::divideNumber(int iDivide) {
 
 	return !bOverflow;
 }
+
 
 bool LongInteger::divHelper(int iDivide) {
 	if (iDivide != BASEVAL) {
@@ -1558,6 +1580,7 @@ bool LongInteger::multHelper(int iMult) {
 	return !bOverflow;
 }
 
+
 bool LongInteger::multHelper2(UINT iMult) {
 	// We want to increase the size of this number by iMult bytes
 	UINT oldSize = size;
@@ -1573,6 +1596,7 @@ bool LongInteger::multHelper2(UINT iMult) {
 
 	return true;
 }
+
 
 bool LongInteger::increaseSize() {
 	// The current 'maxSize' is not big enough. Let us see if we can increase the size
@@ -1599,6 +1623,7 @@ bool LongInteger::increaseSize() {
 
 	return bOverflow;
 }
+
 
 bool LongInteger::decreaseSize() {
 	// Can we decrease the size? The smallest size allowed is 'SIZESTEP'
@@ -1634,6 +1659,7 @@ bool LongInteger::decreaseSize() {
 
 	return true;
 }
+
 
 bool LongInteger::isProcessing() {
 	return bProcessing;
@@ -3217,4 +3243,87 @@ LongInteger LongInteger::factorial(const LongInteger& liValue)
 {
 	PrimeSwing ps;
 	return ps.Factorial(liValue);
+}
+
+
+LongInteger LongInteger::log(const LongInteger& liValue)
+{
+	// We will calculate the log rounded down to the nearest whole integer
+
+	// To calculate the first digit of the log take the value and divide repeatedly by the log base
+	// until the value is less than the log base. This is the integer part of the answer
+	// To get the first digit after the decimal point you would take the final value and raise to the power of the log base
+	// and repeat the process above. Continue until you have as many digits as you need.
+	// Here we only need 1 so it is much simpler.
+	//
+	// As the data is held against base 256, we shall calculate log256
+	// And this is MUCH easier. It is the number of digits minus 1.
+
+	if (!(liValue.equalsZero()) && liValue.bPositive)
+	{
+		return LongInteger(liValue.size - 1);
+	}
+	else
+	{
+		LongInteger returnValue;
+		returnValue.bOverflow = true;
+		return returnValue;
+	}
+}
+	
+LongInteger LongInteger::log(const LongInteger& liValue, const LongInteger& liBase)
+{
+	// To calculate the first digit of the log take the value and divide repeatedly by the log base
+	// until the value is less than the log base. This is the integer part of the answer
+	// To get the first digit after the decimal point you would take the final value and raise to the power of the log base
+	// and repeat the process above. Continue until you have as many digits as you need.
+	// Here we only need the integer value so it is much simpler.
+
+	if (liValue.equalsZero() || !liValue.bPositive || liBase.equalsZero() || !liBase.bPositive || liValue == 1)
+	{
+		LongInteger returnValue;
+		returnValue.bOverflow = true;
+		return returnValue;
+	}
+
+	LongInteger liRoot(liValue);
+	LongInteger liCount;
+
+	while (liRoot > liBase)
+	{
+		liRoot /= liBase;
+		liCount++;
+	}
+
+	return liCount;
+}
+
+LongInteger LongInteger::ln(const LongInteger& lin)
+{
+	// Natural log.
+	// The constant 'E' is the approximate value of e times 256^12 (i.e. e shifted left 12 bytes and then rounded off)
+	LongInteger workingValue(lin);
+
+	// Take the input value, shift it left 12 bytes then repeatedly divide
+	LongInteger returnValue;
+
+	LongInteger quotient, modulus;
+
+	CString strTempTest;
+	workingValue <<= (BASEVALBITS * 12);
+	while (workingValue > LongInteger::E)
+	{
+		LongInteger::DivAndMod(workingValue, LongInteger::E, quotient, modulus);
+		// As 'E' is multiplied by 256^12 we need to adjust the result of the division by the same amount
+		workingValue = quotient << (BASEVALBITS * 12);
+		// To avoid rounding errors as much as possible, let us add the modulus back in
+		// We need to adjust it upwards by 256^12 and then divide by E to get the part of the modulus we need
+		// (it is a fraction with base 'E'*256^12, which is why we adjust it by these values. It does make sense. Trust me.)
+		modulus <<= (BASEVALBITS * 12);
+		modulus /= LongInteger::E;
+		workingValue += modulus;
+		returnValue++;
+	}
+
+	return returnValue;
 }

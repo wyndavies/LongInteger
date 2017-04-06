@@ -22,24 +22,20 @@ class PrimeSieve
 public:
 	/** Constructor.
 	Constructs a prime sieve for the integer range [1,n]. */
-	PrimeSieve(int i);
 	PrimeSieve(const LongInteger& li);
-
 
 	/** Get prime by index */
 	LongInteger GetPrime(int index) const { return m_LIPrimes[index]; }
 	
 	/** Returns prime index in collection */
-	int GetPrimeIndex(int number, int lowerBound, int upperBound) const;
-	int GetPrimeIndex(LongInteger& number, int lowerBound, int upperBound) const;
-	
+	int GetPrimeIndex(const LongInteger& number, int lowerBound, int upperBound) const;
+	LongInteger GetPrimeIndex(const LongInteger& number, LongInteger& lowerBound, LongInteger& upperBound);
+
 	/** Get number of prime numbers in sieve */
 	const LongInteger GetNumberOfPrimes() const { return m_NumberOfPrimes; }
-//	const int GetNumberOfPrimes() const { return m_NumberOfPrimes; }
 
 	/** Gives the product of primes in range [_low, _high] */
-	LongInteger Primorial(int low, int high);
-	LongInteger Primorial(LongInteger& low, LongInteger& high);
+	LongInteger Primorial(const LongInteger& low, const LongInteger& high);
 
 
 
@@ -47,6 +43,7 @@ private:
 
 		/** Get a high bound for pi(n), the number of primes less or equal n. */
 	static int GetPiHighBound(double n);
+	static LongInteger GetPiHighBound(const LongInteger& lin);
 
 
 	//////////////////////////////////////////////////////////////////////////
@@ -68,7 +65,6 @@ private:
 
 	/** Transforms the sieve of Eratosthenes
 	into the sequence of prime numbers. */
-	void MakePrimeList(int n);
 	void MakePrimeList(const LongInteger& li);
 
 
@@ -77,6 +73,8 @@ private:
 
 	/** Prime numbers */
 	LongIntVec m_LIPrimes;
+
+	LongIntMap m_LIMPrimes;
 
 
 	/** Number of primes in collection */

@@ -8,6 +8,7 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <queue>
 class LongInteger; // Forward definition to avoid circular includes. Will generitisate this once I understand what is happening
 
 /** Vector of integers */
@@ -21,5 +22,13 @@ typedef std::multiset<LongInteger> LongIntSet; // Multiset needed as it can cont
 
 /** Vector of LongIntegers */
 typedef std::vector<LongInteger> LongIntVec;
+
+// Attempting to add replacement types that can handle more than 4 billion entries
+// A map can handle 8^8 entries, which is a start, although I would like to go to something that could potentially hold 2^32^8 entries
+// even though 8^8 entries would exceed the RAM capacity on any normal machine
+/** Map of LongIntegers */
+typedef std::map<LongInteger, LongInteger> LongIntMap;
+
+typedef std::queue<LongInteger> LongIntQueue;
 
 #endif
