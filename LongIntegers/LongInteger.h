@@ -143,6 +143,10 @@ public:
 	static const UINT BASEVALBITSSHIFT = 3; // If dividing/multiplying by basevalbits, using shifts
 	static const byte BASEMAX = 255; // Highest value that can be stored in each digit
 	static const UINT ABSMAXSIZE = 4294967295; // Largest number of values that can be stored (index is by uint, so 2^32-1)
+
+	static const UINT MINSIZE = 50;
+	static const UINT TINYSIZESTEP = 50;
+	static const UINT SMALLSIZESTEP = 1000;
 	static const UINT SIZESTEP = 10000; // Internal byte array is increased or decreased in block of this size
 										//	static const UINT KARATSUBACUTOFF = 50; // Karatsuba cutoff size. Numbers below this size will use long multiplication
 										//	static const UINT TOOMCOOK3CUTOFF = 150; // Testing shows this is the optimal value. Update - 150 is the best in debug builds. In release builds it is not. In release it is all over the place.
@@ -152,6 +156,7 @@ public:
 	static UINT KARATSUBACUTOFF;
 	static UINT KARATSUBATHREADING;
 	static UINT TOOMCOOK3CUTOFF;
+	// Threading values are now calculated dynamically (after once triggering 20,000 threads) and so are non-const
 	static UINT TOOMCOOK3THREADING;
 	static UINT BURKINELZIEGLERCUTOFF;
 

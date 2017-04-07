@@ -89,11 +89,11 @@ LongIntVec PrimeSwing::GetMultiplies(const LongInteger& number, PrimeSieve& siev
 	// Ah-ha - need to get a square root function for LongInteger
 	LongInteger sqrtN = LongInteger::sqrt(number);
 
-	LongInteger maxIdx = sieve.GetPrimeIndex(sqrtN, 2, (int)sieve.GetNumberOfPrimes());
+	LongInteger maxIdx = sieve.GetPrimeIndex(sqrtN, LongInteger(2), sieve.GetNumberOfPrimes());
 	LongInteger prime,q,p;
 	for (LongInteger i = 1; i < maxIdx; ++i)
 	{
-		prime = sieve.GetPrime((int)i);
+		prime = sieve.GetPrime(i);
 
 		q = number;
 		p = 1;
@@ -107,11 +107,11 @@ LongIntVec PrimeSwing::GetMultiplies(const LongInteger& number, PrimeSieve& siev
 	}
 
 	LongInteger minIdx = maxIdx;
-	maxIdx = sieve.GetPrimeIndex(number / 3, (int)minIdx, (int)sieve.GetNumberOfPrimes());
+	maxIdx = sieve.GetPrimeIndex(number / 3, minIdx, sieve.GetNumberOfPrimes());
 
 	for (LongInteger i = minIdx; i < maxIdx; ++i)
 	{
-		prime = sieve.GetPrime((int)i);
+		prime = sieve.GetPrime(i);
 
 		if (((number / prime) & 1) == 1)
 			multiplies.push_back(prime);

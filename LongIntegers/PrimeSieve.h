@@ -25,14 +25,13 @@ public:
 	PrimeSieve(const LongInteger& li);
 
 	/** Get prime by index */
-	LongInteger GetPrime(int index) const { return m_LIPrimes[index]; }
+	LongInteger GetPrime(LongInteger index) { return m_LIMPrimes[index]; }
 	
 	/** Returns prime index in collection */
-	int GetPrimeIndex(const LongInteger& number, int lowerBound, int upperBound) const;
 	LongInteger GetPrimeIndex(const LongInteger& number, LongInteger& lowerBound, LongInteger& upperBound);
 
 	/** Get number of prime numbers in sieve */
-	const LongInteger GetNumberOfPrimes() const { return m_NumberOfPrimes; }
+	LongInteger GetNumberOfPrimes() { return m_NumberOfPrimes; }
 
 	/** Gives the product of primes in range [_low, _high] */
 	LongInteger Primorial(const LongInteger& low, const LongInteger& high);
@@ -42,7 +41,6 @@ public:
 private:
 
 		/** Get a high bound for pi(n), the number of primes less or equal n. */
-	static int GetPiHighBound(double n);
 	static LongInteger GetPiHighBound(const LongInteger& lin);
 
 
@@ -72,13 +70,10 @@ private:
 
 
 	/** Prime numbers */
-	LongIntVec m_LIPrimes;
-
 	LongIntMap m_LIMPrimes;
 
-
 	/** Number of primes in collection */
-	int m_NumberOfPrimes;
+	LongInteger m_NumberOfPrimes;
 
 };
 

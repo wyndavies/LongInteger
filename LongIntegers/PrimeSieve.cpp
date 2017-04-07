@@ -12,19 +12,10 @@
 
 
 PrimeSieve::PrimeSieve(const LongInteger& lin)
-//	: m_LIPrimes((int)GetPiHighBound(lin))
 {
-	// The estimate for the size is required otherwise I get out of bounds errors.
 	MakePrimeList(lin);
 }
 
-
-int PrimeSieve::GetPiHighBound(double n)
-{
-	if (n < 17)
-		return 6;
-	return static_cast<int>(n / (log(n) - 1.5));
-}
 
 LongInteger PrimeSieve::GetPiHighBound(const LongInteger& lin)
 {
@@ -55,7 +46,7 @@ void PrimeSieve::SieveOfEratosthenes(BoolVec& composite)
 	int s1 = 7;
 	int s2 = 3;
 	int n = 0;
-	int len = composite.size();
+	int len = (int)composite.size();
 	bool toggle = false;
 
 	while (s1 < len) // -- scan sieve
@@ -96,9 +87,6 @@ void PrimeSieve::MakePrimeList(const LongInteger& lin)
 	// WD - 05/04/2017 - Started adding shadow code that populates the map
 
 	// Fetch two first primes manually
-	m_LIPrimes.push_back(2);
-	m_LIPrimes.push_back(3);
-
 	m_LIMPrimes[LongInteger(0)] = 2;
 	m_LIMPrimes[LongInteger(1)] = 3;
 
@@ -118,16 +106,13 @@ void PrimeSieve::MakePrimeList(const LongInteger& lin)
 	// Fetch prime numbers
 	LongInteger p = 5;
 	LongInteger index = 2;
-	UINT i = 0, j = 2;
+	UINT i = 0;
 	while (p <= lin)
 	{
 		if (!composite[i++])
 		{
-			m_LIPrimes.push_back(p);
-			++j;
-
 			m_LIMPrimes[index] = p;
-			index++;
+			++index;
 		}
 
 		// -- never mind, it's ok.
@@ -135,24 +120,15 @@ void PrimeSieve::MakePrimeList(const LongInteger& lin)
 	}
 
 	// Number of primes
-	m_NumberOfPrimes = j;
+	m_NumberOfPrimes = index;
 
 	// Add a blank entry at the end
-	m_LIPrimes.push_back(LongInteger(0));
 	m_LIMPrimes[index + 1] = LongInteger(0);
-	int iTest = m_LIPrimes.size();
-	int iTest2 = m_LIMPrimes.size();
 }
 
 
 LongInteger PrimeSieve::Primorial(const LongInteger& low, const LongInteger& high)
 {
-	int minIdx = GetPrimeIndex(low, 3, m_NumberOfPrimes);
-	int maxIdx = GetPrimeIndex(high, minIdx, m_NumberOfPrimes);
-
-	auto returnthingy = UtilityFunctions::SequenceProduct(&m_LIPrimes[minIdx],
-		&m_LIPrimes[maxIdx]);
-
 	// Shadow code to test using std::map
 	LongInteger liMinIdx, liMaxIdx;
 	liMinIdx = GetPrimeIndex(low, LongInteger(3), LongInteger(m_NumberOfPrimes));
@@ -161,57 +137,20 @@ LongInteger PrimeSieve::Primorial(const LongInteger& low, const LongInteger& hig
 	auto beginning = m_LIMPrimes.find(liMinIdx);
 	auto ending = m_LIMPrimes.find(liMaxIdx);
 
-	auto mapreturnthing = UtilityFunctions::SequenceProduct2(beginning, ending);
-
-	if (returnthingy != mapreturnthing)
-	{
-		CString arsebiscuits = L"No";
-	}
-
-	return returnthingy;
-}
-
-
-int PrimeSieve::GetPrimeIndex(const LongInteger& number, int lowerBound, int upperBound) const
-{
-	// Binary search	
-	while (lowerBound < upperBound)
-	{
-		int mid = (static_cast<unsigned int>(lowerBound + upperBound)) >> 1;
-
-		if (m_LIPrimes[mid] < number)
-			lowerBound = mid + 1;
-		else
-			upperBound = mid;
-	}
-
-	if (lowerBound >= static_cast<int>(m_LIPrimes.size()))
-		return lowerBound;
-
-	if (m_LIPrimes[lowerBound] == number)
-		lowerBound++;
-
-	return lowerBound;
+	return UtilityFunctions::SequenceProduct2(beginning, ending);
 }
 
 
 LongInteger PrimeSieve::GetPrimeIndex(const LongInteger& number, LongInteger& lowerBound, LongInteger& upperBound)
 {
 	// Binary search
-	CString strLower = lowerBound.toDecimal();
-	CString strUpper = upperBound.toDecimal();
-	CString strNumber = number.toDecimal();
 	while (lowerBound < upperBound)
 	{
 		LongInteger mid = (lowerBound + upperBound) >> 1;
-		CString strMid = mid.toDecimal();
-		CString strValue = m_LIMPrimes[mid].toDecimal();
 		if (m_LIMPrimes[mid] < number)
 			lowerBound = mid + 1;
 		else
 			upperBound = mid;
-		strLower = lowerBound.toDecimal();
-		strUpper = upperBound.toDecimal();
 	}
 
 	if (lowerBound >= m_NumberOfPrimes)
@@ -220,7 +159,6 @@ LongInteger PrimeSieve::GetPrimeIndex(const LongInteger& number, LongInteger& lo
 	if (m_LIMPrimes[lowerBound] == number)
 		lowerBound++;
 
-	strLower = lowerBound.toDecimal();
 	return lowerBound;
 }
 

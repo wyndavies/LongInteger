@@ -29,8 +29,9 @@ const LongInteger LongInteger::E = CString(L"215364474464724850177511348352"); /
 
 void LongInteger::init() {
 	// Create the byte array. Default size of SIZESTEP
+	// Update - default size is MINSIZE. Trying to save memory
 	size = 0;
-	maxSize = SIZESTEP;
+	maxSize = MINSIZE;
 	reset();
 }
 
@@ -432,7 +433,7 @@ bool LongInteger::assignNumber(const string& in_number)
 		}
 
 		size = index + 1;
-		if (size > maxSize) {
+		while (size > maxSize) {
 			increaseSize();
 			if (bOverflow)
 				return !bOverflow;
@@ -776,7 +777,7 @@ bool LongInteger::addNumber(const LongInteger& liAdd) {
 	if (loopSize > size) {
 		memset(digits + size, 0, (loopSize - size));
 		size = loopSize;
-		if (size >= maxSize) {
+		while (size >= maxSize) {
 			increaseSize();
 		}
 	}
@@ -806,7 +807,7 @@ bool LongInteger::addNumber(const LongInteger& liAdd) {
 		++loopSize;
 		if (loopSize >= size) {
 			size = loopSize + 1;
-			if (size >= maxSize) {
+			while (size >= maxSize) {
 				increaseSize();
 			}
 		}
@@ -964,7 +965,7 @@ bool LongInteger::increment() {
 		if (digits[index] == BASEMAX) {
 			digits[index] = 0;
 			++index;
-			if (index >= maxSize) {
+			while (index >= maxSize) {
 				increaseSize();
 				bDone = bOverflow;
 			}
@@ -1206,7 +1207,7 @@ void LongInteger::addInternal(byte* list, UINT offset, UINT value, UINT length) 
 		list[offset] = (byte)result;
 		overflow = result / BASEVAL;
 		++offset;
-		if (offset > (maxSize - 1)) {
+		while (offset > (maxSize - 1)) {
 			increaseSize();
 			if (bOverflow)
 				return;
@@ -1243,7 +1244,13 @@ void LongInteger::checkSize() {
 void LongInteger::recalcMaxSize() {
 	// Used when maxSize needs to be recalculated
 	UINT oldMaxSize = maxSize;
-	maxSize = ((size / SIZESTEP) * SIZESTEP) + SIZESTEP;
+	if (size >= SIZESTEP) {
+		maxSize = ((size / SIZESTEP) * SIZESTEP) + SIZESTEP;
+	} else if (size >= SMALLSIZESTEP) {
+		maxSize = ((size / SMALLSIZESTEP) * SMALLSIZESTEP) + SMALLSIZESTEP;
+	} else {
+		maxSize = ((size / TINYSIZESTEP) * TINYSIZESTEP) + TINYSIZESTEP;
+	}
 
 	if (maxSize != oldMaxSize) {
 		UINT copySize = oldMaxSize;
@@ -1564,7 +1571,7 @@ bool LongInteger::multHelper(int iMult) {
 	if (iMult != BASEVAL) {
 		return !bOverflow;
 	}
-	if (size >= maxSize) {
+	while (size >= maxSize) {
 		increaseSize();
 		if (bOverflow)
 			return !bOverflow;
@@ -1606,7 +1613,16 @@ bool LongInteger::increaseSize() {
 		return bOverflow;
 	}
 
-	UINT newMaxSize = maxSize + SIZESTEP;
+	UINT newMaxSize;
+	// Try to work out the next size to set the value to
+	if (maxSize >= SIZESTEP) {
+		newMaxSize = maxSize + SIZESTEP;
+	} else if (size >= SMALLSIZESTEP) {
+		newMaxSize = maxSize + SMALLSIZESTEP;
+	} else {
+		newMaxSize = maxSize + TINYSIZESTEP;
+	}
+
 	if (newMaxSize > ABSMAXSIZE)
 		newMaxSize = ABSMAXSIZE;
 
@@ -1626,18 +1642,34 @@ bool LongInteger::increaseSize() {
 
 
 bool LongInteger::decreaseSize() {
-	// Can we decrease the size? The smallest size allowed is 'SIZESTEP'
-	if (maxSize <= SIZESTEP)
+	// Can we decrease the size? The smallest size allowed is 'MINSIZE'
+	if (maxSize <= MINSIZE)
 		return false;
 
 	// Check the size. Subtract 10 from maxSize to prevent borderline cases, where the program
 	// starts repeatedly adding and removing data blocks
-	if ((size + SIZESTEP) > (maxSize - 10))
+	UINT subtractSize;
+	if (size > (SIZESTEP + SIZESTEP)) {
+		subtractSize = SIZESTEP;
+	} else if (size > (SMALLSIZESTEP + SMALLSIZESTEP)) {
+		subtractSize = SMALLSIZESTEP;
+	} else {
+		subtractSize = TINYSIZESTEP;
+	}
+
+	if ((size + subtractSize) > (maxSize - 10))
 		return false;
 
-	UINT newMaxSize = maxSize - SIZESTEP;
-	if (newMaxSize < SIZESTEP)
-		newMaxSize = SIZESTEP;
+	UINT newMaxSize;
+	if (size >= SIZESTEP) {
+		newMaxSize = ((size / SIZESTEP) * SIZESTEP) + SIZESTEP;
+	} else if (size >= SMALLSIZESTEP) {
+		newMaxSize = ((size / SMALLSIZESTEP) * SMALLSIZESTEP) + SMALLSIZESTEP;
+	} else {
+		newMaxSize = ((size / TINYSIZESTEP) * TINYSIZESTEP) + TINYSIZESTEP;
+	}
+	if (newMaxSize < MINSIZE)
+		newMaxSize = MINSIZE;
 
 	// Check that the number can fit inside the new smaller structure
 	bool allZero = true;
@@ -1846,7 +1878,7 @@ bool LongInteger::bitwiseor(const LongInteger& liOR) {
 
 	if (size < liOR.size) {
 		for (UINT i = size; i < liOR.size; i++) {
-			if (i >= maxSize) increaseSize();
+			while (i >= maxSize) increaseSize();
 			digits[i] = liOR.digits[i]; // Anything OR zero is itself
 			size++;
 		}
@@ -1921,7 +1953,7 @@ bool LongInteger::bitwisexor(const LongInteger& liXOR) {
 
 	if (size < liXOR.size) {
 		for (UINT i = size; i < liXOR.size; i++) {
-			if (i >= maxSize) increaseSize();
+			while (i >= maxSize) increaseSize();
 			digits[i] = liXOR.digits[i]; // Anything OR zero is itself
 			size++;
 		}
@@ -2585,6 +2617,7 @@ vector<LongIntegerUP> LongInteger::split(LongIntegerUP& liToSplit, UINT uNumPart
 		vList[i]->maxSize = (vList[i]->size - (vList[i]->size % SIZESTEP)) + SIZESTEP;
 		vList[i]->reset();
 		memcpy(vList[i]->digits, liToSplit->digits + uStart, uEnd - uStart);
+		vList[i]->checkSize();
 	}
 
 	while (uNumSplits < uNumParts) {
