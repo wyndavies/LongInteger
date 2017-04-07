@@ -330,6 +330,7 @@ private:
 	void addInternal(byte*, UINT, UINT, UINT);
 	void checkSize();
 	void recalcMaxSize();
+	void recalcMaxSizeAndClear();
 	bool increaseSize();
 	bool decreaseSize();
 	bool increment(); // Helper function for ++

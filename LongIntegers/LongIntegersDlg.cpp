@@ -441,8 +441,8 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// 2||||2 -> 2|(2|||2) -> 2|(2|(2||2)) -> 2|(2|(2|(2|2)))
 
 	LongInteger whatdahell;
-	whatdahell = LongInteger::factorial(LongInteger(100000));
-	whatdahell = LongInteger::factorial(LongInteger(1000000));
+//	whatdahell = LongInteger::factorial(LongInteger(100000));
+//	whatdahell = LongInteger::factorial(LongInteger(1000000));
 	
 	LongInteger five, twentyfour, quotient, modulus;
 
@@ -488,6 +488,8 @@ void CLongIntegersDlg::OnClickedIdarrow()
 		if (!(psWorked && psWorked2))
 		{
 			CString failed = L"failed";
+			CString psAns = psAnswer[i];
+			CString difference = (LongInteger(psAns) / LongInteger(psResult)).toDecimal();
 		}
 		liFactorial = LongInteger::factorial(i);
 		psWorked = liPSResult == liFactorial;

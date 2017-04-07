@@ -243,15 +243,13 @@ bool LongInteger::split(LongInteger* liFront, LongInteger* liBack, UINT iSplit) 
 
 	// Put the first half of the current LongInteger in liFront
 	liFront->size = iSplit;
-	liFront->maxSize = (iSplit - (iSplit % SIZESTEP)) + SIZESTEP;
-	liFront->reset();
+	liFront->recalcMaxSizeAndClear();
 	memcpy(liFront->digits, digits, iSplit * sizeof(byte));
 	liFront->bPositive = bPositive;
 
 	// Put the second half in liBack
 	liBack->size = size - iSplit;
-	liBack->maxSize = (iSplit - (iSplit % SIZESTEP)) + SIZESTEP;
-	liBack->reset();
+	liBack->recalcMaxSizeAndClear();
 	memcpy(liBack->digits, digits + (iSplit * sizeof(byte)), ((size - iSplit) * sizeof(byte)));
 	liBack->bPositive = bPositive;
 
@@ -1224,7 +1222,7 @@ void LongInteger::addInternal(byte* list, UINT offset, UINT value, UINT length) 
 
 void LongInteger::checkSize() {
 	if (size == 0) {
-		if (maxSize > SIZESTEP)
+		if (maxSize > MINSIZE)
 			decreaseSize();
 		return;
 	}
@@ -1245,11 +1243,11 @@ void LongInteger::recalcMaxSize() {
 	// Used when maxSize needs to be recalculated
 	UINT oldMaxSize = maxSize;
 	if (size >= SIZESTEP) {
-		maxSize = ((size / SIZESTEP) * SIZESTEP) + SIZESTEP;
+		maxSize = (size - (size % SIZESTEP)) + SIZESTEP;
 	} else if (size >= SMALLSIZESTEP) {
-		maxSize = ((size / SMALLSIZESTEP) * SMALLSIZESTEP) + SMALLSIZESTEP;
+		maxSize = (size - (size % SMALLSIZESTEP)) + SMALLSIZESTEP;
 	} else {
-		maxSize = ((size / TINYSIZESTEP) * TINYSIZESTEP) + TINYSIZESTEP;
+		maxSize = (size - (size % TINYSIZESTEP)) + TINYSIZESTEP;
 	}
 
 	if (maxSize != oldMaxSize) {
@@ -1262,6 +1260,28 @@ void LongInteger::recalcMaxSize() {
 		delete[] tempDigits;
 	}
 }
+
+
+void LongInteger::recalcMaxSizeAndClear() {
+	// Used when maxSize needs to be recalculated
+	UINT oldMaxSize = maxSize;
+	if (size >= SIZESTEP) {
+		maxSize = (size - (size % SIZESTEP)) + SIZESTEP;
+	}
+	else if (size >= SMALLSIZESTEP) {
+		maxSize = (size - (size % SMALLSIZESTEP)) + SMALLSIZESTEP;
+	}
+	else {
+		maxSize = (size - (size % TINYSIZESTEP)) + TINYSIZESTEP;
+	}
+
+	if (digits != nullptr) {
+		delete digits;
+	}
+	digits = new byte[maxSize];
+	memset(digits, 0, sizeof(byte) * maxSize);
+}
+
 
 bool LongInteger::arrowCalc(UINT arrows, int powerValue) {
 	LongInteger liValue = powerValue;
@@ -1617,7 +1637,7 @@ bool LongInteger::increaseSize() {
 	// Try to work out the next size to set the value to
 	if (maxSize >= SIZESTEP) {
 		newMaxSize = maxSize + SIZESTEP;
-	} else if (size >= SMALLSIZESTEP) {
+	} else if (maxSize >= SMALLSIZESTEP) {
 		newMaxSize = maxSize + SMALLSIZESTEP;
 	} else {
 		newMaxSize = maxSize + TINYSIZESTEP;
@@ -2575,8 +2595,7 @@ UINT LongInteger::toomsplit(LongInteger** liList, UINT uDigits) const {
 
 		// Put the current chunk into the LongInteger
 		liList[i]->size = (uEnd - uStart);
-		liList[i]->maxSize = (uStep - (uStep % SIZESTEP)) + SIZESTEP;
-		liList[i]->reset();
+		liList[i]->recalcMaxSizeAndClear();
 		memcpy(liList[i]->digits, digits + uStart, uEnd - uStart);
 		liList[i]->checkSize(); // Get rid of any leading zeroes
 	}
@@ -2614,8 +2633,7 @@ vector<LongIntegerUP> LongInteger::split(LongIntegerUP& liToSplit, UINT uNumPart
 
 		// Put the current chunk into the LongInteger
 		vList[i]->size = (uEnd - uStart);
-		vList[i]->maxSize = (vList[i]->size - (vList[i]->size % SIZESTEP)) + SIZESTEP;
-		vList[i]->reset();
+		vList[i]->recalcMaxSizeAndClear();
 		memcpy(vList[i]->digits, liToSplit->digits + uStart, uEnd - uStart);
 		vList[i]->checkSize();
 	}
