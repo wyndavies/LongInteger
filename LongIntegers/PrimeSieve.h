@@ -28,7 +28,7 @@ public:
 	LongInteger GetPrime(LongInteger index) { return m_LIMPrimes[index]; }
 	
 	/** Returns prime index in collection */
-	LongInteger GetPrimeIndex(const LongInteger& number, LongInteger& lowerBound, LongInteger& upperBound);
+	LongInteger GetPrimeIndex(const LongInteger& number, LongInteger lowerBound, LongInteger upperBound);
 
 	/** Get number of prime numbers in sieve */
 	LongInteger GetNumberOfPrimes() { return m_NumberOfPrimes; }

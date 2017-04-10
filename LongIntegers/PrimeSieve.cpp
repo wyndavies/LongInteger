@@ -141,7 +141,7 @@ LongInteger PrimeSieve::Primorial(const LongInteger& low, const LongInteger& hig
 }
 
 
-LongInteger PrimeSieve::GetPrimeIndex(const LongInteger& number, LongInteger& lowerBound, LongInteger& upperBound)
+LongInteger PrimeSieve::GetPrimeIndex(const LongInteger& number, LongInteger lowerBound, LongInteger upperBound)
 {
 	// Binary search
 	while (lowerBound < upperBound)
