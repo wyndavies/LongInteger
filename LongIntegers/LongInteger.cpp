@@ -3378,3 +3378,35 @@ LongInteger LongInteger::ln(const LongInteger& lin)
 
 	return returnValue;
 }
+
+
+bool LongInteger::writeToFile(CString& fileName)
+{
+	// Write out the data to file
+	bool returnflag;
+	CFile outFile;
+	returnflag = outFile.Open(fileName, CFile::modeCreate | CFile::modeWrite);
+	if (returnflag) {
+		outFile.Write(digits, maxSize);
+		outFile.Close();
+	}
+	return returnflag;
+}
+
+bool LongInteger::readFromFile(CString& fileName)
+{
+	// Read in the data
+	bool returnflag;
+	CFile inFile;
+	returnflag = inFile.Open(fileName, CFile::modeRead);
+	if (returnflag) {
+		UINT fileSize = inFile.GetLength();
+
+		byte* newData = new byte[fileSize];
+		inFile.Read(newData, fileSize);
+		assignByteArray(newData, fileSize);
+		inFile.Close();
+		delete newData;
+	}
+	return returnflag;
+}

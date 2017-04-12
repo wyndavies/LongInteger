@@ -440,9 +440,52 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// So each step involves working out the one below.
 	// 2||||2 -> 2|(2|||2) -> 2|(2|(2||2)) -> 2|(2|(2|(2|2)))
 
-	LongInteger whatdahell;
-//	whatdahell = LongInteger::factorial(LongInteger(100000));
-//	whatdahell = LongInteger::factorial(LongInteger(1000000));
+	LongInteger* whatdahell = new LongInteger;
+	CString filename = L"D:\\factorial.txt";
+	whatdahell->readFromFile(filename);
+
+	LongInteger* liAdd = new LongInteger;
+	LongInteger* liMinus = new LongInteger;
+	LongInteger* liMultiply = new LongInteger;
+	LongInteger* liDivide = new LongInteger;
+
+	*liAdd = *whatdahell + *whatdahell;
+	*liMinus = *liAdd - *whatdahell;
+	*liMultiply = *whatdahell * *whatdahell;
+	*liDivide = *liMultiply / *whatdahell;
+	delete liAdd;
+	delete liMinus;
+	delete liMultiply;
+	delete liDivide;
+	delete whatdahell;
+
+
+/*	LongInteger* whatdahell;
+	CStdioFile whatFile;
+	BOOL bSuccess = whatFile.Open(L"D:\\number.txt", CFile::modeRead);
+	CString* whatNumber = new CString;
+	bSuccess = whatFile.ReadString(*whatNumber);
+	whatFile.Close();
+	whatdahell = new LongInteger(*whatNumber);
+	LongInteger *wdh1, *wdh2, *wdh3, *wdh4;
+	wdh1 = new LongInteger();
+	wdh2 = new LongInteger();
+	wdh3 = new LongInteger();
+	wdh4 = new LongInteger();
+
+	*wdh1 = *whatdahell + *whatdahell;
+	*wdh2 = *wdh1 - *whatdahell;
+	*wdh3 = *whatdahell * *whatdahell;
+	*wdh4 = *wdh3 / *whatdahell;
+
+	delete whatNumber;
+	delete whatdahell;
+	delete wdh1;
+	delete wdh2;
+	delete wdh3;
+	delete wdh4;
+	*/
+
 	
 	LongInteger five, twentyfour, quotient, modulus;
 
@@ -451,7 +494,6 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	LongInteger::DivAndMod(five, twentyfour, quotient, modulus);
 	CString quot = quotient.toDecimal();
 	CString modu = modulus.toDecimal();
-
 
 
 
@@ -517,7 +559,11 @@ void CLongIntegersDlg::OnClickedIdarrow()
 */
 
 
-	liFactorial = LongInteger::factorial(1000000);
+//	liFactorial = LongInteger::factorial(1000000);
+
+//	liFactorial.writeToFile(CString(L"D:\\factorial.txt"));
+	
+	//m_OutputNumber.SetWindowTextW(liFactorial.toDecimal());
 
 	return;
 

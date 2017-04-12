@@ -312,6 +312,9 @@ public:
 		return bOverflow;
 	}
 
+	bool writeToFile(CString&);
+	bool readFromFile(CString&);
+
 private:
 	byte* digits = nullptr;
 	bool bPositive = true;
