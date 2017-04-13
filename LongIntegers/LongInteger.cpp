@@ -1448,7 +1448,7 @@ bool LongInteger::DivAndMod(const LongInteger& liValue, const LongInteger& liDiv
 
 	// If the value is large and the divisor is at least half the size of the value, then Burnikel-Zeigler division is quicker
 	if (liValue.size > BURKINELZIEGLERCUTOFF) {
-		if (liDivide.size > (liValue.size / 2)) {
+		if (liDivide.size > ((liValue.size * 4) / 5)) {
 			BurnikelZiegler(liValue, liDivide, upliQuotient, upliModulus);
 			return bSuccess;
 		}

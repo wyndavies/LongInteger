@@ -449,6 +449,9 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	LongInteger* liMultiply = new LongInteger;
 	LongInteger* liDivide = new LongInteger;
 
+
+	*liDivide = *whatdahell / LongInteger(CString(L"1234567890123456789012345678901234567890"));
+
 	*liAdd = *whatdahell + *whatdahell;
 	*liMinus = *liAdd - *whatdahell;
 	*liMultiply = *whatdahell * *whatdahell;
