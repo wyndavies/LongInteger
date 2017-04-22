@@ -11,7 +11,7 @@ QueueOfThreads<T>::QueueOfThreads() {
 	threadID = 0;
 	//	deviceCores = std::thread::hardware_concurrency();
 	MyHardwareInfo mHI;
-	deviceCores = mHI.GetPhysicalCores();
+	deviceCores = mHI.GetLogicalCores();
 	if (deviceCores < minThreads) {
 		maxThreads = minThreads; // Default value
 	}
@@ -36,11 +36,6 @@ void QueueOfThreads<T>::decreaseCount(UINT id) {
 		// Find out which thread has finished and remove it from the list
 		UINT index = 0;
 		bool bFound = false;
-
-		//		CString strOutput;
-		//		strOutput.Format(L"Thread ID %d - Finishing \n", id);
-		//		logwithoutlock(strOutput);
-
 
 		while (!bFound && index < queueOfRunningThreads.size()) {
 			if (queueOfRunningThreads[index] == id) {
@@ -88,23 +83,14 @@ bool QueueOfThreads<T>::addToQueue(T* newLongInt) {
 		newLongInt->setID(threadID);
 		queueOfWaitingThreads.push_back(newLongInt);
 
-		//		CString strOutput;
-		//		strOutput.Format(L"Thread ID %d - Added to Queue \n", threadID);
-		//		logwithoutlock(strOutput);
-
 		threadID++;
 		threadsWaiting++;
 		newLongInt->setCallback(this);
-		// Amend to start any old method
-//		newLongInt->setStartMethod(newMethod);
-//		newLongInt->setStartMethod(&(LongInteger::karatsubaMain));
 
 		// I was using a lambda and it was working fine, but this format of thread starting
 		// matches up to the other one.
 		// Starting a thread to start a thread may seem weird, but this functionality is just a placeholder
 		std::thread t1(&QueueOfThreads<T>::startAThread, this);
-
-
 
 		t1.detach();
 		lock.unlock();

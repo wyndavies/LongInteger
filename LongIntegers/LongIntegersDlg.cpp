@@ -440,22 +440,70 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// So each step involves working out the one below.
 	// 2||||2 -> 2|(2|||2) -> 2|(2|(2||2)) -> 2|(2|(2|(2|2)))
 
+	CStdioFile timingsFile;
+	BOOL bSuccess = timingsFile.Open(L"F:\\timings.txt", CFile::modeCreate | CFile::modeWrite);
+
+
 	LongInteger* whatdahell = new LongInteger;
-	CString filename = L"D:\\factorial.txt";
-	whatdahell->readFromFile(filename);
+
+	auto opStart = std::chrono::high_resolution_clock::now();
+	*whatdahell = LongInteger::factorial(1000000);
+	auto opEnd = std::chrono::high_resolution_clock::now();
+	auto rawduration = opEnd - opStart;
+	std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
+	CString writeString;
+	writeString.Format(L"Factorial 1 million - %d", duration);
+	timingsFile.WriteString(writeString);
+
+
 
 	LongInteger* liAdd = new LongInteger;
 	LongInteger* liMinus = new LongInteger;
 	LongInteger* liMultiply = new LongInteger;
 	LongInteger* liDivide = new LongInteger;
 
-
+	opStart = std::chrono::high_resolution_clock::now();
 	*liDivide = *whatdahell / LongInteger(CString(L"1234567890123456789012345678901234567890"));
+	opEnd = std::chrono::high_resolution_clock::now();
+	rawduration = opEnd - opStart;
+	duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
+	writeString.Format(L"Div 1million! by 40 digits - %d", duration);
+	timingsFile.WriteString(writeString);
 
+	opStart = std::chrono::high_resolution_clock::now();
 	*liAdd = *whatdahell + *whatdahell;
+	opEnd = std::chrono::high_resolution_clock::now();
+	rawduration = opEnd - opStart;
+	duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
+	writeString.Format(L"1million! add - %d", duration);
+	timingsFile.WriteString(writeString);
+
+	opStart = std::chrono::high_resolution_clock::now();
 	*liMinus = *liAdd - *whatdahell;
+	opEnd = std::chrono::high_resolution_clock::now();
+	rawduration = opEnd - opStart;
+	duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
+	writeString.Format(L"1million! minus - %d", duration);
+	timingsFile.WriteString(writeString);
+
+
+	opStart = std::chrono::high_resolution_clock::now();
 	*liMultiply = *whatdahell * *whatdahell;
+	opEnd = std::chrono::high_resolution_clock::now();
+	rawduration = opEnd - opStart;
+	duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
+	writeString.Format(L"1million! times - %d", duration);
+	timingsFile.WriteString(writeString);
+
+
+	opStart = std::chrono::high_resolution_clock::now();
 	*liDivide = *liMultiply / *whatdahell;
+	opEnd = std::chrono::high_resolution_clock::now();
+	rawduration = opEnd - opStart;
+	duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
+	writeString.Format(L"1million! squared div 1million! - %d", duration);
+	timingsFile.WriteString(writeString);
+
 	delete liAdd;
 	delete liMinus;
 	delete liMultiply;
@@ -463,6 +511,11 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	delete whatdahell;
 
 
+	timingsFile.Close();
+
+	m_OutputNumber.SetWindowTextW(CString(L"1234567890"));
+
+	return;
 /*	LongInteger* whatdahell;
 	CStdioFile whatFile;
 	BOOL bSuccess = whatFile.Open(L"D:\\number.txt", CFile::modeRead);

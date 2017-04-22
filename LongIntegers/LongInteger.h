@@ -64,6 +64,7 @@
 #include <string>
 #include <cstring>
 #include <sstream>
+#include <fstream>
 #include <algorithm>
 typedef unsigned char byte; // Didn't realise byte and UINT were Microsoft specific definitions. Added them here for Linux
 typedef unsigned int UINT;
@@ -311,9 +312,13 @@ public:
 	inline bool overflow() const {
 		return bOverflow;
 	}
-
+#ifdef WIN32
 	bool writeToFile(CString&);
 	bool readFromFile(CString&);
+#else
+	bool writeToFile(string&);
+	bool readFromFile(string&);
+#endif
 
 private:
 	byte* digits = nullptr;

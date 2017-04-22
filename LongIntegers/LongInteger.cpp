@@ -172,24 +172,9 @@ LongInteger* LongInteger::karatsuba(const LongInteger &liOne, const LongInteger 
 		if (bBackgroundThread) {
 			qot->iAmWaiting(); // Only call this if this process is called in a background thread.
 		}
-		//CString strOutput;
-		// We will log which thread we are waiting on. The way this has been implemented, this process doesn't know
-		// what its own thread ID is, so we can't log that
-		//strOutput.Format(L"Waiting for thread %d to finish\n", liw0->getID());
-		//qot->logwithlock(strOutput);
 		qot->waitForThread(liw0);
-		//strOutput.Format(L"Stopped waiting on thread %d\n", liw0->getID());
-		//qot->logwithlock(strOutput);
-		//strOutput.Format(L"Waiting for thread %d to finish\n", liw1->getID());
-		//qot->logwithlock(strOutput);
 		qot->waitForThread(liw1);
-		//strOutput.Format(L"Stopped waiting on thread %d\n", liw1->getID());
-		//qot->logwithlock(strOutput);
-		//strOutput.Format(L"Waiting for thread %d to finish\n", liw2->getID());
-		//qot->logwithlock(strOutput);
 		qot->waitForThread(liw2);
-		//strOutput.Format(L"Stopped waiting on thread %d - Resuming processing\n", liw2->getID());
-		//qot->logwithlock(strOutput);
 		if (bBackgroundThread) {
 			qot->iHaveStoppedWaiting();
 		}
@@ -2538,7 +2523,7 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 	*liResult[3] = (*liPointwise[3] - *liPointwise[1]) / 3;
 	*liResult[1] = (*liPointwise[1] - *liPointwise[2]) >> 1;
 	*liResult[2] = *liPointwise[2] - *liPointwise[0];
-	*liResult[3] = (*liResult[2] - *liResult[3]) / 2 + (*liPointwise[4] << 1);
+	*liResult[3] = ((*liResult[2] - *liResult[3]) >> 1) + (*liPointwise[4] << 1);
 	*liResult[2] = *liResult[2] + *liResult[1] - *liResult[4];
 	*liResult[1] = *liResult[1] - *liResult[3];
 
@@ -3360,7 +3345,6 @@ LongInteger LongInteger::ln(const LongInteger& lin)
 
 	LongInteger quotient, modulus;
 
-	CString strTempTest;
 	workingValue <<= (BASEVALBITS * 12);
 	while (workingValue > LongInteger::E)
 	{
@@ -3379,7 +3363,7 @@ LongInteger LongInteger::ln(const LongInteger& lin)
 	return returnValue;
 }
 
-
+#ifdef WIN32
 bool LongInteger::writeToFile(CString& fileName)
 {
 	// Write out the data to file
@@ -3410,3 +3394,44 @@ bool LongInteger::readFromFile(CString& fileName)
 	}
 	return returnflag;
 }
+#else
+bool LongInteger::writeToFile(string& fileName)
+{
+	// Write out the data to file
+	ofstream outFile(fileName, ios::out);
+	bool returnflag = outFile.is_open();
+	if (returnflag) {
+		for (UINT i = 0; i < maxSize; i++)
+		{
+			outFile << digits[i];
+		}
+		outFile.Close();
+	}
+	return returnflag;
+}
+
+bool LongInteger::readFromFile(string& fileName)
+{
+	// Read in the data
+	bool returnflag;
+	ifstream inFile(fileName, ios::in);
+	returnflag = inFile.is_open();
+	if (returnflag) {
+		streampos begin, end;
+		begin = inFile.tellg();
+		inFile.seekg(0, ios::end);
+		end = inFile.tellg();
+		UINT fileSize = end - begin;
+
+		inFile.seekg(0, ios::beg);
+		byte* newData = new byte[fileSize];
+		inFile.read(newData, fileSize);
+		assignByteArray(newData, fileSize);
+		inFile.close();
+		delete newData;
+	}
+	return returnflag;
+}
+
+
+#endif
