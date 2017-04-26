@@ -97,7 +97,11 @@ typedef GeneralIntWrapper<LongInteger> LongIntWrapper; // A shorthand to make it
 typedef unique_ptr<LongInteger> LongIntegerUP; // Ditto
 // This for passing a pointer to a function that takes 2 const LongInteger parameters and a bool and returns a pointer to a LongInteger
 // The function pointer is referred to as 'Lifunction' in the code
-typedef LongInteger* (*LIfunction)(const LongInteger&, const LongInteger&, bool); 
+typedef LongInteger* (*LIfunction)(const LongInteger&, const LongInteger&, bool);
+
+// Forward declarations
+bool operator<(int lhs, const LongInteger& rhs);
+
 
 class LongInteger {
 public:
@@ -367,6 +371,7 @@ public:
 
 	// comparison operators
 public:
+	inline bool isPositive() const { return bPositive; }
 
 	inline bool operator<(const LongInteger& rhs) const {
 		if (bOverflow || rhs.bOverflow) {
@@ -419,7 +424,15 @@ public:
 		return !((*this) > rhs);
 	}
 
+	inline bool operator<=(int rhs) const {
+		return !((*this) > rhs);
+	}
+
 	inline bool operator>=(const LongInteger& rhs) const {
+		return !((*this) < rhs);
+	}
+
+	inline bool operator>=(int rhs) const {
 		return !((*this) < rhs);
 	}
 
@@ -461,7 +474,39 @@ public:
 			return(size == 1 && digits[0] == 1); 
 		}
 
-		return ((*this) == LongInteger(rhs));
+		if ((bPositive && rhs < 0) || (!bPositive && rhs >= 0)) {
+			return false;
+		}
+
+		if (rhs == 0) {
+			if (equalsZero()) {
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			if (equalsZero()) {
+				return false;
+			}
+		}
+
+		if (size > sizeof(int)) {
+			return false;
+		}
+
+		bool bEquals = false;
+		UINT thisAsInt = digits[0];
+
+		for (UINT i = 1; i < size; i++)
+		{
+			thisAsInt *= digits[i];
+		}
+
+		if (thisAsInt == std::abs(rhs))
+		{
+			bEquals = true;
+		}
+		return bEquals;
 	}
 
 	inline bool operator!=(const LongInteger& rhs) {
@@ -472,8 +517,53 @@ public:
 		return !((*this) == rhs);
 	}
 
+	// Add int versions of the comparison operators to avoid the overhead of converting ints to LongIntegers for comparisons.
+	inline bool operator<(int rhs) const {
+		if (bOverflow) {
+			return false;
+		}
 
+		if ((bPositive && rhs < 0) || (!bPositive && rhs >= 0)) {
+			// If this is + and rhs is -, then return -, else return +. So return opposite of bPositive flag
+			return !bPositive;
+		}
+		if (rhs == 0) {
+			if (equalsZero()) {
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			if (equalsZero()) {
+				return false;
+			}
+		}
+
+		if (size > sizeof(int)) {
+			return false ^ !bPositive;
+		}
+
+		bool bLessThan = false;
+		UINT thisAsInt = digits[0];
+
+		for (UINT i = 1; i < size; i++)
+		{
+			thisAsInt *= digits[i];
+		}
+
+		if (thisAsInt < (UINT)std::abs(rhs))
+		{
+			bLessThan = true;
+		}
+		return (bLessThan ^ !bPositive); // Return the opposite result if the numbers are negative
+	}
+
+	inline bool operator>(int rhs) const
+	{
+		return rhs < (*this);
+	}
 };
+
 
 inline bool operator==(int lhs, const LongInteger& rhs) {
 	return rhs == lhs;
@@ -483,12 +573,52 @@ inline bool operator!=(int lhs, const LongInteger& rhs) {
 	return !(rhs == lhs);
 }
 
-inline bool operator>(int lhs, const LongInteger& rhs) {
-	return rhs < lhs;
-}
+// Note: Need to create int specific versions of these
 
 inline bool operator<(int lhs, const LongInteger& rhs) {
-	return rhs > lhs;
+	if (rhs.overflow()) {
+		return false;
+	}
+
+	bool bPositive = rhs.isPositive();
+
+	if ((bPositive && lhs < 0) || (!bPositive && lhs >= 0)) {
+		// If this is + and rhs is -, then return -, else return +. So return bPositive flag
+		return bPositive;
+	}
+	if (rhs.equalsZero()) {
+		if (lhs == 0) {
+			return true;
+		} else {
+			return false;
+		}
+	} else {
+		if (lhs == 0) {
+			return false;
+		}
+	}
+
+	if (rhs.getSize() > sizeof(int)) {
+		return true ^ !bPositive;
+	}
+
+	bool bLessThan = false;
+	UINT thisAsInt = rhs.getDigit(0);
+
+	for (UINT i = 1; i < rhs.getSize(); i++)
+	{
+		thisAsInt *= rhs.getDigit(i);
+	}
+
+	if ((UINT)std::abs(lhs) < thisAsInt)
+	{
+		bLessThan = true;
+	}
+	return (bLessThan ^ !bPositive); // Return the opposite result if the numbers are negative
+}
+
+inline bool operator>(int lhs, const LongInteger& rhs) {
+	return rhs < lhs;
 }
 
 inline bool operator>=(int lhs, const LongInteger& rhs) {

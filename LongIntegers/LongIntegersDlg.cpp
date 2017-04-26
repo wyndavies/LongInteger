@@ -440,8 +440,23 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// So each step involves working out the one below.
 	// 2||||2 -> 2|(2|||2) -> 2|(2|(2||2)) -> 2|(2|(2|(2|2)))
 
+	// Test the new int comparisons
+	LongInteger ten = 10;
+	bool bComp;
+	bComp = ten == ten;
+	bComp = (ten == 9) | (9 == ten); // false
+	bComp = (ten == 10) & (10 == ten); // true
+	bComp = (ten != 9) & (9 != ten); // true
+	bComp = (ten < 9) | (9 > ten); // false
+	bComp = (ten > 9) & (9 < ten); // true
+	bComp = (ten <= 9) | (9 >= ten); // false
+	bComp = (ten >= 9) & (9 <= ten); // true
+
+
+
+
 	CStdioFile timingsFile;
-	BOOL bSuccess = timingsFile.Open(L"F:\\timings.txt", CFile::modeCreate | CFile::modeWrite);
+	BOOL bSuccess = timingsFile.Open(L"D:\\timings.txt", CFile::modeCreate | CFile::modeWrite);
 
 
 	LongInteger* whatdahell = new LongInteger;
