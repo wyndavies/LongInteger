@@ -441,7 +441,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// 2||||2 -> 2|(2|||2) -> 2|(2|(2||2)) -> 2|(2|(2|(2|2)))
 
 	// Lets have a test of the natural logarithm with the new amazing 10,000 digit guess at e
-	LongInteger logResult = LongInteger::ln(2); // Should be zero
+/*	LongInteger logResult = LongInteger::ln(2); // Should be zero
 	CString strLogResult = logResult.toDecimal();
 	logResult = LongInteger::ln(4); // 1
 	strLogResult = logResult.toDecimal();
@@ -461,7 +461,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	strLogResult = logResult.toDecimal();
 	logResult = LongInteger::ln(1000000); // 13
 	strLogResult = logResult.toDecimal();
-
+*/
 
 
 

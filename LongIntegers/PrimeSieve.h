@@ -40,10 +40,6 @@ public:
 
 private:
 
-		/** Get a high bound for pi(n), the number of primes less or equal n. */
-	static LongInteger GetPiHighBound(const LongInteger& lin);
-
-
 	//////////////////////////////////////////////////////////////////////////
 
 

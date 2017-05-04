@@ -16,24 +16,6 @@ PrimeSieve::PrimeSieve(const LongInteger& lin)
 	MakePrimeList(lin);
 }
 
-// This function is no longer used due to changes I made. The list size is dynamic instead of fixed, so no need to guess the size
-LongInteger PrimeSieve::GetPiHighBound(const LongInteger& lin)
-{
-	if (lin < 17)
-	{
-		return LongInteger(6);
-	}
-
-	// Let us try an approximation of the original function
-	// This gives a slightly larger value than the original function, but not enough that I'm concerned about it
-	LongInteger returnValue = LongInteger::ln(lin);
-	returnValue *= 2;
-	returnValue -= 3;
-	returnValue = (lin * 2) / returnValue;
-
-	return returnValue;
-}
-
 //////////////////////////////////////////////////////////////////////////
 
 
@@ -84,8 +66,6 @@ void PrimeSieve::SieveOfEratosthenes(BoolVec& composite)
 
 void PrimeSieve::MakePrimeList(const LongInteger& lin)
 {
-	// WD - 05/04/2017 - Started adding shadow code that populates the map
-
 	// Fetch two first primes manually
 	m_LIMPrimes[LongInteger(0)] = 2;
 	m_LIMPrimes[LongInteger(1)] = 3;
@@ -122,14 +102,16 @@ void PrimeSieve::MakePrimeList(const LongInteger& lin)
 	// Number of primes
 	m_NumberOfPrimes = index;
 
-	// Add a blank entry at the end
+	// WD - Add a blank entry at the end. Needed as the algorithms continue until they go 1 past the last prime.
 	m_LIMPrimes[index + 1] = LongInteger(0);
 }
 
 
 LongInteger PrimeSieve::Primorial(const LongInteger& low, const LongInteger& high)
 {
-	// Shadow code to test using std::map
+	// WD - changed quite a bit in terms of actual code, but the logic is the same as the original algorithm
+	//      It is finding the start and end markers to specify the range where all the primes between 'low' and 'high' are
+	//      and then calling SequenceProduct to multiply them together.
 	LongInteger liMinIdx, liMaxIdx;
 	liMinIdx = GetPrimeIndex(low, LongInteger(3), LongInteger(m_NumberOfPrimes));
 	liMaxIdx = GetPrimeIndex(high, LongInteger(liMinIdx), LongInteger(m_NumberOfPrimes));

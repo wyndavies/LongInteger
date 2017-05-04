@@ -8,7 +8,8 @@
 // way regardless of sign. Hence I modified the code. I used an array instead of calculating the number
 // of bytes each time.
 
-const int UtilityFunctions::bitCount[] = { 0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4,
+const int UtilityFunctions::bitCount[] ={
+0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4,
 1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
 1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
 2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
@@ -41,46 +42,3 @@ LongInteger UtilityFunctions::BitCount(const LongInteger &lin)
 	return popCount;
 }
 
-
-LongInteger UtilityFunctions::SequenceProduct2(const LongIntMap::iterator& _begin,
-	const LongIntMap::iterator& _end)
-{
-	// First copy collection to sorted container
-	LongIntSet sorted;
-	for (auto it = _begin; it != _end; ++it) {
-		if (it->second.equalsZero())
-			continue;
-		sorted.insert(it->second);
-	}
-
-	// Start from smaller numbers
-	// Get first and second smallest numbers
-	LongIntSet::iterator itFirst = sorted.begin();
-	if (itFirst == sorted.end())
-		return 0;
-
-	LongIntSet::iterator itSecond = itFirst;
-	++itSecond;
-
-	while (itSecond != sorted.end())
-	{
-		// Multiply them
-		LongInteger prod = (*itFirst) * (*itSecond);
-
-		// Remove them from container
-		sorted.erase(itFirst);
-		sorted.erase(itSecond);
-
-		// Put their product in container
-		sorted.insert(prod);
-
-		// And repeat all this stuff
-		itFirst = sorted.begin();
-		itSecond = itFirst;
-		++itSecond;
-	}
-
-	// After all of this we have single element in sorted
-	// container -- product of all elements of sequence.
-	return *itFirst;
-}
