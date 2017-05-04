@@ -440,6 +440,32 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// So each step involves working out the one below.
 	// 2||||2 -> 2|(2|||2) -> 2|(2|(2||2)) -> 2|(2|(2|(2|2)))
 
+	// Lets have a test of the natural logarithm with the new amazing 10,000 digit guess at e
+	LongInteger logResult = LongInteger::ln(2); // Should be zero
+	CString strLogResult = logResult.toDecimal();
+	logResult = LongInteger::ln(4); // 1
+	strLogResult = logResult.toDecimal();
+	logResult = LongInteger::ln(10); // 2
+	strLogResult = logResult.toDecimal();
+	logResult = LongInteger::ln(20); // 2
+	strLogResult = logResult.toDecimal();
+	logResult = LongInteger::ln(21); // 3
+	strLogResult = logResult.toDecimal();
+	logResult = LongInteger::ln(100); // 4
+	strLogResult = logResult.toDecimal();
+	logResult = LongInteger::ln(1000); // 6
+	strLogResult = logResult.toDecimal();
+	logResult = LongInteger::ln(10000); // 9
+	strLogResult = logResult.toDecimal();
+	logResult = LongInteger::ln(100000); // 11
+	strLogResult = logResult.toDecimal();
+	logResult = LongInteger::ln(1000000); // 13
+	strLogResult = logResult.toDecimal();
+
+
+
+
+
 	// Test the new int comparisons
 	LongInteger ten = 10;
 	bool bComp;

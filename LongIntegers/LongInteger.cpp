@@ -25,7 +25,9 @@ UINT LongInteger::TOOMCOOK3CUTOFF = 150;
 UINT LongInteger::TOOMCOOK3THREADING = 1000;
 UINT LongInteger::KARATSUBACUTOFF = 50;
 UINT LongInteger::KARATSUBATHREADING = 1000;
-const LongInteger LongInteger::E = CString(L"215364474464724850177511348352"); // approx value of e * (256^12)
+bool LongInteger::TriedToReadE = false;
+LongInteger LongInteger::E = LongInteger::ReadEFromFile(L"D:\\einhex.txt");
+UINT LongInteger::SIZEOFE = 12;
 
 void LongInteger::init() {
 	// Create the byte array. Default size of SIZESTEP
@@ -33,6 +35,17 @@ void LongInteger::init() {
 	size = 0;
 	maxSize = MINSIZE;
 	reset();
+
+/*	if (!TriedToReadE)
+	{
+		TriedToReadE = true;
+		// Set the default values
+		LongInteger::E = CString(L"215364474464724850177511348352"); // approx value of e * (256^12)
+		LongInteger::SIZEOFE = 12;
+		// Then try to read from file
+		ReadEFromFile(L"D:\\einhex.txt");
+	}
+	*/
 }
 
 void LongInteger::reset() {
@@ -45,6 +58,66 @@ void LongInteger::reset() {
 	bProcessing = false;
 	bPositive = true; // Can only be true or false, so we'll treat zero as positive
 }
+
+LongInteger LongInteger::ReadEFromFile(CString inFilePath)
+{
+	// Read in the data
+	bool returnflag;
+	CStdioFile inFile;
+	LongInteger returnLInt;
+	returnflag = inFile.Open(inFilePath, CFile::modeRead);
+	if (returnflag)
+	{
+		// The file exists and has been opened. The digits will be 1 per line, in decimal, with the digits in order
+		UINT numDigits = 0;
+		LongInteger eFromFile;
+		CString line;
+		bool loop = true;
+		BOOL lineRead;
+		while (loop)
+		{
+			lineRead = inFile.ReadString(line);
+			if (lineRead)
+			{
+				// First line seems to get gibberish characters. Will need to remove them
+				TCHAR* pDC = line.GetBuffer(line.GetLength());
+				for (int i = 0; i < line.GetLength(); i++)
+				{
+					if (pDC[i] < '0' || pDC[i] > '9')
+					{
+						pDC[i] = '0';
+					}
+				}
+
+				if (line.GetLength() > 0)
+				{
+					int value = _ttoi(line);
+					eFromFile <<= LongInteger::BASEVALBITS;
+					eFromFile += value;
+					numDigits++;
+				}
+				else
+				{
+					loop = false;
+				}
+			}
+			else
+			{
+				loop = false;
+			}
+		}
+
+		// If all has gone well the number of digits should equal the size of the new LongInteger
+		if (numDigits > SIZEOFE && eFromFile.size > SIZEOFE && numDigits == eFromFile.size)
+		{
+			// If the number of digits read in is more than the current best guess then we will use it
+			SIZEOFE = numDigits - 1; // minus 1 because the first digit will be before the period
+			returnLInt = eFromFile;
+		}
+	}
+	return returnLInt;
+}
+
 
 LongInteger LongInteger::multiplyChooser(const LongInteger& liOne, const LongInteger &liTwo) {
 	// Wrapper class to handle memory management
@@ -3337,24 +3410,24 @@ LongInteger LongInteger::log(const LongInteger& liValue, const LongInteger& liBa
 LongInteger LongInteger::ln(const LongInteger& lin)
 {
 	// Natural log.
-	// The constant 'E' is the approximate value of e times 256^12 (i.e. e shifted left 12 bytes and then rounded off)
+	// The constant 'E' is the approximate value of e times 256^12 (or more if read from file) - i.e. e shifted left 11 bytes and then rounded off
 	LongInteger workingValue(lin);
 
-	// Take the input value, shift it left 12 bytes then repeatedly divide
+	// Take the input value, shift it left so it is the same 'base' as E then repeatedly divide
 	LongInteger returnValue;
 
 	LongInteger quotient, modulus;
 
-	workingValue <<= (BASEVALBITS * 12);
+	workingValue <<= (BASEVALBITS * SIZEOFE);
 	while (workingValue > LongInteger::E)
 	{
 		LongInteger::DivAndMod(workingValue, LongInteger::E, quotient, modulus);
 		// As 'E' is multiplied by 256^12 we need to adjust the result of the division by the same amount
-		workingValue = quotient << (BASEVALBITS * 12);
+		workingValue = quotient << (BASEVALBITS * SIZEOFE);
 		// To avoid rounding errors as much as possible, let us add the modulus back in
 		// We need to adjust it upwards by 256^12 and then divide by E to get the part of the modulus we need
 		// (it is a fraction with base 'E'*256^12, which is why we adjust it by these values. It does make sense. Trust me.)
-		modulus <<= (BASEVALBITS * 12);
+		modulus <<= (BASEVALBITS * SIZEOFE);
 		modulus /= LongInteger::E;
 		workingValue += modulus;
 		returnValue++;

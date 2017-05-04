@@ -99,9 +99,9 @@ typedef unique_ptr<LongInteger> LongIntegerUP; // Ditto
 // The function pointer is referred to as 'Lifunction' in the code
 typedef LongInteger* (*LIfunction)(const LongInteger&, const LongInteger&, bool);
 
-// Forward declarations
+// Forward declaration. For some reason I only need to forward declare this one and everything works
 bool operator<(int lhs, const LongInteger& rhs);
-
+bool operator<(UINT lhs, const LongInteger& rhs);
 
 class LongInteger {
 public:
@@ -137,6 +137,9 @@ private:
     // Restoring division seems to work fine. Some more testing needed to see what the performance is
 	static void RestoringDivision(LongInteger&, LongInteger&, LongInteger*, LongInteger*);
 
+	static bool TriedToReadE;
+	static LongInteger ReadEFromFile(CString path);
+
 public: // Make this public during development
 		// This is the recursive part of the karatsuba algorithm
 	static LongInteger* karatsuba(const LongInteger&, const LongInteger&, bool bBackgroundThread = false);
@@ -159,13 +162,14 @@ public:
 
 										// Making these non-const so I can test different values
 	static UINT KARATSUBACUTOFF;
-	static UINT KARATSUBATHREADING;
 	static UINT TOOMCOOK3CUTOFF;
-	// Threading values are now calculated dynamically (after once triggering 20,000 threads) and so are non-const
-	static UINT TOOMCOOK3THREADING;
 	static UINT BURKINELZIEGLERCUTOFF;
+	// Threading values are now calculated dynamically (after accidentally triggering 20,000 threads) and so are non-const
+	static UINT KARATSUBATHREADING;
+	static UINT TOOMCOOK3THREADING;
 
-	static const LongInteger E;
+	static LongInteger E; // These aren't const as there will be an attempt to read in a value from file, else use the default.
+	static UINT SIZEOFE; // Number of bytes that e has been shifted left by for the value above.
 
 public:
 	// For testing only
@@ -509,11 +513,61 @@ public:
 		return bEquals;
 	}
 
+	inline bool operator==(UINT rhs) const {
+		if (rhs == 0) {
+			return equalsZero();
+		}
+		// There are enough comparisons to 1 to justify a dedicated short-cut test
+		if (rhs == 1) {
+			return(size == 1 && digits[0] == 1);
+		}
+
+		if ((bPositive && rhs < 0) || (!bPositive && rhs >= 0)) {
+			return false;
+		}
+
+		if (rhs == 0) {
+			if (equalsZero()) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		else {
+			if (equalsZero()) {
+				return false;
+			}
+		}
+
+		if (size > sizeof(int)) {
+			return false;
+		}
+
+		bool bEquals = false;
+		UINT thisAsInt = digits[0];
+
+		for (UINT i = 1; i < size; i++)
+		{
+			thisAsInt *= digits[i];
+		}
+
+		if (thisAsInt == rhs)
+		{
+			bEquals = true;
+		}
+		return bEquals;
+	}
+
 	inline bool operator!=(const LongInteger& rhs) {
 		return !((*this) == rhs);
 	}
 
 	inline bool operator!=(int rhs) {
+		return !((*this) == rhs);
+	}
+
+	inline bool operator!=(UINT rhs) {
 		return !((*this) == rhs);
 	}
 
@@ -558,7 +612,54 @@ public:
 		return (bLessThan ^ !bPositive); // Return the opposite result if the numbers are negative
 	}
 
+	inline bool operator<(UINT rhs) const {
+		if (bOverflow) {
+			return false;
+		}
+
+		if (!bPositive) {
+			// UINTs can only be positive, so if this is negative it is definately less than the UINT
+			return true;
+		}
+		if (rhs == 0) {
+			if (equalsZero()) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		else {
+			if (equalsZero()) {
+				return false;
+			}
+		}
+
+		if (size > sizeof(int)) {
+			return false ^ !bPositive;
+		}
+
+		bool bLessThan = false;
+		UINT thisAsInt = digits[0];
+
+		for (UINT i = 1; i < size; i++)
+		{
+			thisAsInt *= digits[i];
+		}
+
+		if (thisAsInt < rhs)
+		{
+			bLessThan = true;
+		}
+		return (bLessThan ^ !bPositive); // Return the opposite result if the numbers are negative
+	}
+
 	inline bool operator>(int rhs) const
+	{
+		return rhs < (*this);
+	}
+
+	inline bool operator>(UINT rhs) const
 	{
 		return rhs < (*this);
 	}
@@ -569,11 +670,61 @@ inline bool operator==(int lhs, const LongInteger& rhs) {
 	return rhs == lhs;
 }
 
+inline bool operator==(UINT lhs, const LongInteger& rhs) {
+	return rhs == lhs;
+}
+
 inline bool operator!=(int lhs, const LongInteger& rhs) {
 	return !(rhs == lhs);
 }
 
-// Note: Need to create int specific versions of these
+inline bool operator!=(UINT lhs, const LongInteger& rhs) {
+	return !(rhs == lhs);
+}
+
+inline bool operator<(UINT lhs, const LongInteger& rhs) {
+	if (rhs.overflow()) {
+		return false;
+	}
+
+	bool bPositive = rhs.isPositive();
+
+	if (!bPositive) {
+		// If rhs is negative it is definately less than lhs as UINTs can't be negative
+		return false;
+	}
+	if (rhs.equalsZero()) {
+		if (lhs == 0) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	else {
+		if (lhs == 0) {
+			return false;
+		}
+	}
+
+	if (rhs.getSize() > sizeof(int)) {
+		return true ^ !bPositive;
+	}
+
+	bool bLessThan = false;
+	UINT thisAsInt = rhs.getDigit(0);
+
+	for (UINT i = 1; i < rhs.getSize(); i++)
+	{
+		thisAsInt *= rhs.getDigit(i);
+	}
+
+	if (lhs < thisAsInt)
+	{
+		bLessThan = true;
+	}
+	return (bLessThan ^ !bPositive); // Return the opposite result if the numbers are negative
+}
 
 inline bool operator<(int lhs, const LongInteger& rhs) {
 	if (rhs.overflow()) {
@@ -617,7 +768,12 @@ inline bool operator<(int lhs, const LongInteger& rhs) {
 	return (bLessThan ^ !bPositive); // Return the opposite result if the numbers are negative
 }
 
+
 inline bool operator>(int lhs, const LongInteger& rhs) {
+	return rhs < lhs;
+}
+
+inline bool operator>(UINT lhs, const LongInteger& rhs) {
 	return rhs < lhs;
 }
 
@@ -625,11 +781,23 @@ inline bool operator>=(int lhs, const LongInteger& rhs) {
 	return !(lhs < rhs);
 }
 
+inline bool operator>=(UINT lhs, const LongInteger& rhs) {
+	return !(lhs < rhs);
+}
+
 inline bool operator<=(int lhs, const LongInteger& rhs) {
 	return !(lhs > rhs);
 }
 
+inline bool operator<=(UINT lhs, const LongInteger& rhs) {
+	return !(lhs > rhs);
+}
+
 inline LongInteger operator+(int lhs, const LongInteger& rhs) {
+	return rhs + lhs;
+}
+
+inline LongInteger operator+(UINT lhs, const LongInteger& rhs) {
 	return rhs + lhs;
 }
 
@@ -638,11 +806,25 @@ inline LongInteger operator-(int lhs, const LongInteger& rhs) {
 	return value - rhs;
 }
 
+inline LongInteger operator-(UINT lhs, const LongInteger& rhs) {
+	LongInteger value = lhs;
+	return value - rhs;
+}
+
 inline LongInteger operator*(int lhs, const LongInteger& rhs) {
 	return rhs * lhs;
 }
 
+inline LongInteger operator*(UINT lhs, const LongInteger& rhs) {
+	return rhs * lhs;
+}
+
 inline LongInteger operator/(int lhs, const LongInteger& rhs) {
+	LongInteger value = lhs;
+	return value / rhs;
+}
+
+inline LongInteger operator/(UINT lhs, const LongInteger& rhs) {
 	LongInteger value = lhs;
 	return value / rhs;
 }
@@ -652,7 +834,17 @@ inline LongInteger operator&(int lhs, const LongInteger& rhs) {
 	return value & rhs;
 }
 
+inline LongInteger operator&(UINT lhs, const LongInteger& rhs) {
+	LongInteger value = lhs;
+	return value & rhs;
+}
+
 inline LongInteger operator|(int lhs, const LongInteger& rhs) {
+	LongInteger value = lhs;
+	return value | rhs;
+}
+
+inline LongInteger operator|(UINT lhs, const LongInteger& rhs) {
 	LongInteger value = lhs;
 	return value | rhs;
 }
@@ -662,7 +854,17 @@ inline LongInteger operator^(int lhs, const LongInteger& rhs) {
 	return value ^ rhs;
 }
 
+inline LongInteger operator^(UINT lhs, const LongInteger& rhs) {
+	LongInteger value = lhs;
+	return value ^ rhs;
+}
+
 inline LongInteger operator >> (int lhs, const LongInteger& rhs) {
+	LongInteger value = lhs;
+	return value >> rhs;
+}
+
+inline LongInteger operator >> (UINT lhs, const LongInteger& rhs) {
 	LongInteger value = lhs;
 	return value >> rhs;
 }

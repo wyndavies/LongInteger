@@ -16,7 +16,7 @@ PrimeSieve::PrimeSieve(const LongInteger& lin)
 	MakePrimeList(lin);
 }
 
-
+// This function is no longer used due to changes I made. The list size is dynamic instead of fixed, so no need to guess the size
 LongInteger PrimeSieve::GetPiHighBound(const LongInteger& lin)
 {
 	if (lin < 17)
