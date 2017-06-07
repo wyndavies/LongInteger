@@ -9,6 +9,7 @@
 #include <set>
 #include <map>
 #include <queue>
+
 class LongInteger; // Forward definition to avoid circular includes. Will generitisate this once I understand what is happening
 
 /** Vector of integers */

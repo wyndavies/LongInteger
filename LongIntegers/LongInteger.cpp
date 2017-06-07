@@ -26,7 +26,11 @@ UINT LongInteger::TOOMCOOK3THREADING = 1000;
 UINT LongInteger::KARATSUBACUTOFF = 50;
 UINT LongInteger::KARATSUBATHREADING = 1000;
 bool LongInteger::TriedToReadE = false;
+#ifdef _WIN32
 LongInteger LongInteger::E = LongInteger::ReadEFromFile(L"D:\\einhex.txt");
+#else
+LongInteger LongInteger::E = LongInteger::ReadEFromFile("~/Desktop/LongIntegerFramework/einhex.txt");
+#endif
 UINT LongInteger::SIZEOFE = 12;
 
 void LongInteger::init() {
@@ -59,6 +63,7 @@ void LongInteger::reset() {
 	bPositive = true; // Can only be true or false, so we'll treat zero as positive
 }
 
+#ifdef _WIN32
 LongInteger LongInteger::ReadEFromFile(CString inFilePath)
 {
 	// Read in the data
@@ -117,7 +122,66 @@ LongInteger LongInteger::ReadEFromFile(CString inFilePath)
 	}
 	return returnLInt;
 }
+#else
+LongInteger LongInteger::ReadEFromFile(string inFilePath)
+{
+	// Read in the data
+	bool returnflag;
+	ifstream inFile(inFilePath, ios::in);
+	LongInteger returnLInt;
+	returnflag = inFile.is_open();
+	if (returnflag)
+	{
+		// The file exists and has been opened. The digits will be 1 per line, in decimal, with the digits in order
+		UINT numDigits = 0;
+		LongInteger eFromFile;
+		string line;
+		bool loop = true;
+		bool lineRead;
+		while (loop)
+		{
+			std::getline(inFile, line);
+			lineRead = inFile.fail() | inFile.eof();
+			if (lineRead)
+			{
+				// First line seems to get gibberish characters. Will need to remove them
+				for (int i = 0; i < line.length(); i++)
+				{
+					if (line[i] < '0' || line[i] > '9')
+					{
+						line[i] = '0';
+					}
+				}
 
+				if (line.length() > 0)
+				{
+					int value = std::stoi(line);
+					eFromFile <<= LongInteger::BASEVALBITS;
+					eFromFile += value;
+					numDigits++;
+				}
+				else
+				{
+					loop = false;
+				}
+			}
+			else
+			{
+				loop = false;
+			}
+		}
+
+		// If all has gone well the number of digits should equal the size of the new LongInteger
+		if (numDigits > SIZEOFE && eFromFile.size > SIZEOFE && numDigits == eFromFile.size)
+		{
+			// If the number of digits read in is more than the current best guess then we will use it
+			SIZEOFE = numDigits - 1; // minus 1 because the first digit will be before the period
+			returnLInt = eFromFile;
+		}
+	}
+	return returnLInt;
+}
+#endif
 
 LongInteger LongInteger::multiplyChooser(const LongInteger& liOne, const LongInteger &liTwo) {
 	// Wrapper class to handle memory management
@@ -3478,7 +3542,7 @@ bool LongInteger::writeToFile(string& fileName)
 		{
 			outFile << digits[i];
 		}
-		outFile.Close();
+		outFile.close();
 	}
 	return returnflag;
 }
@@ -3490,18 +3554,15 @@ bool LongInteger::readFromFile(string& fileName)
 	ifstream inFile(fileName, ios::in);
 	returnflag = inFile.is_open();
 	if (returnflag) {
-		streampos begin, end;
+		std::streampos begin, end;
 		begin = inFile.tellg();
 		inFile.seekg(0, ios::end);
 		end = inFile.tellg();
-		UINT fileSize = end - begin;
+		int fileSize = end - begin;
 
-		inFile.seekg(0, ios::beg);
-		byte* newData = new byte[fileSize];
-		inFile.read(newData, fileSize);
-		assignByteArray(newData, fileSize);
-		inFile.close();
-		delete newData;
+		inFile.seekg(0, ios::beg);		byte* newData = new byte[fileSize];
+		std::getline(inFile, strLine);
+		std::strcpy(newData, strLine.c_str());		assignByteArray(newData, fileSize);		inFile.close();		delete newData;
 	}
 	return returnflag;
 }

@@ -1,6 +1,7 @@
-#ifndef _PRIMESIEVE_H_
-#include "PrimeSieve.h"
+#ifdef _WIN32
+#include "stdafx.h"
 #endif
+#include "PrimeSieve.h"
 
 #include <cmath>
 

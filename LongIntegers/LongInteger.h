@@ -38,6 +38,10 @@
 */
 
 #pragma once
+
+#ifndef _LONGINTEGER_H
+#define _LONGINTEGER_H
+
 #include <vector>
 #include <memory>
 #include "QueueOfThreads.h"
@@ -71,6 +75,8 @@ typedef unsigned int UINT;
 
 using std::stringstream;
 using std::string;
+using std::ifstream;
+using std::ios;
 #endif
 
 // This definition is to add compatibility with C++11. The code is intended for C++14, but it turns out
@@ -138,7 +144,11 @@ private:
 	static void RestoringDivision(LongInteger&, LongInteger&, LongInteger*, LongInteger*);
 
 	static bool TriedToReadE;
+#ifdef _WIN32
 	static LongInteger ReadEFromFile(CString path);
+#else
+	static LongInteger ReadEFromFile(string path);
+#endif
 
 public: // Make this public during development
 		// This is the recursive part of the karatsuba algorithm
@@ -868,3 +878,5 @@ inline LongInteger operator >> (UINT lhs, const LongInteger& rhs) {
 	LongInteger value = lhs;
 	return value >> rhs;
 }
+
+#endif

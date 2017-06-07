@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef _MYHARDWAREINFO_H_
+#define _MYHARDWAREINFO_H_
+
 #ifdef _WIN32
 typedef BOOL(WINAPI *LPFN_GLPI)(
 	PSYSTEM_LOGICAL_PROCESSOR_INFORMATION,
@@ -33,3 +36,4 @@ private:
 #endif
 };
 
+#endif

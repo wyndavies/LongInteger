@@ -8,6 +8,7 @@
 
 #ifndef _UTILITYTYPES_H_
 #include "UtilityTypes.h"
+#include "LongInteger.h"
 
 #endif
 

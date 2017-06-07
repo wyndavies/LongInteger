@@ -1,6 +1,8 @@
+#ifdef _WIN32
 #include "stdafx.h"
+#endif
 #include "UtilityFunctions.h"
-#include "LongInteger.h"
+//#include "LongInteger.h"
 
 // Based on code by Roman Pasechnik for his PrimeSwing algorithm for calculating factorials
 // The code has been changed somewhat as it was originally meant for numbers held as 2's compliment.

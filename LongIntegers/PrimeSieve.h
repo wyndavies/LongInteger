@@ -3,9 +3,7 @@
 #ifndef _PRIMESIEVE_H_
 #define _PRIMESIEVE_H_
 
-#ifndef _UTILITYFUNCTIONS_H_
 #include "UtilityFunctions.h"
-#endif
 #ifdef _WIN32
 #include "stdafx.h"
 #endif
