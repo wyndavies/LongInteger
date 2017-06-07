@@ -44,15 +44,18 @@ If you are using a current version of GCC (tested with GCC 5.4 on Ubuntu) you ca
 -std=c++14 -pthread
 In NetBeans or Eclipse you can add these options by going to Project Properties -> Build -> C++ Compiler -> Additional Options
 
-If you are using an older version of GCC or a compiler that doesn't have C++14 support, but does have C++11 support then you need to set slightly different options. There is a small piece of code at the top of LongIntegers.h that adds a definition for make_unique<> if it detects that the compiler is running in C++11 mode. It turns out that is all that is missing for running under C++11.
+I've added a piece of code to the top of LongIntegers.h that adds a definition for 'make_unique<>' if it detects that the compiler doesn't support C++14, but does support C++11.
+This turned out to be all that was needed to allow the code to build on older compilers that only have C++11 support.
 Options for compiler with C++11 support:
 -std=c++11 -pthread
 
 From the command line:
 g++ -std=c++11 -pthread  main.cpp LongInteger.cpp MyHardwareInfo.cpp UtilityFunctions.cpp PrimeSieve.cpp PrimeSwing.cpp -o LongIntegerTest.exe
 
+The code will not work if the compiler does not support at least C++11.
 
 The C++11 code has been tested using GCC on a variety of Linux platforms. On Solaris I couldn't get an up-to-date version of GCC working, so I used Solaris Studio. This builds the code, but errors when it is running, claiming a pure virtual method has been called (but rather nicely doesn't point out what that method actually is). After leaping through a huge number of hoops I finally managed to get GCC 6.3 to build on Solaris and the code runs fine when built from the command line.
+
 Testing on OpenSUSE produced an odd outcome. It errors when I try to build from the command line (the errors are claiming all the standard library functions are missing, which is usually a sign that it doesn't support C++ 11), but when I build it from NetBeans - using GCC (and it is definately pointing at the same version) - it works just fine. So that is a puzzle. My command line options work on other brands of Linux so I dunno what is different.
 
 
