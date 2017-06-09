@@ -591,15 +591,16 @@ public:
 			// If this is + and rhs is -, then return -, else return +. So return opposite of bPositive flag
 			return !bPositive;
 		}
+		// Comparison with zero. If both are zero
 		if (rhs == 0) {
 			if (equalsZero()) {
-				return true;
-			} else {
 				return false;
+			} else {
+				return bPositive;
 			}
 		} else {
 			if (equalsZero()) {
-				return false;
+				return (rhs < 0);
 			}
 		}
 

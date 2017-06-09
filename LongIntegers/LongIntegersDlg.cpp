@@ -495,6 +495,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	CString writeString;
 	writeString.Format(L"Factorial 1 million - %d", duration);
 	timingsFile.WriteString(writeString);
+	timingsFile.Flush();
 
 
 

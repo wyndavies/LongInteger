@@ -2569,6 +2569,10 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 	}
 	else
 	{
+		if (liOne.size > 100000)
+		{
+			bool breakpoint = true;
+		}
 		QueueOfThreads<LongIntWrapper> *qot = LongIntWrapper::getQOT();
 		LongIntWrapper* liw0 = new LongIntWrapper;
 		LongIntWrapper* liw1 = new LongIntWrapper;
@@ -3560,9 +3564,13 @@ bool LongInteger::readFromFile(string& fileName)
 		end = inFile.tellg();
 		int fileSize = end - begin;
 
-		inFile.seekg(0, ios::beg);		byte* newData = new byte[fileSize];
+		inFile.seekg(0, ios::beg);
+		byte* newData = new byte[fileSize];
 		std::getline(inFile, strLine);
-		std::strcpy(newData, strLine.c_str());		assignByteArray(newData, fileSize);		inFile.close();		delete newData;
+		std::strcpy(newData, strLine.c_str());
+		assignByteArray(newData, fileSize);
+		inFile.close();
+		delete newData;
 	}
 	return returnflag;
 }
