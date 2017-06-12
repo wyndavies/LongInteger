@@ -445,6 +445,21 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	LongInteger li1, li2, li3, li4;
 
 	li1 = 1;
+	for (int i = 0; i < 4; i++)
+	{
+		li1 *= 123456789;
+	}
+	li2 = -1;
+	for (int i = 0; i < 10; i++)
+	{
+		li2 *= 987654321;
+	}
+	li3 = li1 * li2;
+	li4 = li3 / li2;
+	bool bResult = li4 == li1;
+	
+
+	li1 = 1;
 	li2 = -1;
 	for (int i = 0; i < 100; i++)
 	{
@@ -462,11 +477,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 			li4 = li3 / li1;
 			if (li4 != li2)
 			{
-				li4 *= -1;
-				if (li4 != li2)
-				{
-					int breakpoint = 1;
-				}
+				int breakpoint = 1;
 			}
 		}
 	}

@@ -1570,10 +1570,20 @@ bool LongInteger::DivAndMod(const LongInteger& liValue, const LongInteger& liDiv
 		return !bSuccess;
 	}
 
+	LongInteger liDivCopy = liDivide;
+	LongInteger liValueCopy = liValue;
+
+	// Turn the calculation into a +ve dividing a +ve and also work out what the final sign will be
+	bool bFinal = !(liValue.bPositive ^ liDivide.bPositive);
+	liDivCopy.bPositive = true;
+	liValueCopy.bPositive = true;
+
+
 	// If the value is large and the divisor is at least half the size of the value, then Burnikel-Zeigler division is quicker
-	if (liValue.size > BURKINELZIEGLERCUTOFF) {
-		if (liDivide.size > ((liValue.size * 4) / 5)) {
-			BurnikelZiegler(liValue, liDivide, upliQuotient, upliModulus);
+	if (liValueCopy.size > BURKINELZIEGLERCUTOFF) {
+		if (liDivCopy.size > ((liValueCopy.size * 4) / 5)) {
+			BurnikelZiegler(liValueCopy, liDivCopy, upliQuotient, upliModulus);
+			upliQuotient->bPositive = bFinal;
 			return bSuccess;
 		}
 		else {
@@ -1583,7 +1593,7 @@ bool LongInteger::DivAndMod(const LongInteger& liValue, const LongInteger& liDiv
 			// Then multiply the original quotient by the "buffed" amount and add the new quotient
 			// This seems like a lot of work, but it is quicker
 
-			UINT uIncrement = liValue.size - liDivide.size;
+			UINT uIncrement = liValueCopy.size - liDivCopy.size;
 			if (uIncrement <= 2) {
 				uIncrement = 2;
 			}
@@ -1591,12 +1601,12 @@ bool LongInteger::DivAndMod(const LongInteger& liValue, const LongInteger& liDiv
 				uIncrement /= 2;
 			}
 
-			LongInteger liNewDivide = liDivide;
+			LongInteger liNewDivide = liDivCopy;
 			LongInteger liOffset = uIncrement;
 			liOffset *= LongInteger::BASEVALBITS;
 			liNewDivide <<= liOffset;
 
-			DivAndMod(liValue, liNewDivide, upliQuotient, upliModulus);
+			DivAndMod(liValueCopy, liNewDivide, upliQuotient, upliModulus);
 
 			liNewDivide.bitshiftright(liOffset);
 			LongIntegerUP upliNewQuotient = make_unique<LongInteger>(0);
@@ -1606,6 +1616,8 @@ bool LongInteger::DivAndMod(const LongInteger& liValue, const LongInteger& liDiv
 			upliQuotient->bitshiftleft(liOffset);
 			*upliQuotient += *upliNewQuotient;
 			upliModulus = move(upliNewModulus);
+			// Set the correct sign
+			upliQuotient->bPositive = bFinal;
 
 			return bSuccess;
 		}
@@ -1613,14 +1625,10 @@ bool LongInteger::DivAndMod(const LongInteger& liValue, const LongInteger& liDiv
 
 	// Use a LongInteger for the subtractor as the number could potentially end up being very large
 	LongInteger liNumOfSubtractions = 1;
-	LongInteger liSubtractor = liDivide;
-	LongInteger liWorkingMod = liValue;
 	LongInteger liWorkingQuot = 0;
+	LongInteger liSubtractor = liDivCopy;
+	LongInteger liWorkingMod = liValueCopy;
 
-	// Turn the calculation into a +ve dividing a +ve and also work out what the final sign will be
-	bool bFinal = !(liWorkingMod.bPositive ^ liDivide.bPositive);
-	liSubtractor.bPositive = true;
-	liWorkingMod.bPositive = true;
 
 	// multiply the divisor by 256 until the size is the same as the target.
 	// Subtract until the divider is greater than the target.
