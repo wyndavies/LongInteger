@@ -1559,9 +1559,11 @@ bool LongInteger::DivAndMod(const LongInteger& liValue, const LongInteger& liDiv
 		return !bSuccess;
 
 	// Compare sizes
-	// If the divisor is bigger than the number being divided then result is zero (we don't have decimals or fractions)
+	// If the divisor is bigger than the number being divided then result is zero and the modulus is the value
 	if (liDivide.size > liValue.size) {
-		return !bSuccess;
+		upliQuotient = make_unique<LongInteger>(0);
+		upliModulus = make_unique<LongInteger>(liValue);
+		return bSuccess;
 	}
 	// Don't divide by zero
 	if (liDivide.equalsZero()) {
@@ -3253,12 +3255,12 @@ vector<LongIntegerUP> LongInteger::DivThreeHalvesByTwo(LongIntegerUP& a2, LongIn
 		else {
 			// In some scenarios R can end up massively negative, so make B a lot bigger
 			if (R->size < B->size) {
-				// This can happen in rare cases
+				// If B is already bigger than R then just add it to R to make R positive
 				*R += *B;
 				(*Q)--;
 			}
 			else {
-				UINT uDiff = uDiff = R->size - B->size;
+				UINT uDiff = R->size - B->size;
 				uDiff *= BASEVALBITS;
 				// Try to get the exact number of bits different
 				int uDiffBits = R->digits[(R->size - 1)] / B->digits[(B->size - 1)];
@@ -3268,11 +3270,7 @@ vector<LongIntegerUP> LongInteger::DivThreeHalvesByTwo(LongIntegerUP& a2, LongIn
 				}
 				if (uDiff > 0)
 					uDiff--;
-				if (B->size == 53) {
-					if (B->digits[52] == 3) {
-						int breakpointint = 0;
-					}
-				}
+				
 				*R += (*B << uDiff);
 				*Q -= (LongInteger(1) << uDiff);
 			}

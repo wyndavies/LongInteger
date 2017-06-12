@@ -440,44 +440,36 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// So each step involves working out the one below.
 	// 2||||2 -> 2|(2|||2) -> 2|(2|(2||2)) -> 2|(2|(2|(2|2)))
 
-	// Lets have a test of the natural logarithm with the new amazing 10,000 digit guess at e
-/*	LongInteger logResult = LongInteger::ln(2); // Should be zero
-	CString strLogResult = logResult.toDecimal();
-	logResult = LongInteger::ln(4); // 1
-	strLogResult = logResult.toDecimal();
-	logResult = LongInteger::ln(10); // 2
-	strLogResult = logResult.toDecimal();
-	logResult = LongInteger::ln(20); // 2
-	strLogResult = logResult.toDecimal();
-	logResult = LongInteger::ln(21); // 3
-	strLogResult = logResult.toDecimal();
-	logResult = LongInteger::ln(100); // 4
-	strLogResult = logResult.toDecimal();
-	logResult = LongInteger::ln(1000); // 6
-	strLogResult = logResult.toDecimal();
-	logResult = LongInteger::ln(10000); // 9
-	strLogResult = logResult.toDecimal();
-	logResult = LongInteger::ln(100000); // 11
-	strLogResult = logResult.toDecimal();
-	logResult = LongInteger::ln(1000000); // 13
-	strLogResult = logResult.toDecimal();
-*/
 
+	// Some division tests
+	LongInteger li1, li2, li3, li4;
 
-
-
-	// Test the new int comparisons
-	LongInteger ten = 10;
-	bool bComp;
-	bComp = ten == ten;
-	bComp = (ten == 9) | (9 == ten); // false
-	bComp = (ten == 10) & (10 == ten); // true
-	bComp = (ten != 9) & (9 != ten); // true
-	bComp = (ten < 9) | (9 > ten); // false
-	bComp = (ten > 9) & (9 < ten); // true
-	bComp = (ten <= 9) | (9 >= ten); // false
-	bComp = (ten >= 9) & (9 <= ten); // true
-
+	li1 = 1;
+	li2 = -1;
+	for (int i = 0; i < 100; i++)
+	{
+		li1 *= 123456789;
+		li2 = -1;
+		for (int j = 0; j < 100; j++)
+		{
+			li2 *= 987654321;
+			li3 = li1 * li2;
+			li4 = li3 / li2;
+			if (li4 != li1)
+			{
+				int breakpoint = 1;
+			}
+			li4 = li3 / li1;
+			if (li4 != li2)
+			{
+				li4 *= -1;
+				if (li4 != li2)
+				{
+					int breakpoint = 1;
+				}
+			}
+		}
+	}
 
 
 
@@ -782,4 +774,3 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	m_OutputNumber.SetWindowTextW(m_longInt.toDecimal());
 
 }
-

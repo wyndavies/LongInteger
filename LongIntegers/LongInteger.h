@@ -406,6 +406,7 @@ public:
 
 		bool bLessThan = false;
 		bool bLoop = true;
+		bool bEquals = false;
 		// Some amendments as the index is now a UINT and thus we can't go negative
 		if (size > 0) {
 			UINT index = size - 1;
@@ -425,9 +426,19 @@ public:
 			if (digits[0] < rhs.digits[0]) {
 				bLessThan = true;
 			}
+			else if (digits[0] == rhs.digits[0])
+			{
+				// Added extra test as this was going wrong comparing negative numbers that were equal and returning true
+				bEquals = true;
+			}
 		}
 
-		return (bLessThan ^ !bPositive); // Return the opposite result if the numbers are negative
+		if (bEquals) {
+			return false;
+		}
+		else {
+			return (bLessThan ^ !bPositive); // Return the opposite result if the numbers are negative
+		}
 	}
 
 	inline bool operator>(const LongInteger& rhs) const {
@@ -485,7 +496,7 @@ public:
 		}
 		// There are enough comparisons to 1 to justify a dedicated short-cut test
 		if (rhs == 1) {
-			return(size == 1 && digits[0] == 1); 
+			return(size == 1 && digits[0] == 1 && bPositive);
 		}
 
 		if ((bPositive && rhs < 0) || (!bPositive && rhs >= 0)) {
@@ -596,11 +607,11 @@ public:
 			if (equalsZero()) {
 				return false;
 			} else {
-				return bPositive;
+				return !bPositive;
 			}
 		} else {
 			if (equalsZero()) {
-				return (rhs < 0);
+				return (rhs > 0);
 			}
 		}
 
@@ -619,6 +630,10 @@ public:
 		if (thisAsInt < (UINT)std::abs(rhs))
 		{
 			bLessThan = true;
+		}
+		else if (thisAsInt == (UINT)std::abs(rhs))
+		{
+			return false; // The return value for equal negative numbers was going wrong
 		}
 		return (bLessThan ^ !bPositive); // Return the opposite result if the numbers are negative
 	}
@@ -750,13 +765,13 @@ inline bool operator<(int lhs, const LongInteger& rhs) {
 	}
 	if (rhs.equalsZero()) {
 		if (lhs == 0) {
-			return true;
-		} else {
 			return false;
+		} else {
+			return (lhs < 0);
 		}
 	} else {
 		if (lhs == 0) {
-			return false;
+			return bPositive;
 		}
 	}
 
@@ -775,6 +790,10 @@ inline bool operator<(int lhs, const LongInteger& rhs) {
 	if ((UINT)std::abs(lhs) < thisAsInt)
 	{
 		bLessThan = true;
+	}
+	else if ((UINT)std::abs(lhs) == thisAsInt)
+	{
+		return false;
 	}
 	return (bLessThan ^ !bPositive); // Return the opposite result if the numbers are negative
 }
