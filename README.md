@@ -11,7 +11,7 @@ It supports:
 - Subtraction
 - Multiplication (uses Karatsuba algorithm. Toom-Cook3 algorithm. Multi-threading.)
 - Division (Burnikel/Ziegler algorithm)
-- Factorials (uses an adaption of Roman Pasachnik's Prime Swing algorithm ... still needs work as it uses too much memory)
+- Factorials (uses an adaption of Roman Pasachnik's Prime Swing algorithm)
 - Bitwise operations
 - Powers
 - Square Root (uses Babylonian algorithm - performance seems okayish)
@@ -30,6 +30,13 @@ QueueOfThreads.h
 QueueOfThreads.hpp
 ReceiveUpdateClass.h
 ReceiveUpdateClass.hpp
+PrimeSieve.h
+PrimeSieve.cpp
+PrimeSwing.h
+PrimeSwing.cpp
+UtilityFunctions.h
+UtilityFunctions.cpp
+UtilityTypes.h
 main.cpp (optional - you can design your own)
 
 
@@ -37,23 +44,24 @@ If you are using a current version of GCC (tested with GCC 5.4 on Ubuntu) you ca
 -std=c++14 -pthread
 In NetBeans or Eclipse you can add these options by going to Project Properties -> Build -> C++ Compiler -> Additional Options
 
-If you are using an older version of GCC or a compiler that doesn't have C++14 support, but does have C++11 support then you need to set slightly different options. There is a small piece of code at the top of LongIntegers.h that adds a definition for make_unique<> if it detects that the compiler is running in C++11 mode. It turns out that is all that is missing for running under C++11.
+I've added a piece of code to the top of LongIntegers.h that adds a definition for 'make_unique<>' if it detects that the compiler doesn't support C++14, but does support C++11.
+This turned out to be all that was needed to allow the code to build on older compilers that only have C++11 support.
 Options for compiler with C++11 support:
 -std=c++11 -pthread
 
 From the command line:
-g++ -std=c++11 -pthread  main.cpp LongInteger.cpp MyHardwareInfo.cpp -o LongIntegerTest.exe
+g++ -std=c++11 -pthread  main.cpp LongInteger.cpp MyHardwareInfo.cpp UtilityFunctions.cpp PrimeSieve.cpp PrimeSwing.cpp -o LongIntegerTest.exe
 
-The C++11 code has been tested using GCC on a variety of Linux platforms. On Solaris I couldn't get an up-to-date version of GCC working, so I used Solaris Studio. This builds the code, but errors when it is running, claiming a pure virtual method has been called (but rather nicely doesn't point out what that method actually is).
-Update on Solaris: worked out the objection it has is not to my code, but to the C++11 threading model. Great. I've build GCC 6.3 on a VM on my machine at home. When I can summon up the energy I'll test it out.
-Update2: Testing on OpenSUSE produced an odd outcome. It errors when I try to build from the command line (the errors are claiming all the standard library functions are missing, which is usually a sign that it doesn't support C++ 11), but when I build it from NetBeans - using GCC - it works just fine. So that is a puzzle. My command line options work on other brands of Linux so I dunno what is different.
+The code will not work if the compiler does not support at least C++11.
+
+The C++11 code has been tested using GCC on a variety of Linux platforms. On Solaris I couldn't get an up-to-date version of GCC working, so I used Solaris Studio. This builds the code, but errors when it is running, claiming a pure virtual method has been called (but rather nicely doesn't point out what that method actually is). After leaping through a huge number of hoops I finally managed to get GCC 6.3 to build on Solaris and the code runs fine when built from the command line.
+
+Testing on OpenSUSE produced an odd outcome. It errors when I try to build from the command line (the errors are claiming all the standard library functions are missing, which is usually a sign that it doesn't support C++ 11), but when I build it from NetBeans - using GCC (and it is definately pointing at the same version) - it works just fine. So that is a puzzle. My command line options work on other brands of Linux so I dunno what is different.
 
 
 ToDo:
-- Remove some remaining tests for UINTs being less than zero (legacy of when I was using ints for indexing)
-- Finish off the BZ division algorithm and integrate it into the standard division call
-    - Work out the exact point to switch between algorithms
-    - Work out the best stepping size to use when multiplying the divisor (when dividing a very large number by a number less than half
+- Work out the exact point to switch to the BZ division algorithm
+- Work out the best stepping size to use when multiplying the divisor (when dividing a very large number by a number less than half
     the size, it is quicker to multiply the divisor by a large factor, do the division and then multiply the quotient and divide the
     modulus, adding the remainder to the new quotient and using the new modulus as the final one. This sounds like a lot more work - and
     it is - but it is quicker. But is it quicker to multiply/divide the initial result by the whole offset amount, or use a smaller amount
@@ -75,3 +83,5 @@ Done:
 - Add factorial algorithm
 - Add square root function
 - Add square function (front-end to power algorithm which does pow(2))
+- Removed tests for UINTs being less than zero (legacy of when I was using ints for indexing)
+- Integrate the BZ division algorithm into the division code, switching to the appropriate algorithm based on the size of the numbers.
