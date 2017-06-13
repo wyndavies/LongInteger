@@ -3563,6 +3563,7 @@ bool LongInteger::readFromFile(string& fileName)
 	bool returnflag;
 	ifstream inFile(fileName, ios::in);
 	returnflag = inFile.is_open();
+	string strLine;
 	if (returnflag) {
 		std::streampos begin, end;
 		begin = inFile.tellg();
@@ -3573,7 +3574,7 @@ bool LongInteger::readFromFile(string& fileName)
 		inFile.seekg(0, ios::beg);
 		byte* newData = new byte[fileSize];
 		std::getline(inFile, strLine);
-		std::strcpy(newData, strLine.c_str());
+		std::strcpy((char*)newData, strLine.c_str());
 		assignByteArray(newData, fileSize);
 		inFile.close();
 		delete newData;

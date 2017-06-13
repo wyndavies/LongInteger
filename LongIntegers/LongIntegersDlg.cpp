@@ -444,20 +444,6 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// Some division tests
 	LongInteger li1, li2, li3, li4;
 
-	li1 = 1;
-	for (int i = 0; i < 4; i++)
-	{
-		li1 *= 123456789;
-	}
-	li2 = -1;
-	for (int i = 0; i < 10; i++)
-	{
-		li2 *= 987654321;
-	}
-	li3 = li1 * li2;
-	li4 = li3 / li2;
-	bool bResult = li4 == li1;
-	
 
 	li1 = 1;
 	li2 = -1;
@@ -472,12 +458,12 @@ void CLongIntegersDlg::OnClickedIdarrow()
 			li4 = li3 / li2;
 			if (li4 != li1)
 			{
-				int breakpoint = 1;
+				li4 = 10;
 			}
 			li4 = li3 / li1;
 			if (li4 != li2)
 			{
-				int breakpoint = 1;
+				li4 = 10;
 			}
 		}
 	}
@@ -559,213 +545,6 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	timingsFile.Close();
 
 	m_OutputNumber.SetWindowTextW(CString(L"1234567890"));
-
-	return;
-/*	LongInteger* whatdahell;
-	CStdioFile whatFile;
-	BOOL bSuccess = whatFile.Open(L"D:\\number.txt", CFile::modeRead);
-	CString* whatNumber = new CString;
-	bSuccess = whatFile.ReadString(*whatNumber);
-	whatFile.Close();
-	whatdahell = new LongInteger(*whatNumber);
-	LongInteger *wdh1, *wdh2, *wdh3, *wdh4;
-	wdh1 = new LongInteger();
-	wdh2 = new LongInteger();
-	wdh3 = new LongInteger();
-	wdh4 = new LongInteger();
-
-	*wdh1 = *whatdahell + *whatdahell;
-	*wdh2 = *wdh1 - *whatdahell;
-	*wdh3 = *whatdahell * *whatdahell;
-	*wdh4 = *wdh3 / *whatdahell;
-
-	delete whatNumber;
-	delete whatdahell;
-	delete wdh1;
-	delete wdh2;
-	delete wdh3;
-	delete wdh4;
-	*/
-
-	
-	LongInteger five, twentyfour, quotient, modulus;
-
-	five = 5;
-	twentyfour = 24;
-	LongInteger::DivAndMod(five, twentyfour, quotient, modulus);
-	CString quot = quotient.toDecimal();
-	CString modu = modulus.toDecimal();
-
-
-
-/*	LongInteger unsquared = CString(L"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
-	LongInteger squared = LongInteger::sqr(unsquared);
-	LongInteger squareroot = LongInteger::sqrt(squared);
-	bool squareworks = unsquared == squareroot;
-	squared--;
-	squareroot = LongInteger::sqrt(squared);
-	squareworks = (unsquared - 1) == squareroot;
-	*/
-
-
-	PrimeSwing ps;
-	LongInteger liPSResult;
-	LongInteger liPSResultli;
-	LongInteger liFactorial;
-	CString psResult;
-	bool psWorked, psWorked2;
-	CString psAnswer[] = { L"1", L"1", L"2", L"6", L"24", L"120", L"720", L"5040", L"40320", L"362880", L"3628800",
-		L"39916800", L"479001600", L"6227020800", L"87178291200", L"1307674368000", L"20922789888000", L"355687428096000", L"6402373705728000", L"121645100408832000", L"2432902008176640000",
-		L"51090942171709440000", L"1124000727777607680000", L"25852016738884976640000", L"620448401733239439360000", L"15511210043330985984000000", L"403291461126605635584000000", L"10888869450418352160768000000", L"304888344611713860501504000000", L"8841761993739701954543616000000", L"265252859812191058636308480000000",
-		L"8222838654177922817725562880000000", L"263130836933693530167218012160000000", L"8683317618811886495518194401280000000", L"295232799039604140847618609643520000000", L"10333147966386144929666651337523200000000", L"371993326789901217467999448150835200000000", L"13763753091226345046315979581580902400000000", L"523022617466601111760007224100074291200000000", L"20397882081197443358640281739902897356800000000", L"815915283247897734345611269596115894272000000000"
-	};
-
-	for (int i = 1; i < 41; i++)
-	{
-		liPSResult = ps.Factorial(i);
-		liPSResultli = ps.Factorial(LongInteger(i));
-		psResult = liPSResult.toDecimal();
-
-		psWorked = psResult == psAnswer[i];
-		psWorked2 = liPSResultli == liPSResult;
-		if (!(psWorked && psWorked2))
-		{
-			CString failed = L"failed";
-			CString psAns = psAnswer[i];
-			CString difference = (LongInteger(psAns) / LongInteger(psResult)).toDecimal();
-		}
-		liFactorial = LongInteger::factorial(i);
-		psWorked = liPSResult == liFactorial;
-		if (!psWorked)
-		{
-			CString failed = L"failed";
-		}
-	}
-
-
-/*	for (int i = 1000; i < 10001; i+=1000)
-	{
-		liPSResult = i;
-		liPSResult.factorial();
-		liFactorial = LongInteger::factorial(i);
-
-		psWorked = liPSResult == liFactorial;
-		if (!(psWorked))
-		{
-			CString failed = L"failed";
-			CString oldStyleFactorial = liPSResult.toDecimal();
-			CString internalCalced = liFactorial.toDecimal();
-		}
-	}
-*/
-
-
-//	liFactorial = LongInteger::factorial(1000000);
-
-//	liFactorial.writeToFile(CString(L"D:\\factorial.txt"));
-	
-	//m_OutputNumber.SetWindowTextW(liFactorial.toDecimal());
-
-	return;
-
-	LongInteger::KARATSUBACUTOFF = 50;
-	LongInteger::TOOMCOOK3CUTOFF = 100;
-
-	// Test the factorial function
-	LongInteger liFactorialMax = 100;
-	LongInteger liResult;
-	CString result;
-	for (LongInteger i = 0; i < liFactorialMax; i++)
-	{
-		liResult = i;
-		liResult.factorial();
-		result = liResult.toDecimal();
-	}
-
-
-	return;
-
-
-	// Some tests for multiplication
-	LongInteger liVal1, liVal2, liResult1, liResult2, liResult3;
-
-
-	CStdioFile myFile;
-	//BOOL bSuccess = myFile.Open(L"D:\\result.txt", CFile::modeCreate | CFile::modeWrite);
-
-	// Test the different types of multiplication.
-	// Although the Karatsuba algorithm is part of multiplication, we can effectively disable it by setting the
-	// cutoff to a value greater than the number of digits in the numbers involved
-	
-	for (UINT i = 100; i < 10000; i += 100)
-	{
-		// The size of the numbers being multiplied is i
-
-		// Create the numbers
-		byte* tempArray = new byte[i];
-		for (UINT z = 0; z < i; z++)
-		{
-			tempArray[z] = 100;
-		}
-		liVal1.assignByteArray(tempArray, i);
-		liVal2.assignByteArray(tempArray, i); // This is fine as the method copies the byte array
-		delete tempArray;
-
-		for (UINT j = 5; j < (i / 10); j+=5)
-		{
-			// j is the cutoff point for the algorithms
-
-			// First we do long multiplication
-			LongInteger::KARATSUBACUTOFF = 1000000;
-
-			auto divStart = std::chrono::high_resolution_clock::now();
-
-			liResult1 = liVal1 * liVal2;
-
-			auto divEnd = std::chrono::high_resolution_clock::now();
-			auto rawduration = divEnd - divStart;
-			std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
-			CString writeString;
-			writeString.Format(L"%d,%d,Long,%d,", i, j, duration);
-			myFile.WriteString(writeString);
-
-			// Now for Karatsuba
-			LongInteger::KARATSUBACUTOFF = j;
-			divStart = std::chrono::high_resolution_clock::now();
-			liResult2 = liVal1 * liVal2;
-			divEnd = std::chrono::high_resolution_clock::now();
-			rawduration = divEnd - divStart;
-			duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
-			writeString.Format(L"%d,%d,Karatsuba,%d,", i, j, duration);
-			myFile.WriteString(writeString);
-
-			// Now for ToomCook3
-			LongInteger::KARATSUBACUTOFF = 1000000; // Disable it to simplify matters
-			LongInteger::TOOMCOOK3CUTOFF = j;
-			divStart = std::chrono::high_resolution_clock::now();
-			liResult3 = LongInteger::ToomCook3(liVal1, liVal2);
-			divEnd = std::chrono::high_resolution_clock::now();
-			rawduration = divEnd - divStart;
-			duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
-
-			// Check that everything is all happiness and light
-			bool bWorked;
-			bWorked = liResult1 == liResult2;
-			bWorked &= (liResult1 == liResult3);
-			if (!bWorked)
-			{
-				int debugpointint = 0;
-			}
-
-			writeString.Format(L"%d,%d,TC3,%d", i, j, duration);
-
-			myFile.WriteString(writeString);
-			writeString = L"\n";
-			myFile.WriteString(writeString);
-		}
-	}
-
-	myFile.Close();
 
 	return;
 
