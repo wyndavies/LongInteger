@@ -446,14 +446,16 @@ void CLongIntegersDlg::OnClickedIdarrow()
 
 
 	li1 = 1;
-	li2 = -1;
+	li2 = 1;
+	LongInteger li1Multiplier = CString(L"-1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
+	LongInteger li2Multiplier = CString(L"-0987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321");
 	for (int i = 0; i < 100; i++)
 	{
-		li1 *= 123456789;
-		li2 = -1;
+		li1 *= li1Multiplier;
+		li2 = 1;
 		for (int j = 0; j < 100; j++)
 		{
-			li2 *= 987654321;
+			li2 *= li2Multiplier;
 			li3 = li1 * li2;
 			li4 = li3 / li2;
 			if (li4 != li1)

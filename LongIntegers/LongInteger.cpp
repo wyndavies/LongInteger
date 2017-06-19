@@ -40,16 +40,6 @@ void LongInteger::init() {
 	maxSize = MINSIZE;
 	reset();
 
-/*	if (!TriedToReadE)
-	{
-		TriedToReadE = true;
-		// Set the default values
-		LongInteger::E = CString(L"215364474464724850177511348352"); // approx value of e * (256^12)
-		LongInteger::SIZEOFE = 12;
-		// Then try to read from file
-		ReadEFromFile(L"D:\\einhex.txt");
-	}
-	*/
 }
 
 void LongInteger::reset() {
@@ -2579,10 +2569,6 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 	}
 	else
 	{
-		if (liOne.size > 100000)
-		{
-			bool breakpoint = true;
-		}
 		QueueOfThreads<LongIntWrapper> *qot = LongIntWrapper::getQOT();
 		LongIntWrapper* liw0 = new LongIntWrapper;
 		LongIntWrapper* liw1 = new LongIntWrapper;
