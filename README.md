@@ -54,7 +54,26 @@ g++ -std=c++11 -pthread  main.cpp LongInteger.cpp MyHardwareInfo.cpp UtilityFunc
 
 The code will not work if the compiler does not support at least C++11.
 
-The C++11 code has been tested using GCC on a variety of Linux platforms. On Solaris I couldn't get an up-to-date version of GCC working, so I used Solaris Studio. This builds the code, but errors when it is running, claiming a pure virtual method has been called (but rather nicely doesn't point out what that method actually is). After leaping through a huge number of hoops I finally managed to get GCC 6.3 to build on Solaris and the code runs fine when built from the command line.
+The C++11 code has been tested using GCC on a variety of Linux platforms. On Solaris I couldn't get an up-to-date version of GCC working, so I tried Solaris Studio. This builds the code, but errors when it is running, claiming a pure virtual method has been called (but rather nicely doesn't point out what that method actually is). After leaping through a huge number of hoops I finally managed to get GCC 6.3 to build on Solaris and the code runs fine when built from the command line.
+
+How to get GCC 6.3 built on Solaris:
+I reckon this is useful info as it took quite some time to find the correct process. Final method was taken from StackOverflow, but I've forgotten the link.
+First go to PackageManager and install the standard GCC option, which will probably be 5.4.
+Download and extract GCC 6.3 source code into a folder somewhere. I used /opt/gcc/
+Run the following:
+cd /opt/gcc
+./contrib/download_prerequisites
+cd ..
+mkdir objdir
+cd objdir
+$PWD/../gcc/configure --prefix=/opt/gcc 
+gmake
+gmake install
+
+Note that 'gmake' will probably take several hours. Don't use the -j option to run multiple jobs as this ends up erroring.
+
+After 'gmake install' has finished add /opt/gcc/bin to the PATH variable in the .profile file in your home folder. Put it before /usr/bin so it doesn't read the older version of GCC you used to build the 6.3 version.
+
 
 Testing on OpenSUSE produced an odd outcome. It errors when I try to build from the command line (the errors are claiming all the standard library functions are missing, which is usually a sign that it doesn't support C++ 11), but when I build it from NetBeans - using GCC (and it is definately pointing at the same version) - it works just fine. So that is a puzzle. My command line options work on other brands of Linux so I dunno what is different.
 
