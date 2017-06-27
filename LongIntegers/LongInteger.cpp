@@ -11,7 +11,7 @@
 
 #include <functional>
 
-#if defined(__sun) && defined(__SVR4)
+#ifndef _WIN32
 #include <cmath>
 #endif
 
@@ -1957,7 +1957,10 @@ bool LongInteger::bitwiseand(const LongInteger& liAnd) {
 	// 
 	// Loop through each byte in the digits array and AND them
 	if (size <= 0 || liAnd.size <= 0)
+	{
+		reset(); // anything AND zero is zero
 		return bOverflow;
+	}
 
 	UINT numLoops = (size > liAnd.size ? size : liAnd.size);
 
@@ -2005,7 +2008,7 @@ bool LongInteger::bitwiseor(const LongInteger& liOR) {
 	// OR this with liOR
 	// 
 	// Loop through each byte in the digits array and OR them
-	if (size <= 0 || liOR.size <= 0)
+	if (size <= 0 || liOR.size <= 0) // Anything OR zero is itself
 		return bOverflow;
 
 	// Don't want to overflow either of the numbers' internal byte arrays
@@ -2080,7 +2083,7 @@ bool LongInteger::bitwisexor(const LongInteger& liXOR) {
 	// XOR this with liXOR
 	// 
 	// Loop through each byte in the digits array and XOR them
-	if (size <= 0 || liXOR.size <= 0)
+	if (size <= 0 || liXOR.size <= 0) // Anything XOR zero is itself
 		return bOverflow;
 
 	// Don't want to overflow either of the numbers' internal byte arrays
@@ -2099,7 +2102,7 @@ bool LongInteger::bitwisexor(const LongInteger& liXOR) {
 	if (size < liXOR.size) {
 		for (UINT i = size; i < liXOR.size; i++) {
 			while (i >= maxSize) increaseSize();
-			digits[i] = liXOR.digits[i]; // Anything OR zero is itself
+			digits[i] = liXOR.digits[i]; // Anything XOR zero is itself
 			size++;
 		}
 	}

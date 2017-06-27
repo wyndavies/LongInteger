@@ -66,14 +66,14 @@ BOOL CLongIntegersDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
-	// TODO: Add extra initialization here
+									// TODO: Add extra initialization here
 	int stuffsize = 1000000;
 	m_RichEdit1.LimitText(stuffsize);
 	m_RichEdit2.LimitText(stuffsize);
 	m_OutputNumber.LimitText(stuffsize);
 
 	m_longInt.setProcessing(false);
-//	m_longInt.setShuttingDown(false);
+	//	m_longInt.setShuttingDown(false);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -138,7 +138,7 @@ void CLongIntegersDlg::OnBnClickedCancel()
 	while (m_longInt.isProcessing())
 	{
 		Sleep(100);
-//		::WaitForSingleObject(m_longInt.getProcessingHandle(), INFINITE);
+		//		::WaitForSingleObject(m_longInt.getProcessingHandle(), INFINITE);
 	}
 
 	// This exits, so that is good. Don't have to create any special code.
@@ -217,7 +217,7 @@ void CLongIntegersDlg::OnClickedIdmultiply()
 		// Do the processing in the background
 		m_longInt.setProcessing(true);
 		AfxBeginThread(CLongIntegersDlg::StartMultWork, reinterpret_cast<LPVOID>(this));
-//		m_longInt.setProcessing(true, AfxBeginThread(CLongIntegersDlg::StartMultWork, reinterpret_cast<LPVOID>(this)));
+		//		m_longInt.setProcessing(true, AfxBeginThread(CLongIntegersDlg::StartMultWork, reinterpret_cast<LPVOID>(this)));
 	}
 }
 
@@ -283,7 +283,7 @@ void CLongIntegersDlg::OnClickedIddivide()
 	{
 		m_longInt.setProcessing(true);
 		AfxBeginThread(CLongIntegersDlg::StartDivWork, reinterpret_cast<LPVOID>(this));
-//		m_longInt.setProcessing(true, AfxBeginThread(CLongIntegersDlg::StartDivWork, reinterpret_cast<LPVOID>(this)));
+		//		m_longInt.setProcessing(true, AfxBeginThread(CLongIntegersDlg::StartDivWork, reinterpret_cast<LPVOID>(this)));
 	}
 }
 
@@ -316,7 +316,7 @@ void CLongIntegersDlg::OnClickedIdpower()
 	if (!m_longInt.isProcessing()) {
 		m_longInt.setProcessing(true);
 		AfxBeginThread(CLongIntegersDlg::StartPowerWork, reinterpret_cast<LPVOID>(this));
-//		m_longInt.setProcessing(true, m_procthread = AfxBeginThread(CLongIntegersDlg::StartPowerWork, reinterpret_cast<LPVOID>(this)));
+		//		m_longInt.setProcessing(true, m_procthread = AfxBeginThread(CLongIntegersDlg::StartPowerWork, reinterpret_cast<LPVOID>(this)));
 	}
 }
 
@@ -370,7 +370,7 @@ CString Divit(LongInteger& liBigNumber)
 			UINT temp = power / 2;
 			if (temp * 2 != power) {
 				bList.push_back(true);
-			} 
+			}
 			else {
 				bList.push_back(false);
 			}
@@ -440,111 +440,59 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// So each step involves working out the one below.
 	// 2||||2 -> 2|(2|||2) -> 2|(2|(2||2)) -> 2|(2|(2|(2|2)))
 
+	// Possible bug found
+	LongInteger liMinus1 = -1;
+	LongInteger liMinus2 = -2;
+	bool bAnswer;
+	bAnswer = liMinus1 < liMinus2;
+
+
+
+
+
 
 	// Some division tests
-	LongInteger li1, li2, li3, li4;
+	MyHardwareInfo mhi;
+
+	CString answer;
+
+	answer = L"Hello there";
+	answer.Format(L"I can see %d logical cores and %d physical cores", mhi.GetLogicalCores(), mhi.GetPhysicalCores());
+
+	LongInteger value1 = 10; // Test initialising with an int
+	answer.Format(L"Initialising with an int value of 10 gives : %s", value1.toDecimal());
+	LongInteger value2(CString(L"10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"));
+	answer.Format(L"Initialising with a string value of 10e100 gives : %s", value2.toDecimal());
+	LongInteger value3(CString(L"10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"));
+	LongInteger value4(value3);
+	value1 = value2 + value3;
+	answer.Format(L"10e100 + 10e100 = %d", value1.toDecimal());
+	value1 = value2 - value3;
+	answer.Format(L"10e100 - 10e100 = %d", value1.toDecimal());
+	value1 = value2 * value3;
+	answer.Format(L"10e100 * 10e100 = %d", value1.toDecimal());
+	value1 = value2 / value3;
+	answer.Format(L"10e100 / 10e100 = %d", value1.toDecimal());
 
 
-	li1 = 1;
-	li2 = 1;
-	LongInteger li1Multiplier = CString(L"-1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
-	LongInteger li2Multiplier = CString(L"-0987654321098765432109876543210987654321098765432109876543210987654321098765432109876543210987654321");
-	for (int i = 0; i < 100; i++)
+	value1 = value2;
+	LongInteger arrayOfLI[15];
+	arrayOfLI[0] = value1;
+	int loopTimes = 14;
+	answer.Format(L"Multiplying 10e100 by itself %d times", loopTimes);
+	for (int i = 0; i < loopTimes; i++)
 	{
-		li1 *= li1Multiplier;
-		li2 = 1;
-		for (int j = 0; j < 100; j++)
-		{
-			li2 *= li2Multiplier;
-			li3 = li1 * li2;
-			li4 = li3 / li2;
-			if (li4 != li1)
-			{
-				li4 = 10;
-			}
-			li4 = li3 / li1;
-			if (li4 != li2)
-			{
-				li4 = 10;
-			}
-		}
+		value1 *= value1;
+		arrayOfLI[i + 1] = value1;
+		answer.Format(L"value1 is %d digits in size", value1.getSize());
 	}
 
-
-
-	CStdioFile timingsFile;
-	BOOL bSuccess = timingsFile.Open(L"D:\\timings.txt", CFile::modeCreate | CFile::modeWrite);
-
-
-	LongInteger* whatdahell = new LongInteger;
-
-	auto opStart = std::chrono::high_resolution_clock::now();
-	*whatdahell = LongInteger::factorial(1000000);
-	auto opEnd = std::chrono::high_resolution_clock::now();
-	auto rawduration = opEnd - opStart;
-	std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
-	CString writeString;
-	writeString.Format(L"Factorial 1 million - %d", duration);
-	timingsFile.WriteString(writeString);
-	timingsFile.Flush();
-
-
-
-	LongInteger* liAdd = new LongInteger;
-	LongInteger* liMinus = new LongInteger;
-	LongInteger* liMultiply = new LongInteger;
-	LongInteger* liDivide = new LongInteger;
-
-	opStart = std::chrono::high_resolution_clock::now();
-	*liDivide = *whatdahell / LongInteger(CString(L"1234567890123456789012345678901234567890"));
-	opEnd = std::chrono::high_resolution_clock::now();
-	rawduration = opEnd - opStart;
-	duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
-	writeString.Format(L"Div 1million! by 40 digits - %d", duration);
-	timingsFile.WriteString(writeString);
-
-	opStart = std::chrono::high_resolution_clock::now();
-	*liAdd = *whatdahell + *whatdahell;
-	opEnd = std::chrono::high_resolution_clock::now();
-	rawduration = opEnd - opStart;
-	duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
-	writeString.Format(L"1million! add - %d", duration);
-	timingsFile.WriteString(writeString);
-
-	opStart = std::chrono::high_resolution_clock::now();
-	*liMinus = *liAdd - *whatdahell;
-	opEnd = std::chrono::high_resolution_clock::now();
-	rawduration = opEnd - opStart;
-	duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
-	writeString.Format(L"1million! minus - %d", duration);
-	timingsFile.WriteString(writeString);
-
-
-	opStart = std::chrono::high_resolution_clock::now();
-	*liMultiply = *whatdahell * *whatdahell;
-	opEnd = std::chrono::high_resolution_clock::now();
-	rawduration = opEnd - opStart;
-	duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
-	writeString.Format(L"1million! times - %d", duration);
-	timingsFile.WriteString(writeString);
-
-
-	opStart = std::chrono::high_resolution_clock::now();
-	*liDivide = *liMultiply / *whatdahell;
-	opEnd = std::chrono::high_resolution_clock::now();
-	rawduration = opEnd - opStart;
-	duration = std::chrono::duration_cast<std::chrono::milliseconds>(rawduration);
-	writeString.Format(L"1million! squared div 1million! - %d", duration);
-	timingsFile.WriteString(writeString);
-
-	delete liAdd;
-	delete liMinus;
-	delete liMultiply;
-	delete liDivide;
-	delete whatdahell;
-
-
-	timingsFile.Close();
+	answer.Format(L"Dividing the result by 10e10 %d times", loopTimes);
+	for (int i = loopTimes; i > 0; i--)
+	{
+		value1 /= arrayOfLI[i - 1];
+		answer.Format(L"value1 is %d digits in size", value1.getSize());
+	}
 
 	m_OutputNumber.SetWindowTextW(CString(L"1234567890"));
 
