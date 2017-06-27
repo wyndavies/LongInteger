@@ -56,23 +56,48 @@ The code will not work if the compiler does not support at least C++11.
 
 The C++11 code has been tested using GCC on a variety of Linux platforms. On Solaris I couldn't get an up-to-date version of GCC working, so I tried Solaris Studio. This builds the code, but errors when it is running, claiming a pure virtual method has been called (but rather nicely doesn't point out what that method actually is). After leaping through a huge number of hoops I finally managed to get GCC 6.3 to build on Solaris and the code runs fine when built from the command line.
 
-How to get GCC 6.3 built on Solaris:
-I reckon this is useful info as it took quite some time to find the correct process. Final method was taken from StackOverflow, but I've forgotten the link.
-First go to PackageManager and install the standard GCC option, which will probably be 5.4.
-Download and extract GCC 6.3 source code into a folder somewhere. I used /opt/gcc/
-Run the following:
-cd /opt/gcc
-./contrib/download_prerequisites
-cd ..
-mkdir objdir
-cd objdir
-$PWD/../gcc/configure --prefix=/opt/gcc 
-gmake
-gmake install
+-----------------
+How to install GCC 6.3 on Solaris.<br>
+The GCC builds available via the package manager are rather old and don't properly support C++14.<br>
+Warning - this requires over 10Gb free working space during the build, though most of this can be removed afterwards.<br>
+So to get GCC 6.3 running, first install any old GCC from the package manager so you have a C and C++ compiler and linker.
+Extract gcc source code into a folder somewhere where you have full access permissions. Example assumes you are using /opt/gcc/
+Then type the following at a terminal:<br>
+cd /opt/gcc<br>
+./contrib/download_prerequisites<br>
+cd ..<br>
+mkdir objdir<br>
+cd objdir<br>
+$PWD/../gcc/configure --prefix=/opt/gcc <br>
+gmake (and wait for several days as it compiles)<br>
+gmake install<br>
 
-Note that 'gmake' will probably take several hours. Don't use the -j option to run multiple jobs as this ends up erroring.
+Afterwards the objdir directory can be deleted as can all directories bar 6 in the gcc directory.
+The 6 sub-directories to keep are:<br>
+gcc/bin<br>
+gcc/include<br>
+gcc/lib<br>
+gcc/lib32<br>
+gcc/lib64<br>
+gcc/libexec<br>
 
-After 'gmake install' has finished add /opt/gcc/bin to the PATH variable in the .profile file in your home folder. Put it before /usr/bin so it doesn't read the older version of GCC you used to build the 6.3 version.
+Remove the older version of GCC via the package manager.
+Include the gcc/bin path in your working path and you will have access to a compiler that can build C++14 code.<br>
+Test this by typing 'gcc --version' at the console.
+
+For other platforms it should be the same process.
+
+Differences for Ubuntu:<br>
+sudo apt-get install gcc-multilib (if Ubuntu complains about no 32-bit libraries when using configure)<br>
+'make' instead of 'gmake'<br>
+Then...<br>
+Edit .bashrc in the home directory and add these 2 lines to the end:<br>
+LD_LIBRARY_PATH=/opt/gcc/lib:/opt/gcc/lib32:/opt/gcc/lib64:/lib:/usr/lib:/usr/local/lib<br>
+export LD_LIBRARY_PATH<br>
+
+For some reason on Solaris it worked fine without any configuration changes and seemed to be getting the right libraries.
+----------------
+
 
 
 Testing on OpenSUSE produced an odd outcome. It errors when I try to build from the command line (the errors are claiming all the standard library functions are missing, which is usually a sign that it doesn't support C++ 11), but when I build it from NetBeans - using GCC (and it is definately pointing at the same version) - it works just fine. So that is a puzzle. My command line options work on other brands of Linux so I dunno what is different.
