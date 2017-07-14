@@ -1,5 +1,13 @@
 #ifdef _WIN32
 #include "stdafx.h"
+#else
+#include <cstdlib>#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <vector>
+using std::string;
+using std::ifstream;
 #endif
 #include "MyHardwareInfo.h"
 
@@ -18,6 +26,10 @@ MyHardwareInfo::~MyHardwareInfo()
 
 }
 
+int MyHardwareInfo::GetCPUCount()
+{
+	return mCPUs;
+}
 
 int MyHardwareInfo::GetPhysicalCores()
 {
@@ -144,8 +156,27 @@ int MyHardwareInfo::init()
 
 	free(buffer);
 
+	mCPUs = processorPackageCount;
 	mPhysicalCores = processorCoreCount;
 	mLogicalCores = logicalProcessorCount;
+#elif MACOS
+	// This gets the number of logical cores on a MAC. Don't currently know
+	// how to destinguish between logical and physical cores.
+	// No clue if this works as I don't have a MAC to test it on
+	int nm[2];
+	size_t len = 4;
+	uint32_t count;
+
+	nm[0] = CTL_HW; nm[1] = HW_AVAILCPU;
+	sysctl(nm, 2, &count, &len, NULL, 0);
+
+	if (count < 1) {
+		nm[1] = HW_NCPU;
+		sysctl(nm, 2, &count, &len, NULL, 0);
+		if (count < 1) { count = 1; }
+		}
+	mLogicalCores = count;
+	mPhysicalCores = count;
 #else
 	mLogicalCores = std::thread::hardware_concurrency();
 
@@ -155,6 +186,46 @@ int MyHardwareInfo::init()
 	// no way to test this at the moment.
 	// Will try on machine at home tomorrow.
 	mPhysicalCores = sysconf(_SC_NPROCESSORS_ONLN);
+
+	int numCPUs = 0;
+
+	string line;
+	string tmp1, tmp2, tmp3, strCPUID;
+	string findText = "physical id";
+	std::size_t found;
+	std::string::size_type sz;
+	std::vector<int> listOfIDs;
+	ifstream myFile("/proc/cpuinfo");
+	if (myFile.is_open())
+	{
+		while (std::getline(myFile, line))
+		{
+			found = line.find(findText);
+			if (found != string::npos)
+			{
+				std::stringstream strStream(line);
+				strStream >> tmp1 >> tmp2 >> tmp3 >> strCPUID;
+
+				int iCPUID = std::stoi(strCPUID, &sz);
+
+				// Find if this ID already exists in the vector
+				bool bCPUFound = false;
+				for (int ID : listOfIDs)
+				{
+					if (ID == iCPUID) bCPUFound = true;
+				}
+				if (!bCPUFound)
+				{
+					listOfIDs.push_back(iCPUID);
+					numCPUs++;
+				}
+			}
+		}
+	}
+	myFile.close();
+
+	if (numCPUs == 0) numCPUs = 1; // Default to 1 if we can't find out how many
+
 #endif
 	return 0;
 }
