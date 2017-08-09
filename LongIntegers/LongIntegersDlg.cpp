@@ -466,16 +466,17 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	LongInteger value3(CString(L"10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"));
 	LongInteger value4(value3);
 	value1 = value2 + value3;
-	answer.Format(L"10e100 + 10e100 = %d", value1.toDecimal());
+	answer.Format(L"10e100 + 10e100 = %s", value1.toDecimal());
 	value1 = value2 - value3;
-	answer.Format(L"10e100 - 10e100 = %d", value1.toDecimal());
+	answer.Format(L"10e100 - 10e100 = %s", value1.toDecimal());
 	value1 = value2 * value3;
-	answer.Format(L"10e100 * 10e100 = %d", value1.toDecimal());
+	answer.Format(L"10e100 * 10e100 = %s", value1.toDecimal());
 	value1 = value2 / value3;
-	answer.Format(L"10e100 / 10e100 = %d", value1.toDecimal());
+	answer.Format(L"10e100 / 10e100 = %s", value1.toDecimal());
 
 
 	value1 = value2;
+	value1.powerCalc(10000);
 	LongInteger arrayOfLI[15];
 	arrayOfLI[0] = value1;
 	int loopTimes = 14;
@@ -487,14 +488,16 @@ void CLongIntegersDlg::OnClickedIdarrow()
 		answer.Format(L"value1 is %d digits in size", value1.getSize());
 	}
 
-	answer.Format(L"Dividing the result by 10e10 %d times", loopTimes);
+/*	answer.Format(L"Dividing the result by 10e10 %d times", loopTimes);
 	for (int i = loopTimes; i > 0; i--)
 	{
 		value1 /= arrayOfLI[i - 1];
 		answer.Format(L"value1 is %d digits in size", value1.getSize());
 	}
+*/
+	LongInteger liFactorial = LongInteger::factorial(1000000);
 
-	m_OutputNumber.SetWindowTextW(CString(L"1234567890"));
+	m_OutputNumber.SetWindowTextW(liFactorial.toDecimal());
 
 	return;
 

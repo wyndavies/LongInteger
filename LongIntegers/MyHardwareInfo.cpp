@@ -1,7 +1,8 @@
 #ifdef _WIN32
 #include "stdafx.h"
 #else
-#include <cstdlib>#include <iostream>
+#include <cstdlib>
+#include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
