@@ -457,7 +457,7 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	CString answer;
 
 	answer = L"Hello there";
-	answer.Format(L"I can see %d logical cores and %d physical cores", mhi.GetLogicalCores(), mhi.GetPhysicalCores());
+	answer.Format(L"I can see %d CPU(s) with %d logical cores and %d physical cores", mhi.GetCPUs(), mhi.GetLogicalCores(), mhi.GetPhysicalCores());
 
 	LongInteger value1 = 10; // Test initialising with an int
 	answer.Format(L"Initialising with an int value of 10 gives : %s", value1.toDecimal());
@@ -476,6 +476,16 @@ void CLongIntegersDlg::OnClickedIdarrow()
 
 
 	value1 = value2;
+
+	UINT myArraySize = 100000000;
+	byte* myByteArray = new byte[myArraySize];
+	for (UINT i = 0; i < myArraySize; i++)
+	{
+		myByteArray[i] = rand() % 256;
+	}
+	value1.assignByteArray(myByteArray, myArraySize);
+	delete myByteArray;
+
 	LongInteger arrayOfLI[15];
 	arrayOfLI[0] = value1;
 	int loopTimes = 14;
@@ -494,7 +504,9 @@ void CLongIntegersDlg::OnClickedIdarrow()
 		answer.Format(L"value1 is %d digits in size", value1.getSize());
 	}
 
-	m_OutputNumber.SetWindowTextW(CString(L"1234567890"));
+	LongInteger liFactorial = LongInteger::factorial(1000000);
+
+	m_OutputNumber.SetWindowTextW(liFactorial.toDecimal());
 
 	return;
 

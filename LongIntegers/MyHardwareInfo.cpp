@@ -8,14 +8,21 @@ MyHardwareInfo::MyHardwareInfo()
 {
 	if (init() != 0)
 	{
-		mPhysicalCores = 0;
-		mLogicalCores = 0;
+		mPhysicalCores = 1;
+		mLogicalCores = 1;
+		mCPUs = 1;
 	}
 }
 
 MyHardwareInfo::~MyHardwareInfo()
 {
 
+}
+
+
+int MyHardwareInfo::GetCPUs()
+{
+	return mCPUs;
 }
 
 
@@ -144,6 +151,7 @@ int MyHardwareInfo::init()
 
 	free(buffer);
 
+	mCPUs = processorPackageCount;
 	mPhysicalCores = processorCoreCount;
 	mLogicalCores = logicalProcessorCount;
 #else

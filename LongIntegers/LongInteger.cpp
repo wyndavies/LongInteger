@@ -199,7 +199,7 @@ LongInteger LongInteger::multiplyChooser(const LongInteger& liOne, const LongInt
 		// There is only a single instance of QOT
 		QueueOfThreads<LongIntWrapper> *qot = LongIntWrapper::getQOT();
 		UINT deviceCores = qot->getDeviceCores();
-		UINT targetThreads = deviceCores * 10;
+		UINT targetThreads = deviceCores * 4;
 
 		UINT uKCutOff = ((liOne.size > liTwo.size) ? liOne.size : liTwo.size) / 2;
 		UINT uTCcutOff = uKCutOff;
