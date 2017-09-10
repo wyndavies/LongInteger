@@ -23,11 +23,13 @@ public:
 	MyHardwareInfo();
 	~MyHardwareInfo();
 
+	int GetCPUCount();
 	int GetPhysicalCores();
 	int GetLogicalCores();
 	int GetCPUs();
 private:
 
+	int mCPUs;
 	int mPhysicalCores;
 	int mLogicalCores;
 	int mCPUs;
