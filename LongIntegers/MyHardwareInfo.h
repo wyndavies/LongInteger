@@ -26,13 +26,11 @@ public:
 	int GetCPUCount();
 	int GetPhysicalCores();
 	int GetLogicalCores();
-	int GetCPUs();
 private:
 
 	int mCPUs;
 	int mPhysicalCores;
 	int mLogicalCores;
-	int mCPUs;
 
 	int init();
 #ifdef _WIN32
