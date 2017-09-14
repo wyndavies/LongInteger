@@ -50,7 +50,8 @@ Options for compiler with C++11 support:
 -std=c++11 -pthread
 
 From the command line:
-g++ -std=c++11 -pthread  main.cpp LongInteger.cpp MyHardwareInfo.cpp UtilityFunctions.cpp PrimeSieve.cpp PrimeSwing.cpp -o LongIntegerTest.exe
+g++ -Wl,-R/opt/gcc/lib -std=c++11 -pthread  main.cpp LongInteger.cpp MyHardwareInfo.cpp UtilityFunctions.cpp PrimeSieve.cpp PrimeSwing.cpp -o LongIntegerTest.exe
+(the -R option points to the folder with the libstdc++.so.6 library, which I built in /opt/gcc/lib)
 
 The code will not work if the compiler does not support at least C++11.
 
