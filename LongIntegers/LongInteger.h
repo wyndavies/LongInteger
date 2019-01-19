@@ -738,11 +738,15 @@ inline bool operator<(UINT lhs, const LongInteger& rhs) {
 	}
 
 	bool bLessThan = false;
-	UINT thisAsInt = rhs.getDigit(0);
+	UINT thisAsInt = rhs.getDigit(rhs.getSize() - 1);
 
-	for (UINT i = 1; i < rhs.getSize(); i++)
+	if (rhs.getSize() > 1)
 	{
-		thisAsInt *= rhs.getDigit(i);
+		for (UINT i = rhs.getSize() - 1; i > 0; i--)
+		{
+			thisAsInt *= LongInteger::BASEVAL;
+			thisAsInt += (rhs.getDigit(i - 1));
+		}
 	}
 
 	if (lhs < thisAsInt)
@@ -780,11 +784,15 @@ inline bool operator<(int lhs, const LongInteger& rhs) {
 	}
 
 	bool bLessThan = false;
-	UINT thisAsInt = rhs.getDigit(0);
+	UINT thisAsInt = rhs.getDigit(rhs.getSize() - 1);
 
-	for (UINT i = 1; i < rhs.getSize(); i++)
+	if (rhs.getSize() > 1)
 	{
-		thisAsInt *= rhs.getDigit(i);
+		for (UINT i = rhs.getSize() - 1; i > 0; i--)
+		{
+			thisAsInt *= LongInteger::BASEVAL;
+			thisAsInt += (rhs.getDigit(i - 1));
+		}
 	}
 
 	if ((UINT)std::abs(lhs) < thisAsInt)

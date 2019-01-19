@@ -459,26 +459,9 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	answer = L"Hello there";
 	answer.Format(L"I can see %d processors with %d logical cores and %d physical cores", mhi.GetCPUCount(), mhi.GetLogicalCores(), mhi.GetPhysicalCores());
 
-	LongInteger value1 = 10; // Test initialising with an int
-	answer.Format(L"Initialising with an int value of 10 gives : %s", value1.toDecimal());
-	LongInteger value2(CString(L"10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"));
-	answer.Format(L"Initialising with a string value of 10e100 gives : %s", value2.toDecimal());
-	LongInteger value3(CString(L"10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"));
-	LongInteger value4(value3);
-	value1 = value2 + value3;
-	answer.Format(L"10e100 + 10e100 = %s", value1.toDecimal());
-	value1 = value2 - value3;
-	answer.Format(L"10e100 - 10e100 = %s", value1.toDecimal());
-	value1 = value2 * value3;
-	answer.Format(L"10e100 * 10e100 = %s", value1.toDecimal());
-	value1 = value2 / value3;
-	answer.Format(L"10e100 / 10e100 = %s", value1.toDecimal());
+	LongInteger value1, value2;
 
-
-	value1 = value2;
-	// value1.powerCalc(10000);
-
-	UINT myArraySize = 100000000;
+	UINT myArraySize = 1000000;
 	byte* myByteArray = new byte[myArraySize];
 	for (UINT i = 0; i < myArraySize; i++)
 	{
@@ -487,27 +470,47 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	value1.assignByteArray(myByteArray, myArraySize);
 	delete myByteArray;
 
-	LongInteger arrayOfLI[15];
-	arrayOfLI[0] = value1;
-	int loopTimes = 14;
-	answer.Format(L"Multiplying 10e100 by itself %d times", loopTimes);
-	for (int i = 0; i < loopTimes; i++)
+	value2 = value1 * value1;
+
+
+	value1 = 2;
+	// Create a file for logging
+	CStdioFile loggingFile;
+	if (loggingFile.Open(L"d:\\loggingFile.txt", CFile::modeCreate | CFile::modeReadWrite))
 	{
-		value1 *= value1;
-		arrayOfLI[i + 1] = value1;
-		answer.Format(L"value1 is %d digits in size", value1.getSize());
+		CString outString = L"Hello\n";
+		loggingFile.WriteString(outString);
+
+		typedef std::chrono::high_resolution_clock chronoTime;
+		typedef std::chrono::microseconds chronoMS;
+		typedef std::chrono::duration<double> dsec;
+		auto startTime = chronoTime::now();
+
+		value2 = LongInteger::factorial(value1);
+
+		auto endTime = chronoTime::now();
+		dsec durationSec = endTime - startTime;
+		chronoMS durationMS = std::chrono::duration_cast<chronoMS>(durationSec);
+
+		outString.Format(L"Size,%s,Time,%d\n", value1.toDecimal(), durationMS.count());
+		loggingFile.WriteString(outString);
+
+		for (int i = 1000; i < 1000000; i *= 2)
+		{
+			value1 = i;
+			startTime = chronoTime::now();
+			value2 = LongInteger::factorial(value1);
+			endTime = chronoTime::now();
+			durationSec = endTime - startTime;
+			durationMS = std::chrono::duration_cast<chronoMS>(durationSec);
+			outString.Format(L"Size,%s,Time,%d\n", value1.toDecimal(), durationMS.count());
+			loggingFile.WriteString(outString);
+		}
+		loggingFile.Close();
 	}
 
-/*	answer.Format(L"Dividing the result by 10e10 %d times", loopTimes);
-	for (int i = loopTimes; i > 0; i--)
-	{
-		value1 /= arrayOfLI[i - 1];
-		answer.Format(L"value1 is %d digits in size", value1.getSize());
-	}
-*/
-	LongInteger liFactorial = LongInteger::factorial(1000000);
 
-	m_OutputNumber.SetWindowTextW(liFactorial.toDecimal());
+	m_OutputNumber.SetWindowTextW(value1.toDecimal());
 
 	return;
 
