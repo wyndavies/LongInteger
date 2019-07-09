@@ -454,29 +454,34 @@ void CLongIntegersDlg::OnClickedIdarrow()
 	// Some division tests
 	MyHardwareInfo mhi;
 
+	long double ld = pow(2, 64);
+
 	CString answer;
 
 	answer = L"Hello there";
 	answer.Format(L"I can see %d processors with %d logical cores and %d physical cores", mhi.GetCPUCount(), mhi.GetLogicalCores(), mhi.GetPhysicalCores());
 
-	LongInteger value1, value2;
 
-	UINT myArraySize = 1000000;
-	byte* myByteArray = new byte[myArraySize];
-	for (UINT i = 0; i < myArraySize; i++)
+	LongInteger l1;
+
+	int numdigits = 10000000;
+	byte* byarray = new byte[numdigits];
+	for (int i = 0; i < numdigits; i++)
 	{
-		myByteArray[i] = rand() % 256;
+		byarray[i] = 3;
 	}
-	value1.assignByteArray(myByteArray, myArraySize);
-	delete myByteArray;
+	l1.assignByteArray(byarray, numdigits);
+	delete byarray;
 
-	value2 = value1 * value1;
+	l1 *= l1;
 
+
+	LongInteger value1, value2;
 
 	value1 = 2;
 	// Create a file for logging
 	CStdioFile loggingFile;
-	if (loggingFile.Open(L"d:\\loggingFile.txt", CFile::modeCreate | CFile::modeReadWrite))
+	if (loggingFile.Open(L"c:\\loggingFile.txt", CFile::modeCreate | CFile::modeReadWrite))
 	{
 		CString outString = L"Hello\n";
 		loggingFile.WriteString(outString);

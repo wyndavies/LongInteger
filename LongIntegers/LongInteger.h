@@ -27,7 +27,7 @@
 * I got NetBeans to compile this code by going into
 * Project Properties - C++ Compiler - Additional options - and added '-std=c++14 -pthread'. The -pthread is to
 * add multithreading support otherwise NetBeans gets very confused.
-* 
+*
 * Managed to get Eclipse to compile the code as well, although I cannot get the IDE to recognise C++14 code
 * It insists there are errors, but hit compile and it builds fine. It will also debug and step through the code
 * without issues, but still with warnings about unrecognised code all over the place.
@@ -72,6 +72,8 @@
 #include <algorithm>
 typedef unsigned char byte; // Didn't realise byte and UINT were Microsoft specific definitions. Added them here for Linux
 typedef unsigned int UINT;
+typedef unsigned long ULONG;
+typedef unsigned long long ULONGLONG;
 
 using std::stringstream;
 using std::string;
@@ -83,7 +85,7 @@ using std::ios;
 // the template below is all that is needed to run under the C++11 standard
 #if __cplusplus == 201103L
 template<typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args&&... args) {
+std::unique_ptr<T> make_unique(Args&& ... args) {
 	return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 #endif
@@ -127,7 +129,7 @@ public:
 	// This is the framework that does the adjustments prior to calling the BurnikelZiegler method
 	static bool DivAndMod(const LongInteger&, const LongInteger&, LongIntegerUP&, LongIntegerUP&);
 	static bool DivAndMod(const LongInteger&, const LongInteger&, LongInteger&, LongInteger&);
-	
+
 
 	static LongInteger sqrt(const LongInteger&);
 	static LongInteger sqr(const LongInteger&);
@@ -140,7 +142,7 @@ public:
 private:
 	// This is the front end to the Karatsuba algorithm which also tidies up any memory allocated
 	static LongInteger multiplyChooser(const LongInteger&, const LongInteger&);
-    // Restoring division seems to work fine. Some more testing needed to see what the performance is
+	// Restoring division seems to work fine. Some more testing needed to see what the performance is
 	static void RestoringDivision(LongInteger&, LongInteger&, LongInteger*, LongInteger*);
 
 	static bool TriedToReadE;
@@ -189,7 +191,11 @@ public:
 	LongInteger();
 	LongInteger(const int);
 	LongInteger(const UINT);
+	LongInteger(const ULONG);
+	LongInteger(const ULONGLONG);
 	LongInteger(const LongInteger&);
+	LongInteger(const double);
+	LongInteger(const long double);
 	LongInteger(LongInteger*);
 #ifdef _WIN32
 	LongInteger(CString&);
@@ -204,6 +210,10 @@ public:
 
 	bool assignNumber(int);
 	bool assignNumber(UINT);
+	bool assignNumber(ULONG);
+	bool assignNumber(ULONGLONG);
+	bool assignNumber(double);
+	bool assignNumber(long double);
 #ifdef _WIN32
 	bool assignNumber(CString&);
 #else
@@ -245,6 +255,7 @@ public:
 	bool powerCalc(LongInteger&, const LongInteger&);
 	bool powerCalc(const LongInteger&);
 	bool powerCalc(int);
+
 	bool arrowCalc(UINT, int);
 	bool modulus(const LongInteger&);
 	bool factorial();
@@ -506,10 +517,12 @@ public:
 		if (rhs == 0) {
 			if (equalsZero()) {
 				return true;
-			} else {
+			}
+			else {
 				return false;
 			}
-		} else {
+		}
+		else {
 			if (equalsZero()) {
 				return false;
 			}
@@ -524,7 +537,7 @@ public:
 
 		for (UINT i = 1; i < size; i++)
 		{
-			thisAsInt *= digits[i];
+			thisAsInt += (digits[i] << (LongInteger::BASEVALBITS * i));
 		}
 
 		if (thisAsInt == std::abs(rhs))
@@ -561,7 +574,7 @@ public:
 			}
 		}
 
-		if (size > sizeof(int)) {
+		if (size > sizeof(UINT)) {
 			return false;
 		}
 
@@ -570,7 +583,55 @@ public:
 
 		for (UINT i = 1; i < size; i++)
 		{
-			thisAsInt *= digits[i];
+			thisAsInt += (digits[i] << (LongInteger::BASEVALBITS * i));
+		}
+
+		if (thisAsInt == rhs)
+		{
+			bEquals = true;
+		}
+		return bEquals;
+	}
+
+	inline bool operator==(ULONGLONG rhs) const {
+		if (rhs == 0) {
+			return equalsZero();
+		}
+		// There are enough comparisons to 1 to justify a dedicated short-cut test
+		if (rhs == 1) {
+			return(size == 1 && digits[0] == 1);
+		}
+
+		if ((bPositive && rhs < 0) || (!bPositive && rhs >= 0)) {
+			return false;
+		}
+
+		if (rhs == 0) {
+			if (equalsZero()) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		else {
+			if (equalsZero()) {
+				return false;
+			}
+		}
+
+		if (size > sizeof(ULONGLONG)) {
+			return false;
+		}
+
+		bool bEquals = false;
+		ULONGLONG thisAsInt = digits[0];
+		ULONGLONG temp;
+
+		for (UINT i = 1; i < size; i++)
+		{
+			temp = digits[i];
+			thisAsInt += (temp << (LongInteger::BASEVALBITS * i));
 		}
 
 		if (thisAsInt == rhs)
@@ -606,10 +667,12 @@ public:
 		if (rhs == 0) {
 			if (equalsZero()) {
 				return false;
-			} else {
+			}
+			else {
 				return !bPositive;
 			}
-		} else {
+		}
+		else {
 			if (equalsZero()) {
 				return (rhs > 0);
 			}
@@ -770,10 +833,12 @@ inline bool operator<(int lhs, const LongInteger& rhs) {
 	if (rhs.equalsZero()) {
 		if (lhs == 0) {
 			return false;
-		} else {
+		}
+		else {
 			return (lhs < 0);
 		}
-	} else {
+	}
+	else {
 		if (lhs == 0) {
 			return bPositive;
 		}

@@ -11,9 +11,8 @@
 
 #include <functional>
 
-#ifndef _WIN32
 #include <cmath>
-#endif
+
 
 // min and max are undefined before the inclusion of <limits> as Microsoft reused the min and max macros and this causes
 // conflicts with (C++ standard) definitions in <limits>
@@ -176,7 +175,7 @@ LongInteger LongInteger::ReadEFromFile(string inFilePath)
 }
 #endif
 
-LongInteger LongInteger::multiplyChooser(const LongInteger& liOne, const LongInteger &liTwo) {
+LongInteger LongInteger::multiplyChooser(const LongInteger& liOne, const LongInteger& liTwo) {
 	// Wrapper class to handle memory management
 	// The karatsuba and ToomCook3 functions needs to put memory on the heap, so the memory needs
 	// to be managed manually. But we want all memory management within the class
@@ -197,7 +196,7 @@ LongInteger LongInteger::multiplyChooser(const LongInteger& liOne, const LongInt
 	{
 
 		// There is only a single instance of QOT
-		QueueOfThreads<LongIntWrapper> *qot = LongIntWrapper::getQOT();
+		QueueOfThreads<LongIntWrapper>* qot = LongIntWrapper::getQOT();
 		UINT deviceCores = qot->getDeviceCores();
 		UINT targetThreads = deviceCores * 2;
 
@@ -208,11 +207,6 @@ LongInteger LongInteger::multiplyChooser(const LongInteger& liOne, const LongInt
 		while (numThreads < targetThreads) {
 			numThreads = numThreads * 3;
 			uKCutOff /= 2;
-		}
-		numThreads = 1;
-		while (numThreads < targetThreads) {
-			numThreads = numThreads * 5;
-			uTCcutOff /= 2;
 		}
 
 		// Not sure if this is the optimal cutoff value
@@ -259,11 +253,11 @@ LongInteger LongInteger::multiplyChooser(const LongInteger& liOne, const LongInt
 // Implementation of the Karatsuba algorithm for multiplication
 // This is a static method
 
-LongInteger* LongInteger::karatsuba(const LongInteger &liOne, const LongInteger &liTwo, bool bBackgroundThread)
+LongInteger* LongInteger::karatsuba(const LongInteger& liOne, const LongInteger& liTwo, bool bBackgroundThread)
 {
 	if ((liOne.size < KARATSUBACUTOFF) && (liTwo.size < KARATSUBACUTOFF))
 	{
-		LongInteger *returnValue = new LongInteger(liOne);
+		LongInteger* returnValue = new LongInteger(liOne);
 		returnValue->multiplyInternal(liTwo);
 		return returnValue;
 	}
@@ -285,7 +279,7 @@ LongInteger* LongInteger::karatsuba(const LongInteger &liOne, const LongInteger 
 	LongInteger* liZ2;
 
 	if (iHalfSize > KARATSUBATHREADING) {
-		QueueOfThreads<LongIntWrapper> *qot = LongIntWrapper::getQOT();
+		QueueOfThreads<LongIntWrapper>* qot = LongIntWrapper::getQOT();
 		LongIntWrapper* liw0 = new LongIntWrapper;
 		LongIntWrapper* liw1 = new LongIntWrapper;
 		LongIntWrapper* liw2 = new LongIntWrapper;
@@ -383,6 +377,24 @@ LongInteger::LongInteger(const UINT iNew) {
 	assignNumber(iNew);
 }
 
+LongInteger::LongInteger(const ULONG iNew) {
+	assignNumber(iNew);
+}
+
+LongInteger::LongInteger(const ULONGLONG iNew) {
+	assignNumber(iNew);
+}
+
+LongInteger::LongInteger(const double dNew)
+{
+	assignNumber(dNew);
+}
+
+LongInteger::LongInteger(const long double dNew)
+{
+	assignNumber(dNew);
+}
+
 LongInteger::LongInteger(const LongInteger& oldLongInt) {
 	size = oldLongInt.size;
 	maxSize = oldLongInt.maxSize;
@@ -460,6 +472,81 @@ bool LongInteger::assignNumber(int inNum) {
 	}
 
 	// It will be unlikely for an int to overflow the starting size of a LongInteger, so not bother checking for that
+	size = index;
+	return bOverflow;
+}
+
+bool LongInteger::assignNumber(ULONG inNum) {
+	// Clear out any existing number
+	init();
+
+	// Turn the int into base 16 digits and store in the internal array
+	UINT index = 0;
+	while (index < maxSize && inNum > 0) {
+		digits[index] = inNum % BASEVAL;
+		inNum /= BASEVAL;
+		++index;
+	}
+
+	size = index;
+	return bOverflow;
+}
+
+bool LongInteger::assignNumber(ULONGLONG inNum) {
+	// Clear out any existing number
+	init();
+
+	// Turn the int into base 16 digits and store in the internal array
+	UINT index = 0;
+	while (index < maxSize && inNum > 0) {
+		digits[index] = inNum % BASEVAL;
+		inNum /= BASEVAL;
+		++index;
+	}
+
+	size = index;
+	return bOverflow;
+}
+
+bool LongInteger::assignNumber(double dNum)
+{
+	// Clear out any existing number
+	init();
+
+	UINT index = 0;
+	double temp;
+	dNum = floor(dNum);
+	while (dNum > 0)
+	{
+		temp = floor(dNum / BASEVAL);
+		digits[index] = (byte)(dNum - (temp * BASEVAL));
+		++index;
+		if (index >= maxSize)
+			increaseSize();
+	}
+
+	size = index;
+	return bOverflow;
+}
+
+bool LongInteger::assignNumber(long double dNum)
+{
+	// Clear out any existing number
+	init();
+
+	UINT index = 0;
+	long double temp;
+	dNum = floor(dNum);
+	while (dNum > 0)
+	{
+		temp = floor(dNum / BASEVAL);
+		digits[index] = (byte)(dNum - (temp * BASEVAL));
+		dNum = temp;
+		++index;
+		if (index >= maxSize)
+			increaseSize();
+	}
+
 	size = index;
 	return bOverflow;
 }
@@ -561,7 +648,7 @@ bool LongInteger::assignNumber(const string& in_number)
 	delete[] tempList;
 
 	return !bOverflow;
-}
+	}
 
 byte LongInteger::getDigit(UINT index) const {
 	if (index < 0 || index >= maxSize) {
@@ -810,10 +897,10 @@ LongInteger::operator int() const
 			return 0;
 	}
 	else {
-		if(abs(*this) > (std::numeric_limits<int>::max()))
+		if (abs(*this) > (std::numeric_limits<int>::max()))
 			return 0;
 	}
-	
+
 
 	int iResult = (UINT)(*this); // Call the UINT conversion so we don't have to write the conversion code twice
 	if (!bPositive)
@@ -860,16 +947,10 @@ bool LongInteger::addNumber(int iAdd) {
 	return addNumber(liAdd);
 }
 
-bool LongInteger::addNumber(const LongInteger& liAdd) {
+bool LongInteger::addNumber(const LongInteger & liAdd) {
 	// Adding is easy. Assume each digit in the input is in the range 0-255.
 	// We just add each digit in the ranges and then balance the numbers
 
-	// Some sanity checks.
-	while (liAdd.size > maxSize) {
-		increaseSize();
-		if (bOverflow)
-			return false;
-	}
 	// If this and liAdd are positive, carry on
 	// If this is + and liAdd is -, then call subtract with liAdd as +
 	if (bPositive) {
@@ -888,11 +969,9 @@ bool LongInteger::addNumber(const LongInteger& liAdd) {
 
 	UINT loopSize = liAdd.size;
 	if (loopSize > size) {
-		memset(digits + size, 0, (loopSize - size));
 		size = loopSize;
-		while (size >= maxSize) {
-			increaseSize();
-		}
+		recalcMaxSize();
+		if (bOverflow) return false;
 	}
 
 	short workingVal = 0;
@@ -918,6 +997,7 @@ bool LongInteger::addNumber(const LongInteger& liAdd) {
 		digits[loopSize] = workingVal % BASEVAL;
 		overflow = workingVal / BASEVAL;
 		++loopSize;
+		// Left in here for safety. Should never happen
 		if (loopSize >= size) {
 			size = loopSize + 1;
 			while (size >= maxSize) {
@@ -943,7 +1023,7 @@ bool LongInteger::subtractNumber(int iAdd) {
 	return bOverflow;
 }
 
-bool LongInteger::subtractNumber(const LongInteger& liMinus) {
+bool LongInteger::subtractNumber(const LongInteger & liMinus) {
 	// We just subtract each digit in the ranges and then balance the numbers
 
 	// Some sanity checks.
@@ -1045,13 +1125,13 @@ bool LongInteger::subtractNumber(const LongInteger& liMinus) {
 	return bOverflow;
 }
 
-LongInteger LongInteger::abs(const LongInteger& liValue) {
+LongInteger LongInteger::abs(const LongInteger & liValue) {
 	LongInteger returnValue(liValue);
 	returnValue.bPositive = true;
 	return returnValue;
 }
 
-LongInteger& LongInteger::operator=(const LongInteger& li) {
+LongInteger& LongInteger::operator=(const LongInteger & li) {
 	// Detect the scenario of self-assignment
 	if (this == &li)
 		return *this;
@@ -1060,7 +1140,7 @@ LongInteger& LongInteger::operator=(const LongInteger& li) {
 	return *this;
 }
 
-void LongInteger::copy(const LongInteger& li) {
+void LongInteger::copy(const LongInteger & li) {
 	maxSize = li.maxSize;
 	delete[] digits;
 	digits = new byte[maxSize];
@@ -1164,7 +1244,7 @@ LongInteger LongInteger::operator--(int) {
 	return liTemp;
 }
 
-LongInteger& LongInteger::operator+=(const LongInteger& liAdd) {
+LongInteger& LongInteger::operator+=(const LongInteger & liAdd) {
 	addNumber(liAdd);
 	return *this;
 }
@@ -1174,7 +1254,7 @@ LongInteger& LongInteger::operator+=(int iAdd) {
 	return *this;
 }
 
-LongInteger& LongInteger::operator-=(const LongInteger& liAdd) {
+LongInteger& LongInteger::operator-=(const LongInteger & liAdd) {
 	subtractNumber(liAdd);
 	return *this;
 }
@@ -1184,7 +1264,7 @@ LongInteger& LongInteger::operator-=(int iAdd) {
 	return *this;
 }
 
-LongInteger& LongInteger::operator*=(const LongInteger& liAdd) {
+LongInteger& LongInteger::operator*=(const LongInteger & liAdd) {
 	multiplyNumber(liAdd);
 	return *this;
 }
@@ -1194,7 +1274,7 @@ LongInteger& LongInteger::operator*=(int iAdd) {
 	return *this;
 }
 
-LongInteger& LongInteger::operator/=(const LongInteger& liDivide) {
+LongInteger& LongInteger::operator/=(const LongInteger & liDivide) {
 	divideNumber(liDivide);
 	return *this;
 }
@@ -1204,31 +1284,31 @@ LongInteger& LongInteger::operator/=(int iDivide) {
 	return *this;
 }
 
-LongInteger LongInteger::operator+(const LongInteger& rhs) const {
+LongInteger LongInteger::operator+(const LongInteger & rhs) const {
 	LongInteger value = *this;
 	value += rhs;
 	return value;
 }
 
-LongInteger LongInteger::operator-(const LongInteger& rhs) const {
+LongInteger LongInteger::operator-(const LongInteger & rhs) const {
 	LongInteger value = *this;
 	value -= rhs;
 	return value;
 }
 
-LongInteger LongInteger::operator*(const LongInteger& rhs) const {
+LongInteger LongInteger::operator*(const LongInteger & rhs) const {
 	LongInteger value = *this;
 	value *= rhs;
 	return value;
 }
 
-LongInteger LongInteger::operator/(const LongInteger& rhs) const {
+LongInteger LongInteger::operator/(const LongInteger & rhs) const {
 	LongInteger value = *this;
 	value /= rhs;
 	return value;
 }
 
-bool LongInteger::multiplyNumber(const LongInteger& liMult) {
+bool LongInteger::multiplyNumber(const LongInteger & liMult) {
 	bool bFinal;
 	// Sort out the signs
 	if (bPositive != liMult.bPositive)
@@ -1257,7 +1337,7 @@ bool LongInteger::multiplyNumber(int iMult) {
 	return (multiplyNumber(liMult));
 }
 
-bool LongInteger::multiplyInternal(const LongInteger& liMult) {
+bool LongInteger::multiplyInternal(const LongInteger & liMult) {
 	// We will assume that the digits of liMult are all in range 0-255. This means that all values will be held by a byte
 	// Multiplying needs to be done 1 digit of the multiplier at a time and we need another memory storage area to hold
 	// the result
@@ -1291,24 +1371,18 @@ bool LongInteger::multiplyInternal(const LongInteger& liMult) {
 	}
 
 	// Now put the temporary values into the original
-	while (maxSize < tempSize) {
-		increaseSize();
-		if (bOverflow)
-			return false;
-	}
+	size = tempSize;
+	recalcMaxSize();
 	memcpy(digits, tempArea, sizeof(byte) * tempSize);
+	checkSize();
+	bPositive = bFinalSign;
 
 	delete[] tempArea;
-
-	size = tempSize;
-	checkSize();
-
-	bPositive = bFinalSign;
 
 	return true;
 }
 
-void LongInteger::addInternal(byte* list, UINT offset, UINT value, UINT length) {
+void LongInteger::addInternal(byte * list, UINT offset, UINT value, UINT length) {
 	// Add an unsigned int (which could hold up to length bytes) to the list starting from offset index
 
 	byte* byteValues = (byte*)& value;
@@ -1358,10 +1432,21 @@ void LongInteger::recalcMaxSize() {
 	// Used when maxSize needs to be recalculated
 	UINT oldMaxSize = maxSize;
 	if (size >= SIZESTEP) {
-		maxSize = (size - (size % SIZESTEP)) + SIZESTEP;
-	} else if (size >= SMALLSIZESTEP) {
+		maxSize = (size - (size % SIZESTEP));
+		if (maxSize > LongInteger::ABSMAXSIZE - SIZESTEP)
+		{
+			this->bOverflow = true;
+			maxSize = ABSMAXSIZE;
+		}
+		else
+		{
+			maxSize += SIZESTEP;
+		}
+	}
+	else if (size >= SMALLSIZESTEP) {
 		maxSize = (size - (size % SMALLSIZESTEP)) + SMALLSIZESTEP;
-	} else {
+	}
+	else {
 		maxSize = (size - (size % TINYSIZESTEP)) + TINYSIZESTEP;
 	}
 
@@ -1381,7 +1466,16 @@ void LongInteger::recalcMaxSizeAndClear() {
 	// Used when maxSize needs to be recalculated
 	UINT oldMaxSize = maxSize;
 	if (size >= SIZESTEP) {
-		maxSize = (size - (size % SIZESTEP)) + SIZESTEP;
+		maxSize = (size - (size % SIZESTEP));
+		if (maxSize > LongInteger::ABSMAXSIZE - SIZESTEP)
+		{
+			this->bOverflow = true;
+			maxSize = ABSMAXSIZE;
+		}
+		else
+		{
+			maxSize += SIZESTEP;
+		}
 	}
 	else if (size >= SMALLSIZESTEP) {
 		maxSize = (size - (size % SMALLSIZESTEP)) + SMALLSIZESTEP;
@@ -1406,7 +1500,7 @@ bool LongInteger::arrowCalc(UINT arrows, int powerValue) {
 	return returnValue;
 }
 
-bool LongInteger::arrowCalc(const LongInteger& baseValue, UINT arrows, LongInteger& liValue) {
+bool LongInteger::arrowCalc(const LongInteger & baseValue, UINT arrows, LongInteger & liValue) {
 	if (bOverflow) return false;
 	LongInteger liWorking;
 
@@ -1452,11 +1546,17 @@ bool LongInteger::equalsZero() const {
 		return false;
 }
 
-bool LongInteger::powerCalc(LongInteger& liValue, const LongInteger& liPower) {
+bool LongInteger::powerCalc(LongInteger & liValue, const LongInteger & liPower) {
 	// Calculate the power by using powers of 2
 	// We will have a loop where we divide liPower by 2 and multiply a copy of liValue by itself,
 	// adding this copy to a running total every time liPower is odd
 	// Just realised this is a bit like old-fashioned multiplication
+
+	if (liPower == 0)
+	{
+		liValue = 1;
+		return true;
+	}
 
 	LongInteger liMultiples = liValue;
 	LongInteger liTotal = 1;
@@ -1464,9 +1564,7 @@ bool LongInteger::powerCalc(LongInteger& liValue, const LongInteger& liPower) {
 
 	while (liCounter > 1) {
 		// Find out if liCounter is odd
-		UINT lastDigit = liCounter.getDigit(0);
-		UINT oddCheck = lastDigit / 2;
-		if (oddCheck * 2 < lastDigit) {
+		if ((liCounter.digits[0] % 2) != 0) {
 			liTotal *= liMultiples;
 		}
 		liCounter /= 2;
@@ -1480,7 +1578,7 @@ bool LongInteger::powerCalc(LongInteger& liValue, const LongInteger& liPower) {
 	return !bOverflow;
 }
 
-bool LongInteger::powerCalcHelper(const LongInteger& value, LongInteger& powerIn) {
+bool LongInteger::powerCalcHelper(const LongInteger & value, LongInteger & powerIn) {
 	// Calculate a power by performing multiplication repeatedly
 	// This is a helper for the arrow function - it changes the 2nd parameter rather than the first as would normally be expected
 
@@ -1495,11 +1593,11 @@ bool LongInteger::powerCalc(int powerIn) {
 	return powerCalc(*this, powerIn);
 }
 
-bool LongInteger::powerCalc(const LongInteger& powerIn) {
+bool LongInteger::powerCalc(const LongInteger & powerIn) {
 	return powerCalc(*this, powerIn);
 }
 
-bool LongInteger::divideNumber(const LongInteger& liDivide) {
+bool LongInteger::divideNumber(const LongInteger & liDivide) {
 	LongIntegerUP upliQuotient = make_unique<LongInteger>(0);
 	LongIntegerUP upliModulus = make_unique<LongInteger>(0);
 
@@ -1516,7 +1614,7 @@ bool LongInteger::divideNumber(const LongInteger& liDivide) {
 	return bOverflow;
 }
 
-bool LongInteger::DivAndMod(const LongInteger& liValue, const LongInteger& liDivide, LongInteger& liQuotient, LongInteger& liModulus)
+bool LongInteger::DivAndMod(const LongInteger & liValue, const LongInteger & liDivide, LongInteger & liQuotient, LongInteger & liModulus)
 {
 	// Front end to DivAndMod that takes the quotient and modulus values as LongInteger references
 	LongIntegerUP upliQuotient;
@@ -1535,7 +1633,7 @@ bool LongInteger::DivAndMod(const LongInteger& liValue, const LongInteger& liDiv
 }
 
 
-bool LongInteger::DivAndMod(const LongInteger& liValue, const LongInteger& liDivide, LongIntegerUP& upliQuotient, LongIntegerUP& upliModulus) {
+bool LongInteger::DivAndMod(const LongInteger & liValue, const LongInteger & liDivide, LongIntegerUP & upliQuotient, LongIntegerUP & upliModulus) {
 	// The divide and modulus functions were created separately, but it will save a lot of hassle by combining them - especially as
 	// it is the same code in the 2 functions
 
@@ -1716,8 +1814,9 @@ bool LongInteger::multHelper(int iMult) {
 	if (iMult != BASEVAL) {
 		return !bOverflow;
 	}
-	while (size >= maxSize) {
-		increaseSize();
+	if (size >= maxSize)
+	{
+		recalcMaxSize();
 		if (bOverflow)
 			return !bOverflow;
 	}
@@ -1762,9 +1861,11 @@ bool LongInteger::increaseSize() {
 	// Try to work out the next size to set the value to
 	if (maxSize >= SIZESTEP) {
 		newMaxSize = maxSize + SIZESTEP;
-	} else if (maxSize >= SMALLSIZESTEP) {
+	}
+	else if (maxSize >= SMALLSIZESTEP) {
 		newMaxSize = maxSize + SMALLSIZESTEP;
-	} else {
+	}
+	else {
 		newMaxSize = maxSize + TINYSIZESTEP;
 	}
 
@@ -1796,9 +1897,11 @@ bool LongInteger::decreaseSize() {
 	UINT subtractSize;
 	if (size > (SIZESTEP + SIZESTEP)) {
 		subtractSize = SIZESTEP;
-	} else if (size > (SMALLSIZESTEP + SMALLSIZESTEP)) {
+	}
+	else if (size > (SMALLSIZESTEP + SMALLSIZESTEP)) {
 		subtractSize = SMALLSIZESTEP;
-	} else {
+	}
+	else {
 		subtractSize = TINYSIZESTEP;
 	}
 
@@ -1808,9 +1911,11 @@ bool LongInteger::decreaseSize() {
 	UINT newMaxSize;
 	if (size >= SIZESTEP) {
 		newMaxSize = ((size / SIZESTEP) * SIZESTEP) + SIZESTEP;
-	} else if (size >= SMALLSIZESTEP) {
+	}
+	else if (size >= SMALLSIZESTEP) {
 		newMaxSize = ((size / SMALLSIZESTEP) * SMALLSIZESTEP) + SMALLSIZESTEP;
-	} else {
+	}
+	else {
 		newMaxSize = ((size / TINYSIZESTEP) * TINYSIZESTEP) + TINYSIZESTEP;
 	}
 	if (newMaxSize < MINSIZE)
@@ -1875,7 +1980,7 @@ void LongInteger::setShuttingDown(bool bValue) {
 	bShuttingDown = bValue;
 }
 
-bool LongInteger::modulus(const LongInteger& liDivide) {
+bool LongInteger::modulus(const LongInteger & liDivide) {
 	LongIntegerUP upliQuotient = make_unique<LongInteger>(0);
 	LongIntegerUP upliModulus = make_unique<LongInteger>(0);
 
@@ -1891,7 +1996,7 @@ bool LongInteger::modulus(const LongInteger& liDivide) {
 	return bOverflow;
 }
 
-LongInteger& LongInteger::operator%=(const LongInteger& liMod) {
+LongInteger& LongInteger::operator%=(const LongInteger & liMod) {
 	modulus(liMod);
 	return *this;
 }
@@ -1904,7 +2009,7 @@ LongInteger& LongInteger::operator%=(int iMod) {
 	return *this;
 }
 
-LongInteger LongInteger::operator%(const LongInteger& liMod) const {
+LongInteger LongInteger::operator%(const LongInteger & liMod) const {
 	LongInteger value = *this;
 	value %= liMod;
 	return value;
@@ -1951,7 +2056,7 @@ LongInteger LongInteger::operator/(int iDiv) const {
 	return value;
 }
 
-bool LongInteger::bitwiseand(const LongInteger& liAnd) {
+bool LongInteger::bitwiseand(const LongInteger & liAnd) {
 	// Bitwise AND method
 	// AND this with liAnd
 	// 
@@ -1979,7 +2084,7 @@ bool LongInteger::bitwiseand(const LongInteger& liAnd) {
 	return bOverflow;
 }
 
-LongInteger LongInteger::operator&(const LongInteger& liAnd) {
+LongInteger LongInteger::operator&(const LongInteger & liAnd) {
 	// Bitwise AND operator
 	LongInteger value = *this;
 	value &= liAnd;
@@ -1992,7 +2097,7 @@ LongInteger LongInteger::operator&(int iAnd) {
 	return value;
 }
 
-LongInteger& LongInteger::operator&=(const LongInteger& liAnd) {
+LongInteger& LongInteger::operator&=(const LongInteger & liAnd) {
 	bitwiseand(liAnd);
 	return *this;
 }
@@ -2002,7 +2107,7 @@ LongInteger& LongInteger::operator&=(int iAnd) {
 	return *this;
 }
 
-bool LongInteger::bitwiseor(const LongInteger& liOR) {
+bool LongInteger::bitwiseor(const LongInteger & liOR) {
 
 	// Bitwise OR method
 	// OR this with liOR
@@ -2037,7 +2142,7 @@ bool LongInteger::bitwiseor(const LongInteger& liOR) {
 	return bOverflow;
 }
 
-LongInteger LongInteger::operator|(const LongInteger& liOR) {
+LongInteger LongInteger::operator|(const LongInteger & liOR) {
 	// Bitwise OR operator
 	LongInteger value = *this;
 	value |= liOR;
@@ -2050,7 +2155,7 @@ LongInteger LongInteger::operator|(int iOR) {
 	return value;
 }
 
-LongInteger& LongInteger::operator|=(const LongInteger& liOR) {
+LongInteger& LongInteger::operator|=(const LongInteger & liOR) {
 	bitwiseor(liOR);
 	return *this;
 }
@@ -2077,7 +2182,7 @@ LongInteger LongInteger::operator~() const {
 	return value;
 }
 
-bool LongInteger::bitwisexor(const LongInteger& liXOR) {
+bool LongInteger::bitwisexor(const LongInteger & liXOR) {
 
 	// Bitwise XOR method
 	// XOR this with liXOR
@@ -2112,7 +2217,7 @@ bool LongInteger::bitwisexor(const LongInteger& liXOR) {
 	return bOverflow;
 }
 
-LongInteger LongInteger::operator^(const LongInteger& liXOR) {
+LongInteger LongInteger::operator^(const LongInteger & liXOR) {
 	// Bitwise XOR operator
 	LongInteger value = *this;
 	value ^= liXOR;
@@ -2125,7 +2230,7 @@ LongInteger LongInteger::operator^(int iXOR) {
 	return value;
 }
 
-LongInteger& LongInteger::operator^=(const LongInteger& liXOR) {
+LongInteger& LongInteger::operator^=(const LongInteger & liXOR) {
 	bitwisexor(liXOR);
 	return *this;
 }
@@ -2135,7 +2240,7 @@ LongInteger& LongInteger::operator^=(int iXOR) {
 	return *this;
 }
 
-bool LongInteger::bitshiftright(const LongInteger& liShift) {
+bool LongInteger::bitshiftright(const LongInteger & liShift) {
 	// Rightshift all the bits by liShift amount
 	// Every multiple of 8 in liShift is a full byte to the right
 	// So start by getting liShift div 8 and moving all bytes by that amount
@@ -2253,7 +2358,7 @@ bool LongInteger::bitshiftright(UINT uShift) {
 	return bOverflow;
 }
 
-bool LongInteger::bitshiftleft(const LongInteger& liShift) {
+bool LongInteger::bitshiftleft(const LongInteger & liShift) {
 	// Leftshift all the bits by liShift amount
 	// Every multiple of 8 in liShift is a full byte to the left
 	// So start by getting liShift div 8 and moving all bytes by that amount
@@ -2419,7 +2524,7 @@ bool LongInteger::bitshiftleft(UINT uShift) {
 	return bOverflow;
 }
 
-LongInteger LongInteger::operator >> (const LongInteger& rhs) {
+LongInteger LongInteger::operator >> (const LongInteger & rhs) {
 	LongInteger value = *this;
 	value >>= rhs;
 	return value;
@@ -2431,7 +2536,7 @@ LongInteger LongInteger::operator >> (UINT rhs) {
 	return value;
 }
 
-LongInteger& LongInteger::operator>>=(const LongInteger& rhs) {
+LongInteger& LongInteger::operator>>=(const LongInteger & rhs) {
 	bitshiftright(rhs);
 	return *this;
 }
@@ -2441,7 +2546,7 @@ LongInteger& LongInteger::operator>>=(UINT rhs) {
 	return *this;
 }
 
-LongInteger LongInteger::operator<<(const LongInteger& rhs) {
+LongInteger LongInteger::operator<<(const LongInteger & rhs) {
 	LongInteger value = *this;
 	value <<= rhs;
 	return value;
@@ -2453,7 +2558,7 @@ LongInteger LongInteger::operator<<(UINT rhs) {
 	return value;
 }
 
-LongInteger& LongInteger::operator<<=(const LongInteger& rhs) {
+LongInteger& LongInteger::operator<<=(const LongInteger & rhs) {
 	bitshiftleft(rhs);
 	return *this;
 }
@@ -2463,7 +2568,7 @@ LongInteger& LongInteger::operator<<=(UINT rhs) {
 	return *this;
 }
 
-LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger& liTwo, bool bBackgroundThread) {
+LongInteger* LongInteger::ToomCook3(const LongInteger & liOne, const LongInteger & liTwo, bool bBackgroundThread) {
 	// A sanity check
 	if (liOne.equalsZero() || liTwo.equalsZero())
 		return new LongInteger(0);
@@ -2487,8 +2592,8 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 
 	// 1 - Splitting
 	// We split the numbers up into kFactor bits.
-	LongInteger * liM[kFactor];
-	LongInteger * liN[kFactor];
+	LongInteger* liM[kFactor];
+	LongInteger* liN[kFactor];
 	for (UINT i = 0; i < kFactor; i++) {
 		liM[i] = new LongInteger;
 		liN[i] = new LongInteger;
@@ -2531,10 +2636,10 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 	// Note that the example above (taken from wikipedia) has the elements of m & n in the opposite order from our array
 
 	// Array: 0=0, 1=1, 2=-1, 3=-2, 4=infinity
-	LongInteger * liEvalM[5];
-	LongInteger * liEvalN[5];
-	LongInteger *liP0M = new LongInteger;
-	LongInteger *liP0N = new LongInteger;
+	LongInteger* liEvalM[5];
+	LongInteger* liEvalN[5];
+	LongInteger* liP0M = new LongInteger;
+	LongInteger* liP0N = new LongInteger;
 	for (UINT i = 0; i < 5; i++) {
 		liEvalM[i] = new LongInteger;
 		liEvalN[i] = new LongInteger;
@@ -2544,12 +2649,28 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 	*liP0N = *liN[0] + *liN[2];
 	*liEvalM[0] = *liM[0];
 	*liEvalN[0] = *liN[0];
-	*liEvalM[1] = *liP0M + *liM[1];
-	*liEvalN[1] = *liP0N + *liN[1];
-	*liEvalM[2] = *liP0M - *liM[1];
-	*liEvalN[2] = *liP0N - *liN[1];
-	*liEvalM[3] = ((*liEvalM[2] + *liM[2]) << 1) - *liM[0];
-	*liEvalN[3] = ((*liEvalN[2] + *liN[2]) << 1) - *liN[0];
+	//	*liEvalM[1] = *liP0M + *liM[1];
+	*liEvalM[1] = *liP0M;
+	*liEvalM[1] += *liM[1];
+	//	*liEvalN[1] = *liP0N + *liN[1];
+	*liEvalN[1] = *liP0N;
+	*liEvalN[1] += *liN[1];
+	//	*liEvalM[2] = *liP0M - *liM[1];
+	*liEvalM[2] = *liP0M;
+	*liEvalM[2] -= *liM[1];
+	//	*liEvalN[2] = *liP0N - *liN[1];
+	*liEvalN[2] = *liP0N;
+	*liEvalN[2] -= *liN[1];
+	//	*liEvalM[3] = ((*liEvalM[2] + *liM[2]) << 1) - *liM[0];
+	*liEvalM[3] = *liEvalM[2];
+	*liEvalM[3] += *liM[2];
+	*liEvalM[3] <<= 1;
+	*liEvalM[3] -= *liM[0];
+	//	*liEvalN[3] = ((*liEvalN[2] + *liN[2]) << 1) - *liN[0];
+	*liEvalN[3] = *liEvalN[2];
+	*liEvalN[3] += *liN[2];
+	*liEvalN[3] <<= 1;
+	*liEvalN[3] -= *liN[0];
 	*liEvalM[4] = *liM[2];
 	*liEvalN[4] = *liN[2];
 
@@ -2560,9 +2681,9 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 
 	// We will also check for threading
 
-	LongInteger * liPointwise[5];
-	
-	if (LongInteger::TOOMCOOK3THREADING > liOne.size)
+	LongInteger* liPointwise[5];
+
+	if (LongInteger::TOOMCOOK3THREADING > liOne.size && LongInteger::TOOMCOOK3THREADING > liTwo.size)
 	{
 		for (UINT i = 0; i < 5; i++) {
 			if (liEvalM[i]->size > TOOMCOOK3CUTOFF || liEvalN[i]->size > TOOMCOOK3CUTOFF) {
@@ -2575,7 +2696,7 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 	}
 	else
 	{
-		QueueOfThreads<LongIntWrapper> *qot = LongIntWrapper::getQOT();
+		QueueOfThreads<LongIntWrapper>* qot = LongIntWrapper::getQOT();
 		LongIntWrapper* liw0 = new LongIntWrapper;
 		LongIntWrapper* liw1 = new LongIntWrapper;
 		LongIntWrapper* liw2 = new LongIntWrapper;
@@ -2587,15 +2708,15 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 		liw2->setParams(*liEvalM[2], *liEvalN[2]);
 		liw3->setParams(*liEvalM[3], *liEvalN[3]);
 		liw4->setParams(*liEvalM[4], *liEvalN[4]);
-		
+
 		LIfunction fp = &LongInteger::ToomCook3;
-		
+
 		liw0->setStartMethod(fp);
 		liw1->setStartMethod(fp);
 		liw2->setStartMethod(fp);
 		liw3->setStartMethod(fp);
 		liw4->setStartMethod(fp);
-		
+
 		qot->addToQueue(liw0);
 		qot->addToQueue(liw1);
 		qot->addToQueue(liw2);
@@ -2603,7 +2724,7 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 		qot->addToQueue(liw4);
 
 		if (bBackgroundThread) {
-				qot->iAmWaiting(); // Only call this if this process is called in a background thread.
+			qot->iAmWaiting(); // Only call this if this process is called in a background thread.
 		}
 
 		qot->waitForThread(liw0);
@@ -2657,18 +2778,32 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 	// The difficulty is in finding an efficient method to compute the above
 	// A sequence for Toom-3 given by Bodrato will be used
 
-	LongInteger * liResult[5];
+	LongInteger* liResult[5];
 	for (UINT i = 0; i < 5; i++)
 		liResult[i] = new LongInteger;
 
 	*liResult[0] = *liPointwise[0];
 	*liResult[4] = *liPointwise[4];
-	*liResult[3] = (*liPointwise[3] - *liPointwise[1]) / 3;
-	*liResult[1] = (*liPointwise[1] - *liPointwise[2]) >> 1;
-	*liResult[2] = *liPointwise[2] - *liPointwise[0];
-	*liResult[3] = ((*liResult[2] - *liResult[3]) >> 1) + (*liPointwise[4] << 1);
-	*liResult[2] = *liResult[2] + *liResult[1] - *liResult[4];
-	*liResult[1] = *liResult[1] - *liResult[3];
+	//	*liResult[3] = (*liPointwise[3] - *liPointwise[1]) / 3;
+	*liResult[3] = *liPointwise[3];
+	*liResult[3] -= *liPointwise[1];
+	*liResult[3] /= 3;
+	//	*liResult[1] = (*liPointwise[1] - *liPointwise[2]) >> 1;
+	*liResult[1] = *liPointwise[1];
+	*liResult[1] -= *liPointwise[2];
+	*liResult[1] >>= 1;
+	//	*liResult[2] = *liPointwise[2] - *liPointwise[0];
+	*liResult[2] = *liPointwise[2];
+	*liResult[2] -= *liPointwise[0];
+	//	*liResult[3] = ((*liResult[2] - *liResult[3]) >> 1) + (*liPointwise[4] << 1);
+	*liResult[3] = (*liResult[2] - *liResult[3]);
+	*liResult[3] >>= 1;
+	*liResult[3] += (*liPointwise[4] << 1);
+	//	*liResult[2] = *liResult[2] + *liResult[1] - *liResult[4];
+	*liResult[2] += *liResult[1];
+	*liResult[2] -= *liResult[4];
+	//	*liResult[1] = *liResult[1] - *liResult[3];
+	*liResult[1] -= *liResult[3];
 
 
 	// 5 - Recomposition
@@ -2678,7 +2813,7 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 		*liResult[i] = *liResult[i] << (BASEVALBITS * (i * uSplit));
 	}
 
-	LongInteger *liReturn = new LongInteger;
+	LongInteger* liReturn = new LongInteger;
 	for (UINT i = 0; i < 5; i++) {
 		*liReturn += *liResult[i];
 	}
@@ -2704,7 +2839,7 @@ LongInteger* LongInteger::ToomCook3(const LongInteger& liOne, const LongInteger&
 	return liReturn;
 }
 
-UINT LongInteger::toomsplit(LongInteger** liList, UINT uDigits) const {
+UINT LongInteger::toomsplit(LongInteger * *liList, UINT uDigits) const {
 	// liList is an vector of LongIntegers. We will split up *this into chunks and 
 	// put these in liList
 	// We assume that the members of liList have already been created, so we just need to fill them in
@@ -2736,7 +2871,7 @@ UINT LongInteger::toomsplit(LongInteger** liList, UINT uDigits) const {
 	return uStep; // Return the number of digits each has been divided into
 }
 
-vector<LongIntegerUP> LongInteger::split(LongIntegerUP& liToSplit, UINT uNumParts, UINT uDigits) {
+vector<LongIntegerUP> LongInteger::split(LongIntegerUP & liToSplit, UINT uNumParts, UINT uDigits) {
 	// We will split up the input LongInteger into uNumParts and return as 
 	// an array of LongIntegers
 	// We will create the LongIntegers in this method
@@ -2788,7 +2923,7 @@ LongInteger LongInteger::operator+() const {
 	return LongInteger(*this);
 }
 
-void LongInteger::assignByteArray(byte* newArray, UINT newSize) {
+void LongInteger::assignByteArray(byte * newArray, UINT newSize) {
 	// Copy a byte array
 	size = newSize;
 	recalcMaxSize();
@@ -2884,7 +3019,7 @@ string LongInteger::toArrayNumbers() {
 }
 #endif
 
-void LongInteger::RestoringDivision(LongInteger& liValue, LongInteger& liDiv, LongInteger* liResult, LongInteger* liModulus) {
+void LongInteger::RestoringDivision(LongInteger & liValue, LongInteger & liDiv, LongInteger * liResult, LongInteger * liModulus) {
 	// Slow division - restoring division
 	// Divide N by D, placing the quotient in Q and the remainder in R
 
@@ -2984,7 +3119,7 @@ void LongInteger::RestoringDivision(LongInteger& liValue, LongInteger& liDiv, Lo
 	delete Q;
 }
 
-void LongInteger::BurnikelZiegler(const LongInteger& liValue, const LongInteger& liDiv, LongIntegerUP& liResult, LongIntegerUP& liModulus) {
+void LongInteger::BurnikelZiegler(const LongInteger & liValue, const LongInteger & liDiv, LongIntegerUP & liResult, LongIntegerUP & liModulus) {
 	// Looked at other algorithm (e.g. Newton-Raphson division) and many of them use floating point numbers
 	// So we shall move on to Burnikel-Ziegler division
 
@@ -3036,7 +3171,7 @@ void LongInteger::BurnikelZiegler(const LongInteger& liValue, const LongInteger&
 
 }
 
-vector<LongIntegerUP> LongInteger::DivTwoDigitsByOne(LongIntegerUP& AHigh, LongIntegerUP& ALow, LongIntegerUP& B, UINT uNumDigits) {
+vector<LongIntegerUP> LongInteger::DivTwoDigitsByOne(LongIntegerUP & AHigh, LongIntegerUP & ALow, LongIntegerUP & B, UINT uNumDigits) {
 	// DivTwoDigitsByOne(AHigh, ALow, B), return quotient Q and remainder S
 	// 
 	// 1) Let [a1,a2] = AH, [a3,a4] = AL, and [b1,b2] = B
@@ -3112,7 +3247,7 @@ vector<LongIntegerUP> LongInteger::DivTwoDigitsByOne(LongIntegerUP& AHigh, LongI
 	return move(vReturn);
 }
 
-vector<LongIntegerUP> LongInteger::DivThreeHalvesByTwo(LongIntegerUP& a2, LongIntegerUP& a1, LongIntegerUP& a0, LongIntegerUP& b1, LongIntegerUP& b0, UINT uNumDigits) {
+vector<LongIntegerUP> LongInteger::DivThreeHalvesByTwo(LongIntegerUP & a2, LongIntegerUP & a1, LongIntegerUP & a0, LongIntegerUP & b1, LongIntegerUP & b0, UINT uNumDigits) {
 	// DivThreeHalvesByTwo(a1,a2,a3,b1,b2)
 	//
 	// 6) q=[a1,a2]/b1;
@@ -3270,7 +3405,7 @@ vector<LongIntegerUP> LongInteger::DivThreeHalvesByTwo(LongIntegerUP& a2, LongIn
 				}
 				if (uDiff > 0)
 					uDiff--;
-				
+
 				*R += (*B << uDiff);
 				*Q -= (LongInteger(1) << uDiff);
 			}
@@ -3285,7 +3420,7 @@ vector<LongIntegerUP> LongInteger::DivThreeHalvesByTwo(LongIntegerUP& a2, LongIn
 
 }
 
-LongIntegerUP LongInteger::merge(vector<LongIntegerUP>& vList, UINT uNumParts, UINT uSizeParts) {
+LongIntegerUP LongInteger::merge(vector<LongIntegerUP> & vList, UINT uNumParts, UINT uSizeParts) {
 	// Merge the contents of liList into a single LongInteger
 
 	// Need to rework this as I've hit scenarios where the components can be bigger than uSizeParts
@@ -3320,8 +3455,8 @@ bool LongInteger::factorial()
 		return !bOverflow;
 	}
 
-	LongInteger *counter = new LongInteger(*this);
-	LongInteger *runningTotal = new LongInteger(1);
+	LongInteger* counter = new LongInteger(*this);
+	LongInteger* runningTotal = new LongInteger(1);
 
 	while (*counter > 1 && runningTotal->bPositive)
 	{
@@ -3341,7 +3476,7 @@ bool LongInteger::factorial()
 }
 
 
-LongInteger LongInteger::sqrt(const LongInteger& liInput)
+LongInteger LongInteger::sqrt(const LongInteger & liInput)
 {
 	// Calculate the positive square root (rounded to the nearest integer) of the input value
 
@@ -3353,7 +3488,7 @@ LongInteger LongInteger::sqrt(const LongInteger& liInput)
 	LongInteger liGuess; // The guess at what the square root is
 
 	UINT index = 0;
-	for (UINT i = 0; i < liInput.size; i+=2)
+	for (UINT i = 0; i < liInput.size; i += 2)
 	{
 		UINT temp = liInput.digits[i];
 		LongInteger liTemp(temp);
@@ -3382,7 +3517,7 @@ LongInteger LongInteger::sqrt(const LongInteger& liInput)
 			liGuess = liPossible;
 			// We've found an answer that is either the value we want or 1 more than the value we want
 			// (remember we are rounding down, so 4.999999 would become 4)
-			if((liGuess * liGuess) > liInput)
+			if ((liGuess * liGuess) > liInput)
 			{
 				liGuess--;
 			}
@@ -3396,14 +3531,14 @@ LongInteger LongInteger::sqrt(const LongInteger& liInput)
 	return liGuess;
 }
 
-LongInteger LongInteger::sqr(const LongInteger& liValue)
+LongInteger LongInteger::sqr(const LongInteger & liValue)
 {
 	// I've ended up wanted to square values often enough that a dedicated function for it would be useful
 	return (liValue * liValue);
 }
 
 
-LongInteger LongInteger::pow(const LongInteger& liValue, const LongInteger& liPower)
+LongInteger LongInteger::pow(const LongInteger & liValue, const LongInteger & liPower)
 {
 	// A more user-friendly power calculation algorithm.
 	// It calls the powerCalc algorithm in such a way that the 2 input parameters aren't changed and the return
@@ -3414,14 +3549,14 @@ LongInteger LongInteger::pow(const LongInteger& liValue, const LongInteger& liPo
 }
 
 
-LongInteger LongInteger::factorial(const LongInteger& liValue)
+LongInteger LongInteger::factorial(const LongInteger & liValue)
 {
 	PrimeSwing ps;
 	return ps.Factorial(liValue);
 }
 
 
-LongInteger LongInteger::log(const LongInteger& liValue)
+LongInteger LongInteger::log(const LongInteger & liValue)
 {
 	// We will calculate the log rounded down to the nearest whole integer
 
@@ -3445,8 +3580,8 @@ LongInteger LongInteger::log(const LongInteger& liValue)
 		return returnValue;
 	}
 }
-	
-LongInteger LongInteger::log(const LongInteger& liValue, const LongInteger& liBase)
+
+LongInteger LongInteger::log(const LongInteger & liValue, const LongInteger & liBase)
 {
 	// To calculate the first digit of the log take the value and divide repeatedly by the log base
 	// until the value is less than the log base. This is the integer part of the answer
@@ -3473,7 +3608,7 @@ LongInteger LongInteger::log(const LongInteger& liValue, const LongInteger& liBa
 	return liCount;
 }
 
-LongInteger LongInteger::ln(const LongInteger& lin)
+LongInteger LongInteger::ln(const LongInteger & lin)
 {
 	// Natural log.
 	// The constant 'E' is the approximate value of e times 256^12 (or more if read from file) - i.e. e shifted left 11 bytes and then rounded off
@@ -3503,7 +3638,7 @@ LongInteger LongInteger::ln(const LongInteger& lin)
 }
 
 #ifdef WIN32
-bool LongInteger::writeToFile(CString& fileName)
+bool LongInteger::writeToFile(CString & fileName)
 {
 	// Write out the data to file
 	bool returnflag;
@@ -3516,25 +3651,28 @@ bool LongInteger::writeToFile(CString& fileName)
 	return returnflag;
 }
 
-bool LongInteger::readFromFile(CString& fileName)
+bool LongInteger::readFromFile(CString & fileName)
 {
 	// Read in the data
 	bool returnflag;
 	CFile inFile;
 	returnflag = inFile.Open(fileName, CFile::modeRead);
 	if (returnflag) {
-		UINT fileSize = inFile.GetLength();
-
+		ULONGLONG fileSize = inFile.GetLength();
+		if (fileSize > MAXULONG64)
+		{
+			return false;
+		}
 		byte* newData = new byte[fileSize];
-		inFile.Read(newData, fileSize);
-		assignByteArray(newData, fileSize);
+		inFile.Read(newData, (UINT)fileSize);
+		assignByteArray(newData, (UINT)fileSize);
 		inFile.Close();
 		delete newData;
 	}
 	return returnflag;
 }
 #else
-bool LongInteger::writeToFile(string& fileName)
+bool LongInteger::writeToFile(string & fileName)
 {
 	// Write out the data to file
 	ofstream outFile(fileName, ios::out);
@@ -3549,7 +3687,7 @@ bool LongInteger::writeToFile(string& fileName)
 	return returnflag;
 }
 
-bool LongInteger::readFromFile(string& fileName)
+bool LongInteger::readFromFile(string & fileName)
 {
 	// Read in the data
 	bool returnflag;
