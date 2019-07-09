@@ -203,10 +203,16 @@ LongInteger LongInteger::multiplyChooser(const LongInteger& liOne, const LongInt
 		UINT uKCutOff = ((liOne.size > liTwo.size) ? liOne.size : liTwo.size) / 2;
 		UINT uTCcutOff = uKCutOff;
 
+		// Calculate the cut-off size to start threading for Karatsuba and ToomCook3 algorithms
 		UINT numThreads = 1;
 		while (numThreads < targetThreads) {
 			numThreads = numThreads * 3;
 			uKCutOff /= 2;
+		}
+		numThreads = 1;
+		while (numThreads < targetThreads) {
+			numThreads = numThreads * 5;
+			uTCcutOff /= 2;
 		}
 
 		// Not sure if this is the optimal cutoff value
